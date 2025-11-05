@@ -2,7 +2,7 @@
 
 // ---------- Config ----------
 const API = {
-  roomUrl: (id)=> `/api/rooms/${encodeURIComponent(id)}`
+  roomUrl: (id)=> `/api/rooms?id=${encodeURIComponent(id)}`
 };
 
 // ---------- State ----------
