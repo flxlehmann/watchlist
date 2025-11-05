@@ -1,11 +1,8 @@
 # Watchlists (Upstash + Next.js)
 
-v15.4
-- **Removed ratings** entirely (types, APIs, UI).
-- **Animated progress bar** for watched percentage (CSS `transition: width .35s ease`).
-- Kept: Upstash Redis storage, autocomplete via TMDB, hourly auto-sync, manual Sync button, posters, unified icon buttons with role colors on hover only.
+v15.5
+- Moved **list ID** display next to the **Share link** (footer).
+- **Removed seconds** from Updated / Last synced times (HH:MM only, locale-aware).
+- **Add** button is now **44×44** (same height as inputs), still square and icon-centered.
 
-Env:
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
-- `TMDB_API_KEY`
+Other features remain: posters, autocomplete, unified dark buttons with color-on-hover, animated watched progress.

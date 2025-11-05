@@ -39,6 +39,7 @@ body{margin:0;background:linear-gradient(180deg,var(--bg),#0f1217);color:var(--t
   background:#0e1217;
   transition:transform .08s ease, filter .15s ease, background .15s ease, border-color .15s ease;
 }
+.iconbtn.lg{ width:44px; height:44px; } /* for Add button */
 .iconbtn:hover{filter:brightness(1.05)}
 .iconbtn:active{transform:translateY(1px)}
 .iconbtn svg{width:18px;height:18px;stroke:currentColor}

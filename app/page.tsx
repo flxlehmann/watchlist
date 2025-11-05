@@ -12,6 +12,8 @@ async function api<T>(path: string, opts?: RequestInit): Promise<T>{
   return res.json();
 }
 
+const timeOpts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
+
 export default function Page(){
   const [list, setList] = useState<List | null>(null);
   const [loading, setLoading] = useState(false);
@@ -209,7 +211,6 @@ export default function Page(){
               <div className="progress" aria-label="Watched percentage"><span style={{ width: `${stats.pct}%` }} /></div>
             </div>
             <div className="sep" />
-            <span className="badge">list: <span className="copy">{list.id}</span></span>
             <button className="iconbtn blue" onClick={()=>refresh()} aria-label="Sync"><RefreshCw size={18}/></button>
             <button className="iconbtn red" onClick={leave} aria-label="Leave list"><LogOut size={18}/></button>
           </>
@@ -222,7 +223,7 @@ export default function Page(){
           <p>Start a new list and share the link with friends.</p>
           <div className="cta">
             <input className="input" placeholder="List name (optional)" value={name} onChange={e=>setName(e.target.value)} style={{maxWidth:320}} />
-            <button className="iconbtn green" onClick={quickStart} aria-label="Create"><Plus size={18}/></button>
+            <button className="iconbtn green lg" onClick={quickStart} aria-label="Create"><Plus size={18}/></button>
           </div>
           <div style={{marginTop:16}}>or join an existing list:</div>
           <div className="cta" style={{marginTop:10}}>
@@ -253,7 +254,7 @@ export default function Page(){
               style={{flex:'1 1 420px'}}
             />
             <input className="input" style={{maxWidth:220, flex:'0 0 220px'}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
-            <button className="iconbtn green" onClick={add} aria-label="Add movie">
+            <button className="iconbtn green lg" onClick={add} aria-label="Add movie">
               <Plus size={18} />
             </button>
 
@@ -315,9 +316,10 @@ export default function Page(){
           <div className="footer">
             <span className="sub">Share this link:</span>
             <span className="badge copy" onClick={()=>{ navigator.clipboard?.writeText(shareUrl); }} title="Click to copy">{shareUrl}</span>
+            <span className="badge">list: <span className="copy">{list.id}</span></span>
             <div className="sep" />
-            <span className="sub">Updated: {new Date(list.updatedAt).toLocaleTimeString()}</span>
-            {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString()}</span>}
+            <span className="sub">Updated: {new Date(list.updatedAt).toLocaleTimeString([], timeOpts)}</span>
+            {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString([], timeOpts)}</span>}
           </div>
         </>
       )}
