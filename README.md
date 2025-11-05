@@ -1,8 +1,9 @@
 # Watchlists (Upstash + Next.js)
 
-- Create a list (big button), then use the add form at the top.
-- Remove with the red **Remove** button on each row.
-- Share the link shown in the footer to collaborate in near‑real time.
+Changes in v7:
+- **No more auto-join** from localStorage. The main screen shows if the URL has no `?list=` param.
+- **Leave** button removes `?list`, clears localStorage, and returns to the main screen.
+- Optional **Resume last list** button is shown if a previous list ID exists.
 
 Env vars:
 - `UPSTASH_REDIS_REST_URL`

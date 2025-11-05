@@ -17,13 +17,16 @@ export default function Page(){
   const [name, setName] = useState('');
   const [who, setWho] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [lastId, setLastId] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
 
-  // Hydrate from URL or localStorage
+  // Only auto-join if the URL has ?list=...
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const id = params.get('list') || localStorage.getItem('listId');
-    if(id) join(id);
+    const urlId = params.get('list');
+    const stored = localStorage.getItem('listId');
+    setLastId(stored || null);
+    if(urlId) join(urlId);
   }, []);
 
   const join = useCallback(async (id: string) => {
@@ -38,6 +41,20 @@ export default function Page(){
       history.replaceState({}, '', url.toString());
       startPolling(id);
     } catch(e: any){ setError(parseErr(e)); }
+  }, []);
+
+  const leave = useCallback(() => {
+    if(pollRef.current) window.clearInterval(pollRef.current);
+    localStorage.removeItem('listId');
+    setList(null);
+    setTitle('');
+    // Remove ?list param
+    const url = new URL(window.location.href);
+    url.searchParams.delete('list');
+    history.replaceState({}, '', url.toString());
+    // Update lastId for "Resume" button (will be null now)
+    const stored = localStorage.getItem('listId');
+    setLastId(stored || null);
   }, []);
 
   const create = useCallback(async () => {
@@ -107,7 +124,12 @@ export default function Page(){
       <div className="header">
         <div className="h1">🎬 Watchlists</div>
         <div className="sep" />
-        {list ? <span className="badge">list: <span className="copy">{list.id}</span></span> : null}
+        {list ? (
+          <>
+            <span className="badge">list: <span className="copy">{list.id}</span></span>
+            <button className="btn secondary" onClick={leave} title="Leave this list">Leave</button>
+          </>
+        ) : null}
       </div>
 
       {!list && (
@@ -126,6 +148,11 @@ export default function Page(){
               if(el){ const id=el.value.trim(); if(id) join(id); }
             }}>Join</button>
           </div>
+          {lastId && (
+            <div className="cta" style={{marginTop:20}}>
+              <button className="btn secondary" onClick={()=>join(lastId!)}>Resume last list ({lastId})</button>
+            </div>
+          )}
         </div>
       )}
 
