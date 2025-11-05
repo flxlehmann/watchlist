@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type Item = { id: string; title: string; rating?: number; watched: boolean; addedBy?: string; createdAt: number; updatedAt: number };
 type List = { id: string; name: string; items: Item[]; updatedAt: number };
+type Suggestion = { id: number; title: string; year?: string };
 
 async function api<T>(path: string, opts?: RequestInit): Promise<T>{
   const res = await fetch(path, { cache: 'no-store', ...opts });
@@ -20,7 +21,12 @@ export default function Page(){
   const [lastId, setLastId] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<number | null>(null);
+  const [sugs, setSugs] = useState<Suggestion[]>([]);
+  const [showSugs, setShowSugs] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
   const pollRef = useRef<number | null>(null);
+  const acTimer = useRef<number | null>(null);
+  const acAbort = useRef<AbortController | null>(null);
 
   // Only auto-join if the URL has ?list=...
   useEffect(() => {
@@ -111,6 +117,7 @@ export default function Page(){
     const titleClean = title.trim();
     if(!titleClean) return;
     setTitle('');
+    setSugs([]); setShowSugs(false); setActiveIdx(-1);
     try{
       const data = await api<List>(`/api/lists/${list.id}`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who }) });
       setList(data);
@@ -135,6 +142,44 @@ export default function Page(){
       setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
   }, [list]);
+
+  // Autocomplete: debounced query to /api/search
+  const onTitleChange = (v: string) => {
+    setTitle(v);
+    if(acTimer.current) window.clearTimeout(acTimer.current);
+    if(acAbort.current){ acAbort.current.abort(); acAbort.current = null; }
+    if(!v.trim()){
+      setSugs([]); setShowSugs(false); return;
+    }
+    acTimer.current = window.setTimeout(async () => {
+      try{
+        acAbort.current = new AbortController();
+        const r = await fetch(`/api/search?q=${encodeURIComponent(v.trim())}`, { signal: acAbort.current.signal });
+        if(!r.ok) throw new Error(await r.text());
+        const j = await r.json();
+        setSugs(j.results || []);
+        setShowSugs(true);
+        setActiveIdx(-1);
+      }catch(_){ /* ignore */ }
+      finally{ acAbort.current = null; }
+    }, 250);
+  };
+
+  const pick = (s: Suggestion) => {
+    const t = s.year ? `${s.title} (${s.year})` : s.title;
+    setTitle(t);
+    setShowSugs(false);
+    setActiveIdx(-1);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if(!showSugs || sugs.length === 0) return;
+    if(e.key === 'ArrowDown'){ e.preventDefault(); setActiveIdx(i => Math.min(i+1, sugs.length-1)); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); setActiveIdx(i => Math.max(i-1, 0)); }
+    else if(e.key === 'Enter'){
+      if(activeIdx >= 0){ e.preventDefault(); pick(sugs[activeIdx]); }
+    } else if(e.key === 'Escape'){ setShowSugs(false); setActiveIdx(-1); }
+  };
 
   const shareUrl = useMemo(() => list ? `${location.origin}?list=${encodeURIComponent(list.id)}` : '', [list]);
 
@@ -179,9 +224,33 @@ export default function Page(){
       {list && (
         <>
           <div className="toolbar">
-            <input className="input" placeholder="Add a movie or show…" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') add(); }} />
+            <input
+              className="input"
+              placeholder="Add a movie or show…"
+              value={title}
+              onChange={e=>onTitleChange(e.target.value)}
+              onKeyDown={onKeyDown}
+              onFocus={()=>{ if(sugs.length>0) setShowSugs(true);} }
+            />
             <input className="input" style={{maxWidth:180}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
             <button className="btn" onClick={add}>Add</button>
+
+            {showSugs && (
+              <div className="ac">
+                {sugs.length === 0 && <div className="ac-empty">No matches</div>}
+                {sugs.map((s, i) => (
+                  <div
+                    key={s.id}
+                    className={`ac-item ${i===activeIdx ? 'active' : ''}`}
+                    onMouseDown={(e)=>{ e.preventDefault(); pick(s); }}
+                    onMouseEnter={()=>setActiveIdx(i)}
+                  >
+                    <span>{s.title}</span>
+                    <span className="sub">{s.year || ''}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
