@@ -182,7 +182,6 @@ export default function Page(){
             <input className="input" placeholder="Add a movie or show…" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') add(); }} />
             <input className="input" style={{maxWidth:180}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
             <button className="btn" onClick={add}>Add</button>
-            {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString()}</span>}
           </div>
 
           {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
@@ -223,6 +222,7 @@ export default function Page(){
             <span className="badge copy" onClick={()=>{ navigator.clipboard?.writeText(shareUrl); }} title="Click to copy">{shareUrl}</span>
             <div className="sep" />
             <span className="sub">Updated: {new Date(list.updatedAt).toLocaleTimeString()}</span>
+            {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString()}</span>}
           </div>
         </>
       )}
