@@ -1,9 +1,9 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-type Item = { id: string; title: string; rating?: number; watched: boolean; addedBy?: string; createdAt: number; updatedAt: number };
+type Item = { id: string; title: string; rating?: number; watched: boolean; addedBy?: string; poster?: string; createdAt: number; updatedAt: number };
 type List = { id: string; name: string; items: Item[]; updatedAt: number };
-type Suggestion = { id: number; title: string; year?: string };
+type Suggestion = { id: number; title: string; year?: string; poster?: string };
 
 async function api<T>(path: string, opts?: RequestInit): Promise<T>{
   const res = await fetch(path, { cache: 'no-store', ...opts });
@@ -24,6 +24,7 @@ export default function Page(){
   const [sugs, setSugs] = useState<Suggestion[]>([]);
   const [showSugs, setShowSugs] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
+  const [posterForNextAdd, setPosterForNextAdd] = useState<string | undefined>(undefined);
   const pollRef = useRef<number | null>(null);
   const acTimer = useRef<number | null>(null);
   const acAbort = useRef<AbortController | null>(null);
@@ -112,40 +113,10 @@ export default function Page(){
     }
   }, [list?.id]);
 
-  const add = useCallback(async () => {
-    if(!list) return;
-    const titleClean = title.trim();
-    if(!titleClean) return;
-    setTitle('');
-    setSugs([]); setShowSugs(false); setActiveIdx(-1);
-    try{
-      const data = await api<List>(`/api/lists/${list.id}`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who }) });
-      setList(data);
-      setLastSynced(Date.now());
-    }catch(e:any){ setError(parseErr(e)); }
-  }, [list, title, who]);
-
-  const update = useCallback(async (itemId: string, patch: Partial<Pick<Item, 'title'|'rating'|'watched'>>) => {
-    if(!list) return;
-    try{
-      const data = await api<List>(`/api/lists/${list.id}`, { method:'PATCH', body: JSON.stringify({ itemId, ...patch }) });
-      setList(data);
-      setLastSynced(Date.now());
-    }catch(e:any){ setError(parseErr(e)); }
-  }, [list]);
-
-  const remove = useCallback(async (itemId: string) => {
-    if(!list) return;
-    try{
-      const data = await api<List>(`/api/lists/${list.id}`, { method:'DELETE', body: JSON.stringify({ itemId }) });
-      setList(data);
-      setLastSynced(Date.now());
-    }catch(e:any){ setError(parseErr(e)); }
-  }, [list]);
-
-  // Autocomplete: debounced query to /api/search
+  // Autocomplete
   const onTitleChange = (v: string) => {
     setTitle(v);
+    setPosterForNextAdd(undefined);
     if(acTimer.current) window.clearTimeout(acTimer.current);
     if(acAbort.current){ acAbort.current.abort(); acAbort.current = null; }
     if(!v.trim()){
@@ -168,6 +139,7 @@ export default function Page(){
   const pick = (s: Suggestion) => {
     const t = s.year ? `${s.title} (${s.year})` : s.title;
     setTitle(t);
+    setPosterForNextAdd(s.poster);
     setShowSugs(false);
     setActiveIdx(-1);
   };
@@ -180,6 +152,39 @@ export default function Page(){
       if(activeIdx >= 0){ e.preventDefault(); pick(sugs[activeIdx]); }
     } else if(e.key === 'Escape'){ setShowSugs(false); setActiveIdx(-1); }
   };
+
+  const add = useCallback(async () => {
+    if(!list) return;
+    const titleClean = title.trim();
+    if(!titleClean) return;
+    const poster = posterForNextAdd;
+    setTitle('');
+    setPosterForNextAdd(undefined);
+    setSugs([]); setShowSugs(false); setActiveIdx(-1);
+    try{
+      const data = await api<List>(`/api/lists/${list.id}`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
+      setList(data);
+      setLastSynced(Date.now());
+    }catch(e:any){ setError(parseErr(e)); }
+  }, [list, title, who, posterForNextAdd]);
+
+  const update = useCallback(async (itemId: string, patch: Partial<Pick<Item, 'title'|'rating'|'watched'|'poster'>>) => {
+    if(!list) return;
+    try{
+      const data = await api<List>(`/api/lists/${list.id}`, { method:'PATCH', body: JSON.stringify({ itemId, ...patch }) });
+      setList(data);
+      setLastSynced(Date.now());
+    }catch(e:any){ setError(parseErr(e)); }
+  }, [list]);
+
+  const remove = useCallback(async (itemId: string) => {
+    if(!list) return;
+    try{
+      const data = await api<List>(`/api/lists/${list.id}`, { method:'DELETE', body: JSON.stringify({ itemId }) });
+      setList(data);
+      setLastSynced(Date.now());
+    }catch(e:any){ setError(parseErr(e)); }
+  }, [list]);
 
   const shareUrl = useMemo(() => list ? `${location.origin}?list=${encodeURIComponent(list.id)}` : '', [list]);
 
@@ -266,6 +271,10 @@ export default function Page(){
                   <input type="checkbox" checked={item.watched} onChange={e=>update(item.id, { watched: e.target.checked })} />
                   <span>{item.watched ? '✓' : ''}</span>
                 </label>
+
+                <div className="thumb">
+                  {item.poster ? <img src={item.poster} alt="" /> : <span>🎬</span>}
+                </div>
 
                 <input type="text" value={item.title} onChange={e=>update(item.id, { title: e.target.value })} />
 

@@ -17,10 +17,12 @@ export async function GET(req: NextRequest){
     return NextResponse.json({ error: 'Upstream error', detail: text }, { status: 502 });
   }
   const data = await r.json();
+  const base = 'https://image.tmdb.org/t/p/w92';
   const results = Array.isArray(data?.results) ? data.results.slice(0, 8).map((m: any) => ({
     id: m.id,
     title: m.title || m.original_title || '',
-    year: (m.release_date || '').slice(0,4) || undefined
+    year: (m.release_date || '').slice(0,4) || undefined,
+    poster: m.poster_path ? `${base}${m.poster_path}` : undefined
   })) : [];
   return NextResponse.json({ results });
 }

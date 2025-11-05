@@ -6,6 +6,7 @@ export type Item = {
   rating?: number; // 0–5
   watched: boolean;
   addedBy?: string;
+  poster?: string; // image URL
   createdAt: number; // ms
   updatedAt: number; // ms
 };
