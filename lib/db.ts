@@ -1,8 +1,33 @@
-import { kv } from '@vercel/kv';
-export type Item = { id: string; title: string; rating?: number; watched: boolean; addedBy?: string; createdAt: number; updatedAt: number; };
-export type List = { id: string; name: string; items: Item[]; updatedAt: number; };
+import { Redis } from '@upstash/redis';
+export type Item = {
+  id: string;
+  title: string;
+  rating?: number; // 0–5
+  watched: boolean;
+  addedBy?: string;
+  createdAt: number; // ms
+  updatedAt: number; // ms
+};
+export type List = {
+  id: string;
+  name: string;
+  items: Item[];
+  updatedAt: number;
+};
+const redis = Redis.fromEnv(); // uses UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
 const key = (id: string) => `list:${id}`;
-export async function getList(id: string): Promise<List | null> { return (await kv.get<List>(key(id))) ?? null; }
-export async function saveList(list: List): Promise<void> { await kv.set(key(list.id), list); }
-export function newId(len = 8) { const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'; const arr = new Uint32Array(len); crypto.getRandomValues(arr); return Array.from(arr, n => alphabet[n % alphabet.length]).join(''); }
+export async function getList(id: string): Promise<List | null> {
+  return (await redis.get<List>(key(id))) ?? null;
+}
+export async function saveList(list: List): Promise<void> {
+  await redis.set(key(list.id), list);
+  // Optional TTL example:
+  // await redis.set(key(list.id), list, { ex: 60 * 60 * 24 * 180 });
+}
+export function newId(len = 8) {
+  const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, n => alphabet[n % alphabet.length]).join('');
+}
 export function now(){ return Date.now(); }
