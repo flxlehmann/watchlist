@@ -24,7 +24,7 @@ body{
 }
 .dot{width:10px;height:10px;border-radius:50%}
 .dot.gray{background:#6b7a90}
-.dot.green{background:var(--acc-2)}
+.dot.green{background:#5ee1a6}
 .dot.yellow{background:#ffd166}
 .share{margin-left:auto;opacity:.9}
 .share a{color:var(--acc); text-decoration:underline; word-break:break-all}
@@ -39,13 +39,13 @@ body{
 .filters{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
 
 .input{
-  background:#0e1524; border:1px solid var(--line); color:var(--text);
+  background:#0e1524; border:1px solid var(--line); color:#e9f2ff;
   padding:10px 12px; border-radius:12px; outline:none; min-width:160px;
 }
 .input.big{width:100%}
 
 .btn{
-  border:1px solid var(--line); background:#0f1a2e; color:var(--text);
+  border:1px solid var(--line); background:#0f1a2e; color:#e9f2ff;
   padding:10px 14px; border-radius:12px; cursor:pointer; transition:.2s;
 }
 .btn:hover{filter:brightness(1.1)}

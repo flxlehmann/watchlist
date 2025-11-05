@@ -1,4 +1,4 @@
-/* Watchlist v6 — Vercel (Upstash Redis) + Custom Autocomplete (iTunes) */
+/* Watchlist v6.4 — Vercel (Upstash Redis) — Manual sync only + Custom Autocomplete (iTunes) */
 
 // ---------- Config ----------
 const API = {
@@ -8,8 +8,8 @@ const API = {
 // ---------- State ----------
 let items = loadLocal() || [];
 let room = '';
-let version = 0;
-let pollingTimer = null; // (disabled in v6.2 manual sync)
+let version = 0;          // server version (manual sync updates it)
+let pollingTimer = null;  // unused in manual mode
 
 // ---------- DOM ----------
 const listEl = document.getElementById('list');
@@ -317,19 +317,17 @@ function addItemObj(obj){
   };
   items.unshift(newItem);
   render();
-  queueServerMutation({op:'add', item:newItem});
+  // manual sync mode: stays local until you press Sync now
 }
 
 function removeItem(id){
   items = items.filter(x=>x.id!==id);
   render();
-  queueServerMutation({op:'remove', id});
 }
 
 function updateItem(id, patch){
   items = items.map(x=> x.id===id ? {...x, ...patch} : x);
   render();
-  queueServerMutation({op:'update', id, patch});
 }
 
 clearAllBtn.addEventListener('click', ()=>{
@@ -337,11 +335,10 @@ clearAllBtn.addEventListener('click', ()=>{
   if (confirm('Clear the entire list?')) {
     items = [];
     render();
-    queueServerMutation({op:'full', items:[]});
   }
 });
 
-// ---------- API (polling sync) ----------
+// ---------- API (manual sync) ----------
 async function apiFetch(method, body){
   const url = API.roomUrl(room);
   const res = await fetch(url, {
@@ -353,60 +350,20 @@ async function apiFetch(method, body){
   return res.json();
 }
 
-async function pullState(){
-  if (!room) return;
-  try{
-    const data = await apiFetch('GET');
-    if (typeof data.version === 'number' && data.version !== version){
-      version = data.version;
-      items = data.items || [];
-      render();
-      logDiag(`Pulled v${version}`);
-    }
-    setStatus(`Room ${room} (v${version})`, true);
-  }catch(e){
-    logDiag('Pull error: ' + e.message);
-    setStatus('Disconnected', false);
-  }
-}
-
-async function pushMutation(mut){
-  if (!room) return;
-  try{
-    const data = await apiFetch('POST', {mutation: mut, baseVersion: version});
-    version = data.version;
-    items = data.items || items;
-    render();
-    logDiag(`Pushed -> v${version}`);
-  }catch(e){
-    logDiag('Push error: ' + e.message);
-  }
-}
-
-function queueServerMutation(mut){ /* manual sync mode: no auto push */ }
-
-function startPolling(){
-  if (pollingTimer) clearInterval(pollingTimer);
-  pollingTimer = setInterval(pullState, 2000);
-  pullState();
-}
-
-// Manual sync
-
 async function manualSync(){
   if (!room){ alert('Enter a room first (Create or Join).'); return; }
   try{
-    // 1) Pull server
+    // Pull server
     let server = await apiFetch('GET');
     if (!server || typeof server.version !== 'number'){ server = {version:0, items:[]}; }
 
-    // 2) If server empty and we have local items, initialize server with our full list
+    // If server empty and local has items -> init server
     if ((server.items||[]).length === 0 && items.length > 0){
       const res = await apiFetch('POST', { mutation: { op:'full', items }, baseVersion: server.version });
       server = res;
     }
 
-    // 3) If server differs from local, adopt server (last-write-wins on pull)
+    // If server differs -> adopt server
     if (server.version !== version){
       version = server.version;
       items = server.items || [];
@@ -423,7 +380,6 @@ async function manualSync(){
 }
 document.getElementById('syncNowBtn').addEventListener('click', manualSync);
 
-
 // ---------- Events ----------
 addForm.addEventListener('submit', async (e)=>{
   e.preventDefault();
@@ -433,7 +389,6 @@ addForm.addEventListener('submit', async (e)=>{
   const metaList = lastSuggestions;
   let pick = null;
   if (metaList && metaList.length){
-    // If the first is exactly equal (case-insensitive), prefer it
     pick = metaList.find(m => m.title.toLowerCase() === raw.toLowerCase()) || metaList[0];
   }
   addItemObj(pick || { title: raw });
@@ -453,7 +408,6 @@ createRoomBtn.addEventListener('click', ()=>{
   roomIdInput.value = room;
   setShareLink();
   setStatus(`Room ${room}`, true);
-  // startPolling disabled: manual sync only
 });
 
 joinRoomBtn.addEventListener('click', ()=>{
@@ -461,7 +415,6 @@ joinRoomBtn.addEventListener('click', ()=>{
   roomIdInput.value = room;
   setShareLink();
   setStatus(`Room ${room}`, true);
-  // startPolling disabled: manual sync only
 });
 
 // Auto-join via ?room=
@@ -469,7 +422,6 @@ if (prefilledRoom){
   room = sanitizeRoomId(prefilledRoom);
   roomIdInput.value = room;
   setShareLink();
-  // startPolling disabled: manual sync only
 }else{
   setStatus('Local mode', false);
 }

@@ -1,27 +1,23 @@
-# Watchlist (GitHub + Vercel)
+# Watchlist — Vercel + Upstash (Manual Sync)
 
-**What this is**: A static web app with a Vercel Serverless Function that uses **Upstash Redis** for syncing state between clients.
+This repo is ready for **GitHub → Vercel**. It serves static files from **/public** and a serverless endpoint at **/api/rooms** that stores state in **Upstash Redis**.
 
-## Deploy with GitHub + Vercel
+## Deploy
+1. Push this folder to a new GitHub repo.
+2. In Vercel: **Add New Project → Import Git Repository**.
+3. In **Project → Settings → Environment Variables**, add:
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
+4. Deploy. If needed, set **Framework preset: Other** and **Output Directory: public**.
 
-1. **Create a new GitHub repo** and add these files.
-   - Or unzip and push the folder.
-2. **Import the repo on Vercel** (vercel.com → Add New → Project → Import Git Repository).
-3. In **Project Settings → Environment Variables**, add:
-   - `UPSTASH_REDIS_REST_URL` → from your Upstash Redis database
-   - `UPSTASH_REDIS_REST_TOKEN` → from Upstash
-   (Create a free Upstash Redis at upstash.com, then copy the REST URL + TOKEN.)
-4. Deploy. Vercel will serve:
-   - Static files (`index.html`, `style.css`, `app.js`)
-   - Serverless endpoint at `/api/rooms/[id]`
+## API
+- GET `/api/rooms?id=<room>` → `{ version, items }`
+- POST `/api/rooms?id=<room>` with `{ baseVersion, mutation }` → updated state
 
-## Use
+## App behavior
+- **Manual sync only**: Nothing hits the API until you press **Sync now**.
+- Create or join a human-readable room (e.g., `mint-otter-42`).
+- Add movies locally, then press **Sync now** to push/pull.
+- Autocomplete uses iTunes Search (no key). Posters fall back to a placeholder on failure.
 
-- Create or join a human-readable room (e.g., `mint-otter-42`), then add movies.
-- The app polls the function every 2s and uses POST for mutations.
-- Autocomplete & posters use the iTunes Search API (no key).
-
-## Notes
-
-- If you'd like TMDB-based autocomplete instead of iTunes, I can ship a variant that reads a TMDB key from an env var or an in-app Settings modal.
-- CORS is `*` to keep it simple; tighten if needed.
+If you prefer TMDB-based autocomplete, realtime push sync, or auth, say the word and I’ll ship a variant.

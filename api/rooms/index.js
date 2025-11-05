@@ -5,7 +5,7 @@
 
 import { Redis } from '@upstash/redis';
 
-const redis = Redis.fromEnv(); // Needs UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+const redis = Redis.fromEnv(); // Requires env: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
 
 function sanitize(id) {
   return String(id || '').toLowerCase().replace(/[^a-z0-9-_]+/g, '-').replace(/^-+|-+$/g, '') || 'default-room';
