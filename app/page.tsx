@@ -18,6 +18,8 @@ export default function Page(){
   const [who, setWho] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [lastId, setLastId] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSynced, setLastSynced] = useState<number | null>(null);
   const pollRef = useRef<number | null>(null);
 
   // Only auto-join if the URL has ?list=...
@@ -39,6 +41,7 @@ export default function Page(){
       const url = new URL(window.location.href);
       url.searchParams.set('list', id);
       history.replaceState({}, '', url.toString());
+      setLastSynced(Date.now());
       startPolling(id);
     } catch(e: any){ setError(parseErr(e)); }
   }, []);
@@ -48,11 +51,9 @@ export default function Page(){
     localStorage.removeItem('listId');
     setList(null);
     setTitle('');
-    // Remove ?list param
     const url = new URL(window.location.href);
     url.searchParams.delete('list');
     history.replaceState({}, '', url.toString());
-    // Update lastId for "Resume" button (will be null now)
     const stored = localStorage.getItem('listId');
     setLastId(stored || null);
   }, []);
@@ -67,6 +68,7 @@ export default function Page(){
       const url = new URL(window.location.href);
       url.searchParams.set('list', data.id);
       history.replaceState({}, '', url.toString());
+      setLastSynced(Date.now());
       startPolling(data.id);
     } catch(e: any){ setError(parseErr(e)); }
     finally { setLoading(false); }
@@ -78,17 +80,31 @@ export default function Page(){
     await create();
   }, [create, list]);
 
+  // Limit auto-sync to once per hour
   const startPolling = (id: string) => {
+    const interval = 60 * 60 * 1000; // 1 hour
     if(pollRef.current) window.clearInterval(pollRef.current);
     pollRef.current = window.setInterval(async () => {
-      try {
-        const data = await api<List>(`/api/lists/${id}`);
-        setList(prev => (prev?.updatedAt !== data.updatedAt ? data : prev));
-      } catch {}
-    }, 1500);
+      await refresh(id);
+    }, interval);
   };
 
   useEffect(() => () => { if(pollRef.current) window.clearInterval(pollRef.current); }, []);
+
+  const refresh = useCallback(async (id?: string) => {
+    const targetId = id ?? list?.id;
+    if(!targetId) return;
+    try {
+      setSyncing(true);
+      const data = await api<List>(`/api/lists/${targetId}`);
+      setList(prev => (prev?.updatedAt !== data.updatedAt ? data : prev));
+      setLastSynced(Date.now());
+    } catch(e:any){
+      setError(parseErr(e));
+    } finally {
+      setSyncing(false);
+    }
+  }, [list?.id]);
 
   const add = useCallback(async () => {
     if(!list) return;
@@ -98,6 +114,7 @@ export default function Page(){
     try{
       const data = await api<List>(`/api/lists/${list.id}`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who }) });
       setList(data);
+      setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
   }, [list, title, who]);
 
@@ -106,6 +123,7 @@ export default function Page(){
     try{
       const data = await api<List>(`/api/lists/${list.id}`, { method:'PATCH', body: JSON.stringify({ itemId, ...patch }) });
       setList(data);
+      setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
   }, [list]);
 
@@ -114,6 +132,7 @@ export default function Page(){
     try{
       const data = await api<List>(`/api/lists/${list.id}`, { method:'DELETE', body: JSON.stringify({ itemId }) });
       setList(data);
+      setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
   }, [list]);
 
@@ -127,6 +146,7 @@ export default function Page(){
         {list ? (
           <>
             <span className="badge">list: <span className="copy">{list.id}</span></span>
+            <button className="btn secondary" onClick={()=>refresh()} disabled={syncing} title="Fetch latest from server">{syncing? 'Syncing…':'Sync'}</button>
             <button className="btn secondary" onClick={leave} title="Leave this list">Leave</button>
           </>
         ) : null}
@@ -162,6 +182,7 @@ export default function Page(){
             <input className="input" placeholder="Add a movie or show…" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') add(); }} />
             <input className="input" style={{maxWidth:180}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
             <button className="btn" onClick={add}>Add</button>
+            {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString()}</span>}
           </div>
 
           {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}

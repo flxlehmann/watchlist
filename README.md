@@ -1,9 +1,9 @@
 # Watchlists (Upstash + Next.js)
 
-Changes in v7:
-- **No more auto-join** from localStorage. The main screen shows if the URL has no `?list=` param.
-- **Leave** button removes `?list`, clears localStorage, and returns to the main screen.
-- Optional **Resume last list** button is shown if a previous list ID exists.
+Changes in v8:
+- Auto-sync reduced to **once per hour** to minimize database requests.
+- Added a **Sync** button in the header to fetch updates on demand.
+- Shows **Last synced** time in the toolbar when in a list.
 
 Env vars:
 - `UPSTASH_REDIS_REST_URL`
