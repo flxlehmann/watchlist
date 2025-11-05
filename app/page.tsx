@@ -20,9 +20,9 @@ export default function Home(){
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggest, setShowSuggest] = useState(false);
-  const [view, setView] = useState<'grid'|'list'>('list') => (typeof localStorage !== 'undefined' && (localStorage.getItem('view') as any)) || 'list');
-  const [watchedFilter, setWatchedFilter] = useState<'all'|'watched'|'unwatched'>('all') => (localStorage.getItem('watchedFilter') as any) || 'all');
-  const [sortBy, setSortBy] = useState<'added'|'release'>('added') => (localStorage.getItem('sortBy') as any) || 'added');
+  const [view, setView] = useState<'grid'|'list'>('list');
+  const [watchedFilter, setWatchedFilter] = useState<'all'|'watched'|'unwatched'>('all');
+  const [sortBy, setSortBy] = useState<'added'|'release'>('added');
   const [lastSynced, setLastSynced] = useState<number | null>(null);
 
   // create or load list
