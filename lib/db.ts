@@ -21,8 +21,6 @@ export async function getList(id: string): Promise<List | null> {
 }
 export async function saveList(list: List): Promise<void> {
   await redis.set(key(list.id), list);
-  // Optional TTL example:
-  // await redis.set(key(list.id), list, { ex: 60 * 60 * 24 * 180 });
 }
 export function newId(len = 8) {
   const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
