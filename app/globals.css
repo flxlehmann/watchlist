@@ -111,7 +111,10 @@
 
 
 
-/* Watched movies: slightly dimmed until hover */
-.poster-card.watched{opacity:0.6;transition:opacity .2s ease-in-out}
+
+
+
+/* Watched movies: almost invisible until hover */
+.poster-card.watched{opacity:0.1}
 .poster-card.watched:hover{opacity:1}
 
