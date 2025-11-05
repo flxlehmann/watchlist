@@ -6,7 +6,6 @@ export type Item = {
   watched: boolean;
   addedBy?: string;
   poster?: string;
-  releaseYear?: number;
   createdAt: number;
   updatedAt: number;
 };
@@ -19,26 +18,14 @@ export type List = {
 };
 
 const redis = Redis.fromEnv();
-
-const PREFIX = 'wl:';
-const key = (id: string) => `${PREFIX}${id}`;
+const key = (id: string) => `list:${id}`;
 
 export async function getList(id: string): Promise<List | null> {
-  if (!id) return null;
-  const res = await redis.get<List>(key(id));
-  return (res as any) || null;
+  return (await redis.get<List>(key(id))) ?? null;
 }
 
 export async function saveList(list: List): Promise<void> {
   await redis.set(key(list.id), list);
-}
-
-export async function upsertListName(id: string, name: string): Promise<List> {
-  const list = (await getList(id)) || { id, name: 'Watchlist', items: [], updatedAt: Date.now() };
-  list.name = (name ?? '').toString().trim().slice(0, 80) || 'Watchlist';
-  list.updatedAt = Date.now();
-  await saveList(list);
-  return list;
 }
 
 export function newId(len = 8) {
