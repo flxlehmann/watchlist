@@ -1,8 +1,7 @@
 # Watchlists (Upstash + Next.js)
 
-v15.6
-- **Autocomplete dropdown** now anchors to the movie input and matches its width.
-- Added **Grid View** with a **view switch** in the header (icons: list ↔ grid).
-- All existing styles remain (dark buttons, color-on-hover, posters, animated watched progress).
+v15.7
+- Fix: replaced mistaken JSX `and` with `&&` to resolve "Unexpected token `div`" build error.
+- Keep **grid/list toggle**, **anchored autocomplete**, **hover-color buttons**, **animated progress**, **posters**.
 
-Tip: The chosen view is remembered in localStorage.
+**Important**: place this folder at project root and keep the page at `app/page.tsx` (not `app/app/page.tsx`).

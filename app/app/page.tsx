@@ -225,7 +225,7 @@ export default function Page(){
         ) : null}
       </div>
 
-      {!list and (
+      {!list && (
         <div className="hero">
           <h2>Create a shared watchlist</h2>
           <p>Start a new list and share the link with friends.</p>
@@ -241,7 +241,7 @@ export default function Page(){
               if(el){ const id=el.value.trim(); if(id) join(id); }
             }} aria-label="Join"><RefreshCw size={18}/></button>
           </div>
-          {lastId and (
+          {lastId && (
             <div className="cta" style={{marginTop:20}}>
               <button className="iconbtn blue" onClick={()=>join(lastId!)} aria-label="Resume"><RefreshCw size={18}/></button>
             </div>
