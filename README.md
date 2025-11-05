@@ -1,23 +1,33 @@
-# Watchlist — Vercel + Upstash (Manual Sync)
+# Watchlist (Open — No Auth)
 
-This repo is ready for **GitHub → Vercel**. It serves static files from **/public** and a serverless endpoint at **/api/rooms** that stores state in **Upstash Redis**.
+Public/open version of the collaborative watchlist. No login required — useful for private/self-hosted deployments.
 
-## Deploy
-1. Push this folder to a new GitHub repo.
-2. In Vercel: **Add New Project → Import Git Repository**.
-3. In **Project → Settings → Environment Variables**, add:
-   - `UPSTASH_REDIS_REST_URL`
-   - `UPSTASH_REDIS_REST_TOKEN`
-4. Deploy. If needed, set **Framework preset: Other** and **Output Directory: public**.
+## Features
+- Create multiple watchlists
+- Add / remove movies
+- Mark as watched
+- Rate 0–5 stars
+- Copy/share list URL (no invites)
+- Upstash Redis (REST) + Vercel friendly
+- TypeScript, Tailwind, SWR
 
-## API
-- GET `/api/rooms?id=<room>` → `{ version, items }`
-- POST `/api/rooms?id=<room>` with `{ baseVersion, mutation }` → updated state
+## Quickstart
+1) Create an **Upstash Redis** DB and copy REST URL + TOKEN.
+2) Copy env:
+```bash
+cp .env.example .env.local
+```
+3) Install & run:
+```bash
+pnpm i
+pnpm dev
+```
+4) Deploy to **Vercel** and set the same envs in Project Settings → Environment Variables.
 
-## App behavior
-- **Manual sync only**: Nothing hits the API until you press **Sync now**.
-- Create or join a human-readable room (e.g., `mint-otter-42`).
-- Add movies locally, then press **Sync now** to push/pull.
-- Autocomplete uses iTunes Search (no key). Posters fall back to a placeholder on failure.
+## Data Model (Redis keys)
+- `app:lists` -> SET of listIds
+- `list:{listId}` -> JSON list
+- `list:{listId}:items` -> ZSET of itemIds (score = timestamp)
+- `item:{itemId}` -> JSON movie item
 
-If you prefer TMDB-based autocomplete, realtime push sync, or auth, say the word and I’ll ship a variant.
+> Everything is world-readable/writeable because there’s no auth. If you put this on the public internet, consider adding simple admin protection (basic auth or IP restriction) or re-enable OAuth.
