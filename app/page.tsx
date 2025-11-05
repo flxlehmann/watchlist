@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Eye, Trash2, Plus } from 'lucide-react';
+import { Eye, Trash2, Plus, RefreshCw, LogOut } from 'lucide-react';
 
 type Item = { id: string; title: string; rating?: number; watched: boolean; addedBy?: string; poster?: string; createdAt: number; updatedAt: number };
 type List = { id: string; name: string; items: Item[]; updatedAt: number };
@@ -189,11 +189,11 @@ export default function Page(){
 
   const shareUrl = useMemo(() => list ? `${location.origin}?list=${encodeURIComponent(list.id)}` : '', [list]);
 
-  // ---- Footer statistics ----
+  // Header statistics
   const stats = useMemo(() => {
     const total = list?.items.length ?? 0;
     const watched = list ? list.items.filter(i => i.watched).length : 0;
-    const pct = total ? Math.round((watched / total) * 1000) / 10 : 0; // one decimal
+    const pct = total ? Math.round((watched / total) * 1000) / 10 : 0;
     return { total, watched, pct };
   }, [list]);
 
@@ -204,32 +204,37 @@ export default function Page(){
         <div className="sep" />
         {list ? (
           <>
+            <div className="stats">
+              <span className="badge">Stats: {stats.total} total • {stats.watched} watched • {stats.pct}%</span>
+              <div className="progress" aria-label="Watched percentage"><span style={{ width: `${stats.pct}%` }} /></div>
+            </div>
+            <div className="sep" />
             <span className="badge">list: <span className="copy">{list.id}</span></span>
-            <button className="btn secondary" onClick={()=>refresh()} disabled={syncing} title="Fetch latest from server">{syncing? 'Syncing…':'Sync'}</button>
-            <button className="btn secondary" onClick={leave} title="Leave this list">Leave</button>
+            <button className="iconbtn blue" onClick={()=>refresh()} aria-label="Sync"><RefreshCw size={18}/></button>
+            <button className="iconbtn red" onClick={leave} aria-label="Leave list"><LogOut size={18}/></button>
           </>
         ) : null}
       </div>
 
-      {!list && (
+      {!list and (
         <div className="hero">
           <h2>Create a shared watchlist</h2>
           <p>Start a new list and share the link with friends.</p>
           <div className="cta">
             <input className="input" placeholder="List name (optional)" value={name} onChange={e=>setName(e.target.value)} style={{maxWidth:320}} />
-            <button className="btn" onClick={quickStart}>Create watchlist</button>
+            <button className="iconbtn green" onClick={quickStart} aria-label="Create"><Plus size={18}/></button>
           </div>
           <div style={{marginTop:16}}>or join an existing list:</div>
           <div className="cta" style={{marginTop:10}}>
             <input className="input" placeholder="Enter list ID…" onKeyDown={(e)=>{ if(e.key==='Enter'){ const id=(e.target as HTMLInputElement).value.trim(); if(id) join(id);} }} style={{maxWidth:320}} />
-            <button className="btn secondary" onClick={()=>{
+            <button className="iconbtn blue" onClick={()=>{
               const el = document.querySelector<HTMLInputElement>('input[placeholder^="Enter list ID"]');
               if(el){ const id=el.value.trim(); if(id) join(id); }
-            }}>Join</button>
+            }} aria-label="Join"><RefreshCw size={18}/></button>
           </div>
           {lastId && (
             <div className="cta" style={{marginTop:20}}>
-              <button className="btn secondary" onClick={()=>join(lastId!)}>Resume last list ({lastId})</button>
+              <button className="iconbtn blue" onClick={()=>join(lastId!)} aria-label="Resume"><RefreshCw size={18}/></button>
             </div>
           )}
         </div>
@@ -248,8 +253,8 @@ export default function Page(){
               style={{flex:'1 1 420px'}}
             />
             <input className="input" style={{maxWidth:220, flex:'0 0 220px'}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
-            <button className="btn plus" onClick={add} aria-label="Add movie">
-              <Plus size={20} />
+            <button className="iconbtn green" onClick={add} aria-label="Add movie">
+              <Plus size={18} />
             </button>
 
             {showSugs && (
@@ -299,16 +304,14 @@ export default function Page(){
 
                 <div className="actions">
                   <button
-                    className={`iconbtn ${item.watched ? 'success' : ''}`}
-                    title={item.watched ? 'Mark as not watched' : 'Mark as watched'}
+                    className="iconbtn green"
                     aria-label="Toggle watched"
                     onClick={()=>update(item.id, { watched: !item.watched })}
                   >
                     <Eye size={18} />
                   </button>
                   <button
-                    className="iconbtn danger"
-                    title="Remove movie"
+                    className="iconbtn red"
                     aria-label="Remove movie"
                     onClick={()=>remove(item.id)}
                   >
@@ -325,8 +328,6 @@ export default function Page(){
             <div className="sep" />
             <span className="sub">Updated: {new Date(list.updatedAt).toLocaleTimeString()}</span>
             {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString()}</span>}
-            <div className="sep" />
-            <span className="badge">Stats: {stats.total} total • {stats.watched} watched • {stats.pct}%</span>
           </div>
         </>
       )}
