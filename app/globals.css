@@ -79,7 +79,7 @@
 .poster-card .poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .poster-card .poster-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:42px;opacity:.8}
 .poster-card .hover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:12px;opacity:0;pointer-events:none;transition:opacity .2s}
-.poster-card .hover::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.0),rgba(0,0,0,.55));z-index:0}
+.poster-card .hover::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.0),rgba(0,0,0,.55));z-index:0opacity:.65;}
 .poster-card .hover .meta{position:relative;z-index:1;display:flex;flex-direction:column;gap:6px}
 .poster-card .hover .title{font-weight:700}
 .poster-card .hover .actions{position:relative;z-index:1;display:flex;gap:10px;justify-content:center}
@@ -89,3 +89,23 @@
 /* Keep list view styling intact */
 .list .row{justify-content:space-between}
 /* Responsive remains as before; 3 columns @ 980px, 2 columns @ 720px are already defined */
+
+
+/* --- Hover interaction & readability improvements --- */
+/* Make overlay interactive on hover */
+.poster-card .hover{opacity:0;pointer-events:none}
+.poster-card:hover .hover{opacity:1;pointer-events:auto}
+
+/* Dim the poster image on hover for text contrast */
+.poster-card:hover .poster img{filter:brightness(.6) saturate(.9)}
+
+/* Strengthen the overlay gradient */
+.poster-card .hover::before{opacity:.75}
+
+/* Ensure buttons can be clicked on hover overlay */
+.poster-card .hover .actions{pointer-events:auto}
+
+/* De-emphasize watched items more strongly */
+.poster-card.watched{opacity:.45}
+.poster-card.watched .poster img{filter:grayscale(1) brightness(.55)}
+
