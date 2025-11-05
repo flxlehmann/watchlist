@@ -252,7 +252,7 @@ export default function Page(){
           <div className="toolbar">
             <div className="ac-anchor">
               <input
-                className="input"
+                className="input grow"
                 placeholder="Add a movie or show…"
                 value={title}
                 onChange={e=>onTitleChange(e.target.value)}
