@@ -29,9 +29,7 @@
 .card-item{border:1px solid var(--ring);border-radius:12px;background:linear-gradient(180deg,var(--muted),rgba(255,255,255,0));padding:10px;display:flex;flex-direction:column;gap:8px}
 .card-item.watched{background:linear-gradient(180deg,var(--watched-bg),rgba(255,255,255,0));border-color:#27402f}
 .card-item{position:relative;border:1px solid var(--ring);border-radius:12px;background:var(--muted);overflow:hidden}
-.card-item .thumb{width:100%;position:relative;overflow:hidden;aspect-ratio:2/3}
-.card-item .thumb::before{content:'';display:block;padding-top:150%} /* Fallback for aspect-ratio: 2:3 */
-.card-item .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.card-item .thumb{width:100%;position:relative;overflow:hidden} /* Fallback for inset:0;width:100%;height:100%;object-fit:cover;display:block}
 
 
 .hero{padding:32px;text-align:center}.hero h2{margin:0 0 12px 0;font-size:22px}.hero p{margin:0 0 20px 0;color:var(--sub)}.hero .cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
@@ -43,8 +41,7 @@
 
 
 /* Grid poster overlay */
-.grid .card-item .thumb{width:100%;position:relative;overflow:hidden;aspect-ratio:2/3}
-.grid .card-item .thumb::before{content:'';display:block;padding-top:150%}
+.grid .card-item .thumb{width:100%;position:relative;overflow:hidden}
 .grid .card-item .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .grid .card-item .thumb .overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:10px;opacity:0;pointer-events:none;transition:opacity .2s}
 .grid .card-item .thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.7) 100%);opacity:0;transition:opacity .2s}
@@ -56,7 +53,7 @@
 
 /* Grid-only poster layout (no frame) */
 .grid .card-item{border:none;background:transparent;box-shadow:none;padding:0;border-radius:8px}
-.grid .card-item .thumb{border-radius:8px;overflow:hidden}
+.grid .card-item .thumb{width:100%;position:relative;overflow:hidden}
 /* Center overlay content on hover */
 .grid .card-item .thumb .overlay{justify-content:center;align-items:center;text-align:center;gap:10px}
 .grid .card-item .thumb .row{flex-direction:column;align-items:center;justify-content:center;gap:10px}
@@ -65,3 +62,11 @@
 .grid .card-item.watched .thumb img{filter:grayscale(1) brightness(.6)}
 /* Ensure list rows still space-between */
 .list .row{justify-content:space-between}
+
+.card-item .thumb::before{content:'';display:block;padding-top:150%}
+
+
+/* Grid poster-only sizing without aspect-ratio property */
+.grid .card-item .thumb{border-radius:8px;overflow:hidden}
+.grid .card-item .thumb::before{content:'';display:block;padding-top:150%}
+.grid .card-item .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
