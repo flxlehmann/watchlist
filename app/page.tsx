@@ -189,6 +189,14 @@ export default function Page(){
 
   const shareUrl = useMemo(() => list ? `${location.origin}?list=${encodeURIComponent(list.id)}` : '', [list]);
 
+  // ---- Footer statistics ----
+  const stats = useMemo(() => {
+    const total = list?.items.length ?? 0;
+    const watched = list ? list.items.filter(i => i.watched).length : 0;
+    const pct = total ? Math.round((watched / total) * 1000) / 10 : 0; // one decimal
+    return { total, watched, pct };
+  }, [list]);
+
   return (
     <div className="card">
       <div className="header">
@@ -314,6 +322,8 @@ export default function Page(){
             <div className="sep" />
             <span className="sub">Updated: {new Date(list.updatedAt).toLocaleTimeString()}</span>
             {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString()}</span>}
+            <div className="sep" />
+            <span className="badge">Stats: {stats.total} total • {stats.watched} watched • {stats.pct}%</span>
           </div>
         </>
       )}

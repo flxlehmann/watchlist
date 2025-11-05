@@ -1,20 +1,17 @@
 # Watchlists (Upstash + Next.js)
 
-v12: UI polish (per your spec)
-- **Trash can** remove button (small icon).
-- **Eye** button to toggle watched.
-- **Watched rows** get a darkish green tint and subtle text lighten.
+v13: Polished interactions + stats
+- **White icons** (inherit via `currentColor`) for all action buttons.
+- **Consistent hover/active** effects across buttons and icon buttons.
+- **Stats in footer**: total movies, watched count, and % watched (one decimal).
 
-Also includes:
-- TMDB-based autocomplete + posters.
-- Hourly auto-sync + manual Sync button.
+Includes previous features:
+- Lucide icons (eye toggle, trash remove)
+- Dark-green tint for watched items
+- TMDB autocomplete + posters
+- Hourly auto-sync + manual Sync button
 
-Install:
-```bash
-npm i
-npm run dev
-```
-Deploy to Vercel with env vars:
+Env:
 - `UPSTASH_REDIS_REST_URL`
 - `UPSTASH_REDIS_REST_TOKEN`
 - `TMDB_API_KEY`
