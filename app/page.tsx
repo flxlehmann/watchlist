@@ -287,7 +287,7 @@ export default function Page(){
                   <div className="thumb">
                     {item.poster ? <img src={item.poster} alt="" /> : <span>🎬</span>}
                   </div>
-                  <input type="text" value={item.title} onChange={e=>update(item.id, { title: e.target.value })} />
+                  <div className="title" title={item.title}>{item.title}</div>
                   <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
                   <div className="actions">
                     <button
@@ -318,7 +318,7 @@ export default function Page(){
                   <div className="thumb">
                     {item.poster ? <img src={item.poster} alt="" /> : <span>🎬</span>}
                   </div>
-                  <input type="text" value={item.title} onChange={e=>update(item.id, { title: e.target.value })} />
+                  <div className="title" title={item.title}>{item.title}</div>
                   <div className="row" style={{justifyContent:'space-between'}}>
                     <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
                     <div className="row-actions">
