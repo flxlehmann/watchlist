@@ -21,3 +21,15 @@ TMDB_API_KEY=
 
 ## Deploy
 Push to Vercel (Next.js). Attach an Upstash Redis database and set env vars above.
+
+
+---
+
+**v16.1**
+
+- Fixed TMDB search URL.
+- Completed Redis data layer (`lib/db.ts`).
+- Completed REST routes for items (add/toggle/delete) and list rename.
+- Implemented filters (watched/unwatched), sorting (date added / release year), grid/list views.
+- Unified dark icon buttons + improved styles.
+- Hourly autosync + manual Sync.

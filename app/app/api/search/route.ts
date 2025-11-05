@@ -13,7 +13,7 @@ export async function GET(req: NextRequest){
   const url = `https://api.themoviedb.org/3/search/movie?api_key=${key}&query=${encodeURIComponent(q)}&include_adult=false&language=en-US&page=1`;
   const r = await fetch(url, { headers: { 'accept': 'application/json' } });
   if(!r.ok){
-    const text = await r.text().catch(()=>'');
+    const text = await r.text().catch(()=>''); 
     return NextResponse.json({ error: 'Upstream error', detail: text }, { status: 502 });
   }
   const data = await r.json();
