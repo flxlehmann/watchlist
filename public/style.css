@@ -1,0 +1,115 @@
+:root{
+  --bg:#0b0f14; --panel:#101622; --muted:#9fb3c8; --text:#e9f2ff;
+  --acc:#7cc4ff; --acc-2:#5ee1a6; --warn:#ff7a7a; --line:#1c2536;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;
+  color:var(--text); background:radial-gradient(1200px 600px at 10% -10%,#0f1730 0%,#0b0f14 45%),var(--bg);
+}
+
+.app{max-width:900px;margin:32px auto;padding:0 20px}
+
+.topbar{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:12px;}
+.topbar h1{margin:0;font-weight:800;letter-spacing:.2px}
+.room{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+
+.statusbar{
+  display:flex; align-items:center; gap:8px; padding:10px 12px; 
+  border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.02);
+  box-shadow:var(--shadow); margin-bottom:14px;
+}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot.gray{background:#6b7a90}
+.dot.green{background:var(--acc-2)}
+.dot.yellow{background:#ffd166}
+.share{margin-left:auto;opacity:.9}
+.share a{color:var(--acc); text-decoration:underline; word-break:break-all}
+
+.controls{
+  display:grid; gap:12px; padding:14px; background:var(--panel);
+  border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow);
+}
+#addForm{display:flex; gap:10px; align-items:center}
+.add-with-suggest{position:relative; flex:1}
+
+.filters{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+.input{
+  background:#0e1524; border:1px solid var(--line); color:var(--text);
+  padding:10px 12px; border-radius:12px; outline:none; min-width:160px;
+}
+.input.big{width:100%}
+
+.btn{
+  border:1px solid var(--line); background:#0f1a2e; color:var(--text);
+  padding:10px 14px; border-radius:12px; cursor:pointer; transition:.2s;
+}
+.btn:hover{filter:brightness(1.1)}
+.btn.primary{background:linear-gradient(120deg,#0f1a2e,#142445); border-color:#21365c}
+.btn.danger{background:#241016; border-color:#412438}
+.btn.outline{background:transparent}
+.btn:disabled{opacity:.6; cursor:not-allowed}
+
+.list{list-style:none; margin:16px 0 24px; padding:0; display:grid; gap:10px}
+
+/* 4 columns (checkbox | poster | meta | actions) */
+.item{
+  display:grid;
+  grid-template-columns: auto 56px 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:12px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02);
+  border-radius:14px;
+}
+
+.thumb{
+  width:56px; height:56px; border-radius:10px; overflow:hidden;
+  background:#0e1524; border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+}
+.thumb img{width:100%; height:100%; object-fit:cover}
+.thumb .placeholder{font-size:22px; opacity:.5}
+
+.meta{display:flex; flex-direction:column; gap:2px;}
+.title{font-weight:700; letter-spacing:.2px;}
+.title.watched{text-decoration:line-through; opacity:.65}
+.subtle{font-size:12px; color:var(--muted)}
+
+.actions{display:flex; gap:6px; align-items:center}
+
+.starbar{display:flex; gap:2px}
+.star{font-size:20px; cursor:pointer; user-select:none; filter:drop-shadow(0 2px 2px rgba(0,0,0,.2));}
+.star.filled{color:#ffd166}
+.kbd{font:12px/1 monospace; opacity:.7; border:1px solid var(--line); padding:2px 6px; border-radius:8px}
+
+.empty{
+  margin:18px 0; padding:18px; border:1px dashed var(--line); border-radius:12px;
+  text-align:center; color:var(--muted); background:rgba(255,255,255,.02)
+}
+
+.foot{opacity:.7; text-align:center; margin-bottom:40px}
+
+/* Custom Autocomplete */
+.ac-wrap{ position:relative; }
+.ac-list{
+  position:absolute; top:100%; left:0; right:0;
+  background:#0e1524; border:1px solid var(--line); border-radius:12px;
+  margin-top:6px; padding:6px; box-shadow:var(--shadow); max-height:260px;
+  overflow:auto; z-index: 1000;
+}
+.ac-item{
+  padding:8px 10px; border-radius:8px; cursor:pointer; display:flex; gap:8px; align-items:center;
+}
+.ac-item:hover, .ac-item.active{ background:#121b2f; }
+.ac-item .ac-title{ font-weight:600; }
+.ac-item .ac-sub{ font-size:12px; color:var(--muted); }
+.ac-empty{ padding:8px 10px; color:var(--muted); }
+.ac-poster{
+  width:28px; height:28px; border-radius:6px; overflow:hidden; background:#0b1220; border:1px solid var(--line); flex:0 0 auto;
+}
+.ac-poster img{ width:100%; height:100%; object-fit:cover; display:block; }

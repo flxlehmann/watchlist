@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/rooms/[id].js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "^/api/rooms/(.*)$",
+      "dest": "api/rooms/$1.js"
+    },
+    {
+      "src": "^(.*)$",
+      "dest": "public$1"
+    }
+  ]
+}
