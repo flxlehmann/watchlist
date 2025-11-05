@@ -96,13 +96,6 @@ export default function Page(){
             <button className="btn" disabled={loading} onClick={create}>{loading? 'Creating…':'Create new list'}</button>
           </div>
         )}
-        {list && (
-          <div className="row" style={{width:'100%'}}>
-            <input className="input" placeholder="Add a movie or show…" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') add(); }} />
-            <input className="input" style={{maxWidth:180}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
-            <button className="btn" onClick={add}>Add</button>
-          </div>
-        )}
       </div>
       {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
       <div className="list">
