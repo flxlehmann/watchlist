@@ -1,0 +1,14 @@
+{
+  "name": "watchlist-vercel-v6",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev",
+    "build": "echo 'Static build'"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.28.3"
+  }
+}
