@@ -20,9 +20,9 @@ export default function Home(){
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggest, setShowSuggest] = useState(false);
-  const [view, setView] = useState<'grid'|'list'>(() => (typeof localStorage !== 'undefined' && (localStorage.getItem('view') as any)) || 'list');
-  const [watchedFilter, setWatchedFilter] = useState<'all'|'watched'|'unwatched'>(() => (localStorage.getItem('watchedFilter') as any) || 'all');
-  const [sortBy, setSortBy] = useState<'added'|'release'>(() => (localStorage.getItem('sortBy') as any) || 'added');
+  const [view, setView] = useState<'grid'|'list'>('list') => (typeof localStorage !== 'undefined' && (localStorage.getItem('view') as any)) || 'list');
+  const [watchedFilter, setWatchedFilter] = useState<'all'|'watched'|'unwatched'>('all') => (localStorage.getItem('watchedFilter') as any) || 'all');
+  const [sortBy, setSortBy] = useState<'added'|'release'>('added') => (localStorage.getItem('sortBy') as any) || 'added');
   const [lastSynced, setLastSynced] = useState<number | null>(null);
 
   // create or load list
@@ -44,6 +44,22 @@ export default function Home(){
         setList(current);
       }catch(e: any){ setError(parseErr(e)); }
     })();
+  }, []);
+
+  // hydrate client-only prefs
+  const [isClient, setIsClient] = useState(false);
+  const [baseOrigin, setBaseOrigin] = useState('');
+  useEffect(() => {
+    setIsClient(true);
+    if (typeof window !== 'undefined') {
+      const v = (localStorage.getItem('view') as any) as ('grid'|'list') | null;
+      if (v === 'grid' || v === 'list') setView(v);
+      const wf = (localStorage.getItem('watchedFilter') as any) as ('all'|'watched'|'unwatched') | null;
+      if (wf === 'all' || wf === 'watched' || wf === 'unwatched') setWatchedFilter(wf);
+      const sb = (localStorage.getItem('sortBy') as any) as ('added'|'release') | null;
+      if (sb === 'added' || sb === 'release') setSortBy(sb);
+      setBaseOrigin(window.location.origin);
+    }
   }, []);
 
   // autosync hourly
@@ -102,7 +118,7 @@ export default function Home(){
     }catch(e:any){ setError(parseErr(e)); }
   }, [list]);
 
-  const shareUrl = useMemo(() => list ? `${location.origin}?list=${encodeURIComponent(list.id)}` : '', [list]);
+  const shareUrl = useMemo(() => (isClient && list) ? `${baseOrigin}?list=${encodeURIComponent(list.id)}` : '', [isClient, baseOrigin, list]);
 
   // Stats & derived items
   const filtered = useMemo(() => {
@@ -123,9 +139,9 @@ export default function Home(){
     return { total, wat, unw: total - wat };
   }, [list]);
 
-  useEffect(() => { localStorage.setItem('view', view); }, [view]);
-  useEffect(() => { localStorage.setItem('watchedFilter', watchedFilter); }, [watchedFilter]);
-  useEffect(() => { localStorage.setItem('sortBy', sortBy); }, [sortBy]);
+  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('view', view); }, [view]);
+  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('watchedFilter', watchedFilter); }, [watchedFilter]);
+  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('sortBy', sortBy); }, [sortBy]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
