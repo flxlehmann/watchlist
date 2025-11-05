@@ -3,12 +3,11 @@ import { Redis } from '@upstash/redis';
 export type Item = {
   id: string;
   title: string;
-  rating?: number; // 0–5
   watched: boolean;
   addedBy?: string;
-  poster?: string; // image URL
-  createdAt: number; // ms
-  updatedAt: number; // ms
+  poster?: string;
+  createdAt: number;
+  updatedAt: number;
 };
 
 export type List = {

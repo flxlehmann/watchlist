@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, Trash2, Plus, RefreshCw, LogOut } from 'lucide-react';
 
-type Item = { id: string; title: string; rating?: number; watched: boolean; addedBy?: string; poster?: string; createdAt: number; updatedAt: number };
+type Item = { id: string; title: string; watched: boolean; addedBy?: string; poster?: string; createdAt: number; updatedAt: number };
 type List = { id: string; name: string; items: Item[]; updatedAt: number };
 type Suggestion = { id: number; title: string; year?: string; poster?: string };
 
@@ -169,7 +169,7 @@ export default function Page(){
     }catch(e:any){ setError(parseErr(e)); }
   }, [list, title, who, posterForNextAdd]);
 
-  const update = useCallback(async (itemId: string, patch: Partial<Pick<Item, 'title'|'rating'|'watched'|'poster'>>) => {
+  const update = useCallback(async (itemId: string, patch: Partial<Pick<Item, 'title'|'watched'|'poster'>>) => {
     if(!list) return;
     try{
       const data = await api<List>(`/api/lists/${list.id}`, { method:'PATCH', body: JSON.stringify({ itemId, ...patch }) });
@@ -289,16 +289,6 @@ export default function Page(){
                 </div>
 
                 <input type="text" value={item.title} onChange={e=>update(item.id, { title: e.target.value })} />
-
-                <div className="rating">
-                  {Array.from({length:5}).map((_,i)=>{
-                    const val = i+1; const on = (item.rating ?? 0) >= val;
-                    return (
-                      <span key={val} className={`star ${on?'':'off'}`} onClick={()=>update(item.id,{ rating: val })}>★</span>
-                    );
-                  })}
-                  <span className="sub" style={{marginLeft:8}}>{item.rating ?? 0}/5</span>
-                </div>
 
                 <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
 
