@@ -13,11 +13,11 @@
   "routes": [
     {
       "src": "^/api/rooms/(.*)$",
-      "dest": "api/rooms/$1.js"
+      "dest": "/api/rooms/$1"
     },
     {
       "src": "^(.*)$",
-      "dest": "public$1"
+      "dest": "/public$1"
     }
   ]
 }

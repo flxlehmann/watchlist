@@ -9,7 +9,7 @@ const API = {
 let items = loadLocal() || [];
 let room = '';
 let version = 0;
-let pollingTimer = null;
+let pollingTimer = null; // (disabled in v6.2 manual sync)
 
 // ---------- DOM ----------
 const listEl = document.getElementById('list');
@@ -383,9 +383,7 @@ async function pushMutation(mut){
   }
 }
 
-function queueServerMutation(mut){
-  pushMutation(mut);
-}
+function queueServerMutation(mut){ /* manual sync mode: no auto push */ }
 
 function startPolling(){
   if (pollingTimer) clearInterval(pollingTimer);
@@ -394,7 +392,37 @@ function startPolling(){
 }
 
 // Manual sync
-syncNowBtn.addEventListener('click', pullState);
+
+async function manualSync(){
+  if (!room){ alert('Enter a room first (Create or Join).'); return; }
+  try{
+    // 1) Pull server
+    let server = await apiFetch('GET');
+    if (!server || typeof server.version !== 'number'){ server = {version:0, items:[]}; }
+
+    // 2) If server empty and we have local items, initialize server with our full list
+    if ((server.items||[]).length === 0 && items.length > 0){
+      const res = await apiFetch('POST', { mutation: { op:'full', items }, baseVersion: server.version });
+      server = res;
+    }
+
+    // 3) If server differs from local, adopt server (last-write-wins on pull)
+    if (server.version !== version){
+      version = server.version;
+      items = server.items || [];
+      render();
+      logDiag(`Synced (pulled v${version})`);
+    } else {
+      logDiag('Synced (no changes)');
+    }
+    setStatus(`Room ${room} (v${version})`, true);
+  }catch(e){
+    logDiag('Sync error: ' + e.message);
+    setStatus('Disconnected', false);
+  }
+}
+document.getElementById('syncNowBtn').addEventListener('click', manualSync);
+
 
 // ---------- Events ----------
 addForm.addEventListener('submit', async (e)=>{
@@ -425,7 +453,7 @@ createRoomBtn.addEventListener('click', ()=>{
   roomIdInput.value = room;
   setShareLink();
   setStatus(`Room ${room}`, true);
-  startPolling();
+  // startPolling disabled: manual sync only
 });
 
 joinRoomBtn.addEventListener('click', ()=>{
@@ -433,7 +461,7 @@ joinRoomBtn.addEventListener('click', ()=>{
   roomIdInput.value = room;
   setShareLink();
   setStatus(`Room ${room}`, true);
-  startPolling();
+  // startPolling disabled: manual sync only
 });
 
 // Auto-join via ?room=
@@ -441,7 +469,7 @@ if (prefilledRoom){
   room = sanitizeRoomId(prefilledRoom);
   roomIdInput.value = room;
   setShareLink();
-  startPolling();
+  // startPolling disabled: manual sync only
 }else{
   setStatus('Local mode', false);
 }
