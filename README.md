@@ -1,15 +1,8 @@
 # Watchlists (Upstash + Next.js)
 
-v15: Unified buttons + prominent stats
-- All buttons now use the same `.iconbtn` style/size.
-- Colors by role:
-  - Sync = blue (`RefreshCw`)
-  - Leave = red (`LogOut`)
-  - Add = green (`Plus`)
-  - Watched = green (`Eye`)
-  - Remove = red (`Trash2`)
-- Icons are centered inside buttons.
-- Stats moved to header with a progress bar for watched %.
+v15.1: Fix build error
+- Corrected a JSX conditional (`!list && (...)`) that caused a syntax error during build.
+- All v15 features remain: unified icon buttons, colored roles, header stats with progress bar.
 
 Env:
 - `UPSTASH_REDIS_REST_URL`

@@ -42,7 +42,7 @@ export default function Page(){
   const join = useCallback(async (id: string) => {
     setError(null);
     try {
-      const data = await api<List>(`/api/lists/${id}`);
+      const data = await api<List>(\`/api/lists/\${id}\`);
       setList(data);
       setName(data.name);
       localStorage.setItem('listId', id);
@@ -69,7 +69,7 @@ export default function Page(){
   const create = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const data = await api<List>(`/api/lists`, { method: 'POST', body: JSON.stringify({ name }) });
+      const data = await api<List>(\`/api/lists\`, { method: 'POST', body: JSON.stringify({ name }) });
       setList(data);
       setName(data.name);
       localStorage.setItem('listId', data.id);
@@ -104,7 +104,7 @@ export default function Page(){
     if(!targetId) return;
     try {
       setSyncing(true);
-      const data = await api<List>(`/api/lists/${targetId}`);
+      const data = await api<List>(\`/api/lists/\${targetId}\`);
       setList(prev => (prev?.updatedAt !== data.updatedAt ? data : prev));
       setLastSynced(Date.now());
     } catch(e:any){
@@ -126,7 +126,7 @@ export default function Page(){
     acTimer.current = window.setTimeout(async () => {
       try{
         acAbort.current = new AbortController();
-        const r = await fetch(`/api/search?q=${encodeURIComponent(v.trim())}`, { signal: acAbort.current.signal });
+        const r = await fetch(\`/api/search?q=\${encodeURIComponent(v.trim())}\`, { signal: acAbort.current.signal });
         if(!r.ok) throw new Error(await r.text());
         const j = await r.json();
         setSugs(j.results || []);
@@ -138,7 +138,7 @@ export default function Page(){
   };
 
   const pick = (s: Suggestion) => {
-    const t = s.year ? `${s.title} (${s.year})` : s.title;
+    const t = s.year ? \`\${s.title} (\${s.year})\` : s.title;
     setTitle(t);
     setPosterForNextAdd(s.poster);
     setShowSugs(false);
@@ -163,7 +163,7 @@ export default function Page(){
     setPosterForNextAdd(undefined);
     setSugs([]); setShowSugs(false); setActiveIdx(-1);
     try{
-      const data = await api<List>(`/api/lists/${list.id}`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
+      const data = await api<List>(\`/api/lists/\${list.id}\`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
       setList(data);
       setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
@@ -172,7 +172,7 @@ export default function Page(){
   const update = useCallback(async (itemId: string, patch: Partial<Pick<Item, 'title'|'rating'|'watched'|'poster'>>) => {
     if(!list) return;
     try{
-      const data = await api<List>(`/api/lists/${list.id}`, { method:'PATCH', body: JSON.stringify({ itemId, ...patch }) });
+      const data = await api<List>(\`/api/lists/\${list.id}\`, { method:'PATCH', body: JSON.stringify({ itemId, ...patch }) });
       setList(data);
       setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
@@ -181,13 +181,13 @@ export default function Page(){
   const remove = useCallback(async (itemId: string) => {
     if(!list) return;
     try{
-      const data = await api<List>(`/api/lists/${list.id}`, { method:'DELETE', body: JSON.stringify({ itemId }) });
+      const data = await api<List>(\`/api/lists/\${list.id}\`, { method:'DELETE', body: JSON.stringify({ itemId }) });
       setList(data);
       setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
   }, [list]);
 
-  const shareUrl = useMemo(() => list ? `${location.origin}?list=${encodeURIComponent(list.id)}` : '', [list]);
+  const shareUrl = useMemo(() => list ? \`\${location.origin}?list=\${encodeURIComponent(list.id)}\` : '', [list]);
 
   // Header statistics
   const stats = useMemo(() => {
@@ -216,7 +216,7 @@ export default function Page(){
         ) : null}
       </div>
 
-      {!list and (
+      {!list && (
         <div className="hero">
           <h2>Create a shared watchlist</h2>
           <p>Start a new list and share the link with friends.</p>
