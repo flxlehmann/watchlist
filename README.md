@@ -1,8 +1,8 @@
 # Watchlists (Upstash + Next.js)
 
-v15.1: Fix build error
-- Corrected a JSX conditional (`!list && (...)`) that caused a syntax error during build.
-- All v15 features remain: unified icon buttons, colored roles, header stats with progress bar.
+v15.2: Fix template literals
+- Removed stray backslashes that broke template literals (e.g. `${id}`).
+- Keeps unified icon buttons, colored roles, and header stats bar.
 
 Env:
 - `UPSTASH_REDIS_REST_URL`
