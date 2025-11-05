@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Eye, Trash2 } from 'lucide-react';
 
 type Item = { id: string; title: string; rating?: number; watched: boolean; addedBy?: string; poster?: string; createdAt: number; updatedAt: number };
 type List = { id: string; name: string; items: Item[]; updatedAt: number };
@@ -266,12 +267,7 @@ export default function Page(){
             )}
 
             {list.items.map(item => (
-              <div className="item" key={item.id}>
-                <label className="checkbox">
-                  <input type="checkbox" checked={item.watched} onChange={e=>update(item.id, { watched: e.target.checked })} />
-                  <span>{item.watched ? '✓' : ''}</span>
-                </label>
-
+              <div className={`item ${item.watched ? 'watched' : ''}`} key={item.id}>
                 <div className="thumb">
                   {item.poster ? <img src={item.poster} alt="" /> : <span>🎬</span>}
                 </div>
@@ -290,7 +286,24 @@ export default function Page(){
 
                 <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
 
-                <button className="btn danger" title="Remove item" onClick={()=>remove(item.id)}>Remove</button>
+                <div className="actions">
+                  <button
+                    className={`iconbtn ${item.watched ? 'success' : ''}`}
+                    title={item.watched ? 'Mark as not watched' : 'Mark as watched'}
+                    aria-label="Toggle watched"
+                    onClick={()=>update(item.id, { watched: !item.watched })}
+                  >
+                    <Eye size={18} />
+                  </button>
+                  <button
+                    className="iconbtn danger"
+                    title="Remove movie"
+                    aria-label="Remove movie"
+                    onClick={()=>remove(item.id)}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

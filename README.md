@@ -1,11 +1,20 @@
 # Watchlists (Upstash + Next.js)
 
-v11: Poster thumbnails
-- Autocomplete suggestions now include poster data from TMDB.
-- When you pick a suggestion, the poster is saved with the item.
-- Items show a 48x72 thumbnail (w92 TMDB image) or a 🎬 placeholder.
+v12: UI polish (per your spec)
+- **Trash can** remove button (small icon).
+- **Eye** button to toggle watched.
+- **Watched rows** get a darkish green tint and subtle text lighten.
 
-Setup:
+Also includes:
+- TMDB-based autocomplete + posters.
+- Hourly auto-sync + manual Sync button.
+
+Install:
+```bash
+npm i
+npm run dev
+```
+Deploy to Vercel with env vars:
 - `UPSTASH_REDIS_REST_URL`
 - `UPSTASH_REDIS_REST_TOKEN`
 - `TMDB_API_KEY`
