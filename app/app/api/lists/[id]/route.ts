@@ -9,13 +9,14 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 export async function POST(req: NextRequest, { params }: { params: { id: string }}){
   const list = await getList(params.id);
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  const { title, addedBy, poster } = await req.json();
+  const { title, addedBy, poster, releaseYear } = await req.json();
   const item: Item = {
     id: crypto.randomUUID(),
     title: String(title || '').trim().slice(0, 140),
     watched: false,
     addedBy: addedBy ? String(addedBy).slice(0, 40) : undefined,
     poster: poster ? String(poster) : undefined,
+    releaseYear: typeof releaseYear === 'number' ? releaseYear : undefined,
     createdAt: now(),
     updatedAt: now()
   };
@@ -28,13 +29,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string }}){
   const list = await getList(params.id);
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  const { itemId, title, watched, poster } = await req.json();
+  const { itemId, title, watched, poster, releaseYear } = await req.json();
   const idx = list.items.findIndex(i => i.id === itemId);
   if(idx === -1) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
   const item = list.items[idx];
   if(typeof title === 'string') item.title = title.trim().slice(0, 140);
   if(typeof watched === 'boolean') item.watched = watched;
   if(typeof poster === 'string' || poster === null) item.poster = poster || undefined;
+  if(typeof releaseYear === 'number' || releaseYear === null) item.releaseYear = typeof releaseYear === 'number' ? releaseYear : undefined;
   item.updatedAt = now();
   list.items[idx] = item;
   list.updatedAt = now();
