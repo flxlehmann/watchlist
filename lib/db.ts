@@ -18,7 +18,7 @@ export type List = {
   updatedAt: number;
 };
 
-const redis = Redis.fromEnv(); // uses UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
+const redis = Redis.fromEnv();
 const key = (id: string) => `list:${id}`;
 
 export async function getList(id: string): Promise<List | null> {

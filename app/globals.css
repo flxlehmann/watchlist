@@ -31,19 +31,22 @@ body{margin:0;background:linear-gradient(180deg,var(--bg),#0f1217);color:var(--t
 /* Inputs */
 .input{width:100%;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--ring);background:var(--muted);color:var(--text)}
 
-/* Unified icon buttons */
-.iconbtn{width:36px;height:36px;display:inline-grid;place-items:center;border-radius:10px;border:1px solid var(--ring);cursor:pointer;color:#ffffff;background:#0e1217;transition:transform .08s ease, filter .15s ease, background .15s ease, border-color .15s ease}
+/* Unified icon buttons: default DARK, role color on hover only */
+.iconbtn{
+  width:36px;height:36px;display:inline-grid;place-items:center;
+  border-radius:10px;border:1px solid var(--ring);
+  cursor:pointer;color:#ffffff;
+  background:#0e1217;
+  transition:transform .08s ease, filter .15s ease, background .15s ease, border-color .15s ease;
+}
 .iconbtn:hover{filter:brightness(1.05)}
 .iconbtn:active{transform:translateY(1px)}
 .iconbtn svg{width:18px;height:18px;stroke:currentColor}
 
-/* Color roles */
-.iconbtn.blue{background:var(--blue);border-color:var(--blue-d)}
-.iconbtn.blue:hover{background:var(--blue-d)}
-.iconbtn.red{background:var(--red);border-color:var(--red-d)}
-.iconbtn.red:hover{background:var(--red-d)}
-.iconbtn.green{background:var(--green);border-color:var(--green-d)}
-.iconbtn.green:hover{background:var(--green-d)}
+/* Role colors on hover only */
+.iconbtn.blue:hover{background:var(--blue);border-color:var(--blue-d)}
+.iconbtn.red:hover{background:var(--red);border-color:var(--red-d)}
+.iconbtn.green:hover{background:var(--green);border-color:var(--green-d)}
 
 /* Layout */
 .toolbar{position:relative;display:flex;gap:10px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--ring);background:linear-gradient(180deg,var(--panel),rgba(255,255,255,0))}
