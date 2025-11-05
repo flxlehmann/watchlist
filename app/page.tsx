@@ -317,25 +317,27 @@ export default function Page(){
                 <div className={`card-item ${item.watched ? 'watched' : ''}`} key={item.id}>
                   <div className="thumb">
                     {item.poster ? <img src={item.poster} alt="" /> : <span>🎬</span>}
-                  </div>
-                  <div className="title" title={item.title}>{item.title}</div>
-                  <div className="row" style={{justifyContent:'space-between'}}>
-                    <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
-                    <div className="row-actions">
-                      <button
-                        className="iconbtn green"
-                        aria-label="Toggle watched"
-                        onClick={()=>update(item.id, { watched: !item.watched })}
-                      >
-                        <Eye size={18} />
-                      </button>
-                      <button
-                        className="iconbtn red"
-                        aria-label="Remove movie"
-                        onClick={()=>remove(item.id)}
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                    <div className="overlay">
+                      <div className="title" title={item.title}>{item.title}</div>
+                      <div className="row" style={{justifyContent:'space-between'}}>
+                        <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
+                        <div className="row-actions">
+                          <button
+                            className="iconbtn green"
+                            aria-label="Toggle watched"
+                            onClick={()=>update(item.id, { watched: !item.watched })}
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            className="iconbtn red"
+                            aria-label="Remove movie"
+                            onClick={()=>remove(item.id)}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
