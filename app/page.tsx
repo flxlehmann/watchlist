@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Eye, Trash2 } from 'lucide-react';
+import { Eye, Trash2, Plus } from 'lucide-react';
 
 type Item = { id: string; title: string; rating?: number; watched: boolean; addedBy?: string; poster?: string; createdAt: number; updatedAt: number };
 type List = { id: string; name: string; items: Item[]; updatedAt: number };
@@ -245,9 +245,12 @@ export default function Page(){
               onChange={e=>onTitleChange(e.target.value)}
               onKeyDown={onKeyDown}
               onFocus={()=>{ if(sugs.length>0) setShowSugs(true);} }
+              style={{flex:'1 1 420px'}}
             />
-            <input className="input" style={{maxWidth:180}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
-            <button className="btn" onClick={add}>Add</button>
+            <input className="input" style={{maxWidth:220, flex:'0 0 220px'}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
+            <button className="btn plus" onClick={add} aria-label="Add movie">
+              <Plus size={20} />
+            </button>
 
             {showSugs && (
               <div className="ac">
