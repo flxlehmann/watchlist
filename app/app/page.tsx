@@ -216,7 +216,7 @@ export default function Page(){
               <div className="progress" aria-label="Watched percentage"><span style={{ width: `${stats.pct}%` }} /></div>
             </div>
             <div className="sep" />
-            <button className="iconbtn" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
+            <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
               {view==='list' ? <LayoutGrid size={18}/> : <ListIcon size={18}/>}
             </button>
             <button className="iconbtn blue" onClick={()=>refresh()} aria-label="Sync"><RefreshCw size={18}/></button>
@@ -281,6 +281,11 @@ export default function Page(){
             <input className="input" style={{maxWidth:220, flex:'0 0 220px'}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
             <button className="iconbtn green lg" onClick={add} aria-label="Add movie">
               <Plus size={18} />
+            </button>
+            <div className="sep" />
+            {/* Extra toggle in toolbar as well for visibility */}
+            <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
+              {view==='list' ? <LayoutGrid size={18}/> : <ListIcon size={18}/>}
             </button>
           </div>
 

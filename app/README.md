@@ -1,7 +1,7 @@
 # Watchlists (Upstash + Next.js)
 
-v15.7
-- Fix: replaced mistaken JSX `and` with `&&` to resolve "Unexpected token `div`" build error.
-- Keep **grid/list toggle**, **anchored autocomplete**, **hover-color buttons**, **animated progress**, **posters**.
+v15.8
+- View toggle button is now **blue role** and appears in **header AND toolbar** for visibility.
+- Autocomplete dropdown now has **width:100%** and higher **z-index** to ensure it exactly matches the movie input and overlays other content.
 
-**Important**: place this folder at project root and keep the page at `app/page.tsx` (not `app/app/page.tsx`).
+If you still don't see the toggle, confirm you're on a list page (toggle only renders when a list is active).

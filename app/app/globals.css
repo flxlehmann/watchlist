@@ -84,7 +84,7 @@ body{margin:0;background:linear-gradient(180deg,var(--bg),#0f1217);color:var(--t
 
 /* Autocomplete dropdown anchored to input width */
 .ac-anchor{position:relative;flex:1 1 420px}
-.ac{position:absolute;top:48px;left:0;right:0;max-height:280px;overflow:auto;background:var(--panel);border:1px solid var(--ring);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:10}
+.ac{position:absolute;top:48px;left:0;right:0;width:100%;max-height:280px;overflow:auto;background:var(--panel);border:1px solid var(--ring);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50}
 .ac-item{padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
 .ac-item:hover,.ac-item.active{background:var(--muted)}
 .ac-empty{padding:10px 12px;color:var(--sub)}
