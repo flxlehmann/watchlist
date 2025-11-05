@@ -182,7 +182,7 @@ export default function Home(){
       <div className="filters">
         <div className="chipRow">
           <button className={`chip ${watchedFilter==='all'?'active':''}`} onClick={() => setWatchedFilter('all')}>All</button>
-          <button className={`chip ${watchedFilter==='unwatched'?'active':''}`} onClick={() => setWatchedFilter('unwathed' as any) || setWatchedFilter('unwatched')}>Unwatched</button>
+          <button className={`chip ${watchedFilter==='unwatched'?'active':''}`} onClick={() => setWatchedFilter('unwatched')}>Unwatched</button>
           <button className={`chip ${watchedFilter==='watched'?'active':''}`} onClick={() => setWatchedFilter('watched')}>Watched</button>
         </div>
         <div className="rightControls">

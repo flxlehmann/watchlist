@@ -33,3 +33,5 @@ Push to Vercel (Next.js). Attach an Upstash Redis database and set env vars abov
 - Implemented filters (watched/unwatched), sorting (date added / release year), grid/list views.
 - Unified dark icon buttons + improved styles.
 - Hourly autosync + manual Sync.
+
+- **v16.1.1** Hotfix: fixed TypeScript build error in Unwatched chip onClick.
