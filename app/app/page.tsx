@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, Trash2, Plus, RefreshCw, LogOut, LayoutGrid, List as ListIcon } from 'lucide-react';
 
-type Item = { id: string; title: string; watched: boolean; addedBy?: string; poster?: string; createdAt: number; updatedAt: number };
+type Item = { id: string; title: string; watched: boolean; addedBy?: string; poster?: string; releaseYear?: number; createdAt: number; updatedAt: number };
 type List = { id: string; name: string; items: Item[]; updatedAt: number };
 type Suggestion = { id: number; title: string; year?: string; poster?: string };
 
@@ -28,7 +28,10 @@ export default function Page(){
   const [showSugs, setShowSugs] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [posterForNextAdd, setPosterForNextAdd] = useState<string | undefined>(undefined);
+  const [releaseYearForNextAdd, setReleaseYearForNextAdd] = useState<number | undefined>(undefined);
   const [view, setView] = useState<'list'|'grid'>(() => (typeof window !== 'undefined' ? (localStorage.getItem('view') as 'list'|'grid' | null) : null) || 'list');
+  const [watchedFilter, setWatchedFilter] = useState<'all'|'watched'|'unwatched'>('all');
+  const [sortBy, setSortBy] = useState<'added'|'release'>('added');
   const pollRef = useRef<number | null>(null);
   const acTimer = useRef<number | null>(null);
   const acAbort = useRef<AbortController | null>(null);
@@ -121,6 +124,7 @@ export default function Page(){
   const onTitleChange = (v: string) => {
     setTitle(v);
     setPosterForNextAdd(undefined);
+    setReleaseYearForNextAdd(undefined);
     if(acTimer.current) window.clearTimeout(acTimer.current);
     if(acAbort.current){ acAbort.current.abort(); acAbort.current = null; }
     if(!v.trim()){
@@ -144,6 +148,7 @@ export default function Page(){
     const t = s.year ? `${s.title} (${s.year})` : s.title;
     setTitle(t);
     setPosterForNextAdd(s.poster);
+    setReleaseYearForNextAdd(s.year ? parseInt(s.year, 10) : undefined);
     setShowSugs(false);
     setActiveIdx(-1);
   };
@@ -162,17 +167,19 @@ export default function Page(){
     const titleClean = title.trim();
     if(!titleClean) return;
     const poster = posterForNextAdd;
+    const releaseYear = releaseYearForNextAdd;
     setTitle('');
     setPosterForNextAdd(undefined);
+    setReleaseYearForNextAdd(undefined);
     setSugs([]); setShowSugs(false); setActiveIdx(-1);
     try{
-      const data = await api<List>(`/api/lists/${list.id}`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
+      const data = await api<List>(`/api/lists/${list.id}`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster, releaseYear }) });
       setList(data);
       setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
-  }, [list, title, who, posterForNextAdd]);
+  }, [list, title, who, posterForNextAdd, releaseYearForNextAdd]);
 
-  const update = useCallback(async (itemId: string, patch: Partial<Pick<Item, 'title'|'watched'|'poster'>>) => {
+  const update = useCallback(async (itemId: string, patch: Partial<Pick<Item, 'title'|'watched'|'poster'|'releaseYear'>>) => {
     if(!list) return;
     try{
       const data = await api<List>(`/api/lists/${list.id}`, { method:'PATCH', body: JSON.stringify({ itemId, ...patch }) });
@@ -192,13 +199,27 @@ export default function Page(){
 
   const shareUrl = useMemo(() => list ? `${location.origin}?list=${encodeURIComponent(list.id)}` : '', [list]);
 
-  // Header statistics
+  // Stats
   const stats = useMemo(() => {
     const total = list?.items.length ?? 0;
     const watched = list ? list.items.filter(i => i.watched).length : 0;
     const pct = total ? Math.round((watched / total) * 1000) / 10 : 0;
     return { total, watched, pct };
   }, [list]);
+
+  // Derived filtered & sorted items
+  const items = useMemo(() => {
+    if(!list) return [];
+    let arr = list.items.slice();
+    if(watchedFilter === 'watched') arr = arr.filter(i => i.watched);
+    else if(watchedFilter === 'unwatched') arr = arr.filter(i => !i.watched);
+    if(sortBy === 'added'){
+      arr.sort((a,b) => b.createdAt - a.createdAt); // newest first
+    } else {
+      arr.sort((a,b) => (b.releaseYear ?? -Infinity) - (a.releaseYear ?? -Infinity)); // most recent year first; unknowns last
+    }
+    return arr;
+  }, [list, watchedFilter, sortBy]);
 
   useEffect(() => {
     localStorage.setItem('view', view);
@@ -215,12 +236,6 @@ export default function Page(){
               <span className="badge">Stats: {stats.total} total • {stats.watched} watched • {stats.pct}%</span>
               <div className="progress" aria-label="Watched percentage"><span style={{ width: `${stats.pct}%` }} /></div>
             </div>
-            <div className="sep" />
-            <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
-              {view==='list' ? <LayoutGrid size={18}/> : <ListIcon size={18}/>}
-            </button>
-            <button className="iconbtn blue" onClick={()=>refresh()} aria-label="Sync"><RefreshCw size={18}/></button>
-            <button className="iconbtn red" onClick={leave} aria-label="Leave list"><LogOut size={18}/></button>
           </>
         ) : null}
       </div>
@@ -283,7 +298,31 @@ export default function Page(){
               <Plus size={18} />
             </button>
             <div className="sep" />
-            {/* Extra toggle in toolbar as well for visibility */}
+            <button className="iconbtn blue" onClick={()=>refresh()} aria-label="Sync"><RefreshCw size={18}/></button>
+            <button className="iconbtn red" onClick={leave} aria-label="Leave list"><LogOut size={18}/></button>
+          </div>
+
+          {/* Filter Row with divider above (via CSS on .filterbar) */}
+          <div className="filterbar">
+            <div className="chips" role="group" aria-label="Watched filter">
+              <button
+                className={`chip ${watchedFilter==='watched' ? 'active' : ''}`}
+                onClick={()=>setWatchedFilter(f => f==='watched' ? 'all' : 'watched')}
+              >Only watched</button>
+              <button
+                className={`chip ${watchedFilter==='unwatched' ? 'active' : ''}`}
+                onClick={()=>setWatchedFilter(f => f==='unwatched' ? 'all' : 'unwatched')}
+              >Only unwatched</button>
+            </div>
+            <div className="row" style={{gap:8}}>
+              <span className="sub">Sort by</span>
+              <select className="select" value={sortBy} onChange={e=>setSortBy(e.target.value as any)}>
+                <option value="added">Date added</option>
+                <option value="release">Release year</option>
+              </select>
+            </div>
+            <div className="sep" />
+            {/* Move view toggle to right side of this row */}
             <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
               {view==='list' ? <LayoutGrid size={18}/> : <ListIcon size={18}/>}
             </button>
@@ -293,16 +332,19 @@ export default function Page(){
 
           {view==='list' ? (
             <div className="list">
-              {list.items.length === 0 && (
-                <div className="empty">No items yet. Use the form above to add your first title 👆</div>
+              {items.length === 0 && (
+                <div className="empty">No items match your filters.</div>
               )}
-              {list.items.map(item => (
+              {items.map(item => (
                 <div className={`item ${item.watched ? 'watched' : ''}`} key={item.id}>
                   <div className="thumb">
                     {item.poster ? <img src={item.poster} alt="" /> : <span>🎬</span>}
                   </div>
                   <input type="text" value={item.title} onChange={e=>update(item.id, { title: e.target.value })} />
-                  <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
+                  <div className="sub">
+                    {item.addedBy ? `by ${item.addedBy}` : ''}
+                    {item.releaseYear ? ` • ${item.releaseYear}` : ''}
+                  </div>
                   <div className="actions">
                     <button
                       className="iconbtn green"
@@ -324,17 +366,20 @@ export default function Page(){
             </div>
           ) : (
             <div className="grid">
-              {list.items.length === 0 && (
-                <div className="empty" style={{gridColumn:'1 / -1'}}>No items yet. Use the form above to add your first title 👆</div>
+              {items.length === 0 && (
+                <div className="empty" style={{gridColumn:'1 / -1'}}>No items match your filters.</div>
               )}
-              {list.items.map(item => (
+              {items.map(item => (
                 <div className={`card-item ${item.watched ? 'watched' : ''}`} key={item.id}>
                   <div className="thumb">
                     {item.poster ? <img src={item.poster} alt="" /> : <span>🎬</span>}
                   </div>
                   <input type="text" value={item.title} onChange={e=>update(item.id, { title: e.target.value })} />
                   <div className="row" style={{justifyContent:'space-between'}}>
-                    <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
+                    <div className="sub">
+                      {item.addedBy ? `by ${item.addedBy}` : ''}
+                      {item.releaseYear ? ` • ${item.releaseYear}` : ''}
+                    </div>
                     <div className="row-actions">
                       <button
                         className="iconbtn green"

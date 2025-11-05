@@ -30,6 +30,7 @@ body{margin:0;background:linear-gradient(180deg,var(--bg),#0f1217);color:var(--t
 
 /* Inputs */
 .input{width:100%;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--ring);background:var(--muted);color:var(--text)}
+.select{height:36px;padding:0 10px;border-radius:10px;border:1px solid var(--ring);background:#0e1217;color:var(--text)}
 
 /* Unified icon buttons: default DARK, role color on hover only */
 .iconbtn{
@@ -50,7 +51,8 @@ body{margin:0;background:linear-gradient(180deg,var(--bg),#0f1217);color:var(--t
 .iconbtn.green:hover{background:var(--green);border-color:var(--green-d)}
 
 /* Layout */
-.toolbar{position:relative;display:flex;gap:10px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--ring);background:linear-gradient(180deg,var(--panel),rgba(255,255,255,0))}
+.toolbar{position:relative;display:flex;gap:10px;flex-wrap:wrap;padding:14px 20px;background:linear-gradient(180deg,var(--panel),rgba(255,255,255,0))}
+.filterbar{display:flex;gap:10px;align-items:center;padding:10px 20px;border-top:1px solid var(--ring);border-bottom:1px solid var(--ring);background:linear-gradient(180deg,var(--panel),rgba(255,255,255,0))}
 .list{padding:8px}
 .item{display:grid;grid-template-columns:48px 1fr 150px 88px;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;border:1px solid var(--ring);background:linear-gradient(180deg,var(--muted),rgba(255,255,255,0));margin:8px 0}
 .item.watched{background:linear-gradient(180deg,var(--watched-bg), rgba(255,255,255,0)); border-color:#27402f}
@@ -88,6 +90,11 @@ body{margin:0;background:linear-gradient(180deg,var(--bg),#0f1217);color:var(--t
 .ac-item{padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
 .ac-item:hover,.ac-item.active{background:var(--muted)}
 .ac-empty{padding:10px 12px;color:var(--sub)}
+
+/* Chips for filters */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{height:36px;display:inline-flex;align-items:center;gap:8px;padding:0 10px;border-radius:999px;border:1px solid var(--ring);background:#0e1217;color:var(--text);cursor:pointer}
+.chip.active{background:#1a2430;border-color:#2a3b4e}
 
 @media (max-width:980px){
   .grid{grid-template-columns:repeat(3, minmax(0,1fr))}

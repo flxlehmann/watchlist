@@ -1,7 +1,11 @@
 # Watchlists (Upstash + Next.js)
 
-v15.8
-- View toggle button is now **blue role** and appears in **header AND toolbar** for visibility.
-- Autocomplete dropdown now has **width:100%** and higher **z-index** to ensure it exactly matches the movie input and overlays other content.
+v15.9
+- Added **Filter Row** below the input row with a divider line.
+- Filters: **Only watched**, **Only unwatched** (toggle chips).
+- Sorting: **Date added** (newest first) or **Release year** (most recent first).
+- Items now capture **release year** when chosen from autocomplete and use it for sorting.
+- Moved **List/Grid view toggle** to the **right of the filter row** (blue icon button).
 
-If you still don't see the toggle, confirm you're on a list page (toggle only renders when a list is active).
+Notes:
+- Release year is stored per item when picking from TMDB suggestions; manual titles will sort after those with a year.
