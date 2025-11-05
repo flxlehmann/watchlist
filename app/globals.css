@@ -85,7 +85,7 @@
 .poster-card .hover .actions{position:relative;z-index:1;display:flex;gap:10px;justify-content:center}
 .poster-card:hover .hover{opacity:1}
 /* Watched state greyscale */
-.poster-card.watched .poster img{filter:grayscale(1) brightness(.6)}
+.poster-card.watched .poster img{filter:grayscale(1) brightness(.55) saturate(.7)}
 /* Keep list view styling intact */
 .list .row{justify-content:space-between}
 /* Responsive remains as before; 3 columns @ 980px, 2 columns @ 720px are already defined */
@@ -107,5 +107,5 @@
 
 /* De-emphasize watched items more strongly */
 .poster-card.watched{opacity:.45}
-.poster-card.watched .poster img{filter:grayscale(1) brightness(.55)}
+.poster-card.watched .poster img{filter:grayscale(1) brightness(.55) saturate(.7)}
 

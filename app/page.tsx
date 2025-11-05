@@ -12,6 +12,13 @@ async function api<T>(path: string, opts?: RequestInit): Promise<T>{
   return res.json();
 }
 
+
+function getHiResPoster(url?: string): string | undefined {
+  if(!url) return url as any;
+  try{
+    return url.replace(/\/image\.tmdb\.org\/t\/p\/w(92|154|185|342|500|780)\//, '/image.tmdb.org/t/p/w500/');
+  }catch{ return url as any; }
+}
 const timeOpts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
 
 export default function Page(){
@@ -285,7 +292,7 @@ export default function Page(){
               {list.items.map(item => (
                 <div className={`item ${item.watched ? 'watched' : ''}`} key={item.id}>
                   <div className="thumb">
-                    {item.poster ? <img src={item.poster} alt="" /> : <span>🎬</span>}
+                    {item.poster ? <img src={getHiResPoster(item.poster)} alt="" /> : <span>🎬</span>}
                   </div>
                   <div className="title" title={item.title}>{item.title}</div>
                   <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
@@ -318,7 +325,7 @@ export default function Page(){
                 <div className={`poster-card ${item.watched ? 'watched' : ''}`} key={item.id}>
                   <div className="poster">
                     {item.poster ? (
-                      <img src={item.poster} alt="" />
+                      <img src={getHiResPoster(item.poster)} alt="" />
                     ) : (
                       <div className="poster-fallback">🎬</div>
                     )}

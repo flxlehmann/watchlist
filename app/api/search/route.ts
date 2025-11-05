@@ -13,7 +13,7 @@ export async function GET(req: NextRequest){
     return NextResponse.json({ error: 'Upstream error', detail: text }, { status: 502 });
   }
   const data = await r.json();
-  const base = 'https://image.tmdb.org/t/p/w92';
+  const base = 'https://image.tmdb.org/t/p/w500';
   const results = Array.isArray(data?.results) ? data.results.slice(0, 8).map((m: any) => ({
     id: m.id,
     title: m.title || m.original_title || '',
