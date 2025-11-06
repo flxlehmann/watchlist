@@ -203,7 +203,7 @@ export default function Page(){
   }, [view]);
 
   return (
-    <main className="card" role="main">
+    <div className="card" role="main">
       <header className="header" role="banner">
         <div className="h1">🎬 Watchlists</div>
         <div className="sep" />
