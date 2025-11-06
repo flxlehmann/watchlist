@@ -270,8 +270,8 @@ export default function Page(){
                       onMouseDown={(e)=>{ e.preventDefault(); pick(s); }}
                       onMouseEnter={()=>setActiveIdx(i)}
                     >
-                      <span>{s.title}</span>
-                      <span className="sub">{s.year || ''}</span>
+                      <span className="title">{s.title}</span>
+                      <span className="year">{s.year || ''</span>
                     </div>
                   ))}
                 </div>
