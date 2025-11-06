@@ -165,7 +165,7 @@ export default function Page(){
     const poster = posterForNextAdd;
     setTitle(''); setPosterForNextAdd(undefined); setSugs([]); setShowSugs(false); setActiveIdx(-1);
     try{
-      const data = await api<List>(`/api/lists/${list.id}`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
+      const data = await api<List>(`/api/lists/${list.id}`, { method: 'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
       setList(data);
       setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
