@@ -212,3 +212,19 @@
 .ac-item .title{font-weight:600}
 .ac-item .year{opacity:.65;font-size:14px}
 
+
+/* Typography & hero */
+.lead{color:var(--sub);font-size:15px;margin:4px 0 12px}
+.features{list-style:none;display:flex;gap:12px;flex-wrap:wrap;padding:0;margin:8px 0 16px}
+.features li{background:var(--muted);border:1px solid var(--ring);padding:8px 10px;border-radius:999px;color:var(--sub)}
+.hero h1{font-size:22px;margin:0 0 8px 0}
+
+/* Focus-visible rings */
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.input:focus-visible{border-color:var(--blue);box-shadow:0 0 0 3px rgba(56,189,248,.15)}
+.iconbtn:focus-visible{box-shadow:0 0 0 3px rgba(56,189,248,.2)}
+
+main.card{display:block}
+
+.hero .cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.hero .cta .input{flex:1 1 360px;min-width:260px;max-width:420px}

@@ -203,16 +203,16 @@ export default function Page(){
   }, [view]);
 
   return (
-    <div className="card">
-      <div className="header">
+    <main className="card" role="main">
+      <header className="header" role="banner">
         <div className="h1">🎬 Watchlists</div>
         <div className="sep" />
         {list && (
           <>
             <div className="stats">
               <span className="badge">Stats: {stats.total} total • {stats.watched} watched • {stats.pct}%</span>
-              <div className="progress" aria-label="Watched percentage"><span style={{ width: `${stats.pct}%` }} /></div>
-            </div>
+              <div className="progress" role="progressbar" aria-label="Watched percentage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.pct}><span style={{ width: `${stats.pct}%` }} /></div>
+            </header>
             <div className="sep" />
             <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
               {view==='list' ? <LayoutGrid size={18}/> : <ListIcon size={18}/>}
@@ -224,13 +224,14 @@ export default function Page(){
       </div>
 
       {!list && (
-        <div className="hero">
-          <h2>Create a shared watchlist</h2>
-          <p>Start a new list and share the link with friends.</p>
+        <section className="hero" aria-labelledby="hero-title">
+          <h1 id="hero-title">Create a shared watchlist</h1>
+          <p className="lead">Start a new list and share the link with friends — lightweight and instant.</p>
+<ul className="features" role="list"><li>Shared editing in real time</li><li>Posters & autocomplete by TMDB</li><li>One-click watched tracking & stats</li></ul>
           <div className="cta">
             <input className="input" placeholder="List name (optional)" value={name} onChange={e=>setName(e.target.value)} style={{maxWidth:320}} />
             <button className="iconbtn green lg" onClick={quickStart} aria-label="Create"><Plus size={18}/></button>
-          </div>
+          </section>
           <div style={{marginTop:16}}>or join an existing list:</div>
           <div className="cta" style={{marginTop:10}}>
             <input className="input" placeholder="Enter list ID…" onKeyDown={(e)=>{ if(e.key==='Enter'){ const id=(e.target as HTMLInputElement).value.trim(); if(id) join(id);} }} style={{maxWidth:320}} />
@@ -282,7 +283,7 @@ export default function Page(){
             </button>
           </div>
 
-          {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
+          {error && <div role='status' aria-live='polite' style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
 
           {view==='list' ? (
             <div className="list">
@@ -292,7 +293,7 @@ export default function Page(){
               {list.items.map(item => (
                 <div className={`item ${item.watched ? 'watched' : ''}`} key={item.id}>
                   <div className="thumb">
-                    {item.poster ? <img src={getHiResPoster(item.poster)} alt="" /> : <span>🎬</span>}
+                    {item.poster ? <img src={getHiResPoster(item.poster)} alt="" loading="lazy" decoding="async" /> : <span>🎬</span>}
                   </div>
                   <div className="title" title={item.title}>{item.title}</div>
                   <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
@@ -325,7 +326,7 @@ export default function Page(){
                 <div className={`poster-card ${item.watched ? 'watched' : ''}`} key={item.id}>
                   <div className="poster">
                     {item.poster ? (
-                      <img src={getHiResPoster(item.poster)} alt="" />
+                      <img src={getHiResPoster(item.poster)} alt="" loading="lazy" decoding="async" />
                     ) : (
                       <div className="poster-fallback">🎬</div>
                     )}
@@ -357,14 +358,14 @@ export default function Page(){
             </div>
           )}
 
-          <div className="footer">
+          <footer className="footer" role="contentinfo">
             <span className="sub">Share this link:</span>
             <span className="badge copy" onClick={()=>{ navigator.clipboard?.writeText(shareUrl); }} title="Click to copy">{shareUrl}</span>
             <span className="badge">list: <span className="copy">{list.id}</span></span>
             <div className="sep" />
             <span className="sub">Updated: {new Date(list.updatedAt).toLocaleTimeString([], timeOpts)}</span>
             {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString([], timeOpts)}</span>}
-          </div>
+          </footer>
         </>
       )}
     </div>
