@@ -212,7 +212,7 @@ export default function Page(){
             <div className="stats">
               <span className="badge">Stats: {stats.total} total • {stats.watched} watched • {stats.pct}%</span>
               <div className="progress" role="progressbar" aria-label="Watched percentage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.pct}><span style={{ width: `${stats.pct}%` }} /></div>
-            </header>
+            
             <div className="sep" />
             <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
               {view==='list' ? <LayoutGrid size={18}/> : <ListIcon size={18}/>}
@@ -221,7 +221,7 @@ export default function Page(){
             <button className="iconbtn red" onClick={leave} aria-label="Leave list"><LogOut size={18}/></button>
           </>
         )}
-      </div>
+      </header>
 
       {!list && (
         <section className="hero" aria-labelledby="hero-title">
