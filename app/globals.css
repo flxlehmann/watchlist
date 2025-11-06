@@ -51,7 +51,7 @@
   padding:10px;
 }
 .ac-item{
-  padding:22px 24px;
+  padding:18px 20px;
   cursor:pointer;
   display:flex;
   justify-content:space-between;
@@ -59,9 +59,9 @@
   gap:18px;
   transition:background .12s ease, transform .08s ease;
   border-bottom:1px solid rgba(255,255,255,.04);
-  min-height:84px;
-  font-size:1.2rem;
-  line-height:1.5;
+  min-height:72px;
+  font-size:15px;
+  line-height:1.45;
   border-radius:10px;
 }.ac-item:hover,.ac-item.active{background:var(--muted)}.ac-empty{padding:10px 12px;color:var(--sub)}
 @media (max-width:980px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -205,3 +205,10 @@
 
 /* Safety: make any input inside .cta or .toolbar grow */
 .cta .input{flex:1 1 auto;width:100%;min-width:0}
+
+
+/* Title + year alignment inside autocomplete items */
+.ac-item .left{display:flex;align-items:center;gap:8px}
+.ac-item .title{font-weight:600}
+.ac-item .year{opacity:.65;font-size:14px}
+
