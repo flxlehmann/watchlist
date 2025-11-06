@@ -203,8 +203,8 @@ export default function Page(){
   }, [view]);
 
   return (
-    <div className="card" role="main">
-      <header className="header" role="banner">
+    <div className="card">
+      <div className="header">
         <div className="h1">🎬 Watchlists</div>
         <div className="sep" />
         {list && (
@@ -212,7 +212,7 @@ export default function Page(){
             <div className="stats">
               <span className="badge">Stats: {stats.total} total • {stats.watched} watched • {stats.pct}%</span>
               <div className="progress" role="progressbar" aria-label="Watched percentage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.pct}><span style={{ width: `${stats.pct}%` }} /></div>
-            
+            </div>
             <div className="sep" />
             <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
               {view==='list' ? <LayoutGrid size={18}/> : <ListIcon size={18}/>}
@@ -221,17 +221,17 @@ export default function Page(){
             <button className="iconbtn red" onClick={leave} aria-label="Leave list"><LogOut size={18}/></button>
           </>
         )}
-      </header>
+      </div>
 
       {!list && (
-        <section className="hero" aria-labelledby="hero-title">
-          <h1 id="hero-title">Create a shared watchlist</h1>
-          <p className="lead">Start a new list and share the link with friends — lightweight and instant.</p>
+        <div className="hero">
+          <h2>Create a shared watchlist</h2>
+          <p>Start a new list and share the link with friends.</p>
 <ul className="features" role="list"><li>Shared editing in real time</li><li>Posters & autocomplete by TMDB</li><li>One-click watched tracking & stats</li></ul>
           <div className="cta">
             <input className="input" placeholder="List name (optional)" value={name} onChange={e=>setName(e.target.value)} style={{maxWidth:320}} />
             <button className="iconbtn green lg" onClick={quickStart} aria-label="Create"><Plus size={18}/></button>
-          </section>
+          </div>
           <div style={{marginTop:16}}>or join an existing list:</div>
           <div className="cta" style={{marginTop:10}}>
             <input className="input" placeholder="Enter list ID…" onKeyDown={(e)=>{ if(e.key==='Enter'){ const id=(e.target as HTMLInputElement).value.trim(); if(id) join(id);} }} style={{maxWidth:320}} />
@@ -358,14 +358,14 @@ export default function Page(){
             </div>
           )}
 
-          <footer className="footer" role="contentinfo">
+          <div className="footer">
             <span className="sub">Share this link:</span>
             <span className="badge copy" onClick={()=>{ navigator.clipboard?.writeText(shareUrl); }} title="Click to copy">{shareUrl}</span>
             <span className="badge">list: <span className="copy">{list.id}</span></span>
             <div className="sep" />
             <span className="sub">Updated: {new Date(list.updatedAt).toLocaleTimeString([], timeOpts)}</span>
             {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString([], timeOpts)}</span>}
-          </footer>
+          </div>
         </>
       )}
     </div>
