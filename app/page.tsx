@@ -165,7 +165,7 @@ export default function Page(){
     const poster = posterForNextAdd;
     setTitle(''); setPosterForNextAdd(undefined); setSugs([]); setShowSugs(false); setActiveIdx(-1);
     try{
-      const data = await api<List>(`/api/lists/${list.id}`, { method: 'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
+      const data = await api<List>(`/api/lists/${list.id}`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
       setList(data);
       setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
@@ -211,7 +211,7 @@ export default function Page(){
           <>
             <div className="stats">
               <span className="badge">Stats: {stats.total} total • {stats.watched} watched • {stats.pct}%</span>
-              <div className="progress" role="progressbar" aria-label="Watched percentage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.pct}><span style={{ width: `${stats.pct}%` }} /></div>
+              <div className="progress" aria-label="Watched percentage"><span style={{ width: `${stats.pct}%` }} /></div>
             </div>
             <div className="sep" />
             <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
@@ -227,7 +227,6 @@ export default function Page(){
         <div className="hero">
           <h2>Create a shared watchlist</h2>
           <p>Start a new list and share the link with friends.</p>
-<ul className="features" role="list"><li>Shared editing in real time</li><li>Posters & autocomplete by TMDB</li><li>One-click watched tracking & stats</li></ul>
           <div className="cta">
             <input className="input" placeholder="List name (optional)" value={name} onChange={e=>setName(e.target.value)} style={{maxWidth:320}} />
             <button className="iconbtn green lg" onClick={quickStart} aria-label="Create"><Plus size={18}/></button>
@@ -270,8 +269,8 @@ export default function Page(){
                       onMouseDown={(e)=>{ e.preventDefault(); pick(s); }}
                       onMouseEnter={()=>setActiveIdx(i)}
                     >
-                      <span className="title">{s.title}</span>
-                      <span className="year">{s.year || ''</span>
+                      <span>{s.title}</span>
+                      <span className="sub">{s.year || ''}</span>
                     </div>
                   ))}
                 </div>
@@ -283,7 +282,7 @@ export default function Page(){
             </button>
           </div>
 
-          {error && <div role='status' aria-live='polite' style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
+          {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
 
           {view==='list' ? (
             <div className="list">
@@ -293,7 +292,7 @@ export default function Page(){
               {list.items.map(item => (
                 <div className={`item ${item.watched ? 'watched' : ''}`} key={item.id}>
                   <div className="thumb">
-                    {item.poster ? <img src={getHiResPoster(item.poster)} alt="" loading="lazy" decoding="async" /> : <span>🎬</span>}
+                    {item.poster ? <img src={getHiResPoster(item.poster)} alt="" /> : <span>🎬</span>}
                   </div>
                   <div className="title" title={item.title}>{item.title}</div>
                   <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
@@ -326,7 +325,7 @@ export default function Page(){
                 <div className={`poster-card ${item.watched ? 'watched' : ''}`} key={item.id}>
                   <div className="poster">
                     {item.poster ? (
-                      <img src={getHiResPoster(item.poster)} alt="" loading="lazy" decoding="async" />
+                      <img src={getHiResPoster(item.poster)} alt="" />
                     ) : (
                       <div className="poster-fallback">🎬</div>
                     )}
