@@ -5,7 +5,6 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
-  Clock,
   Copy,
   Loader2,
   LogOut,
@@ -37,6 +36,7 @@ type SearchSuggestion = {
   id: number;
   title: string;
   year?: string;
+  poster?: string;
 };
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -111,6 +111,7 @@ export default function Page() {
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
   const blurTimeoutRef = useRef<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -131,10 +132,21 @@ export default function Page() {
   }, []);
 
   const stats = useMemo(() => {
-    if (!list) return { total: 0, watched: 0, pending: 0 };
+    if (!list) {
+      return {
+        total: 0,
+        watched: 0,
+        pending: 0,
+        watchedPercent: 0,
+        pendingPercent: 0
+      };
+    }
     const total = list.items.length;
     const watched = list.items.filter((item) => item.watched).length;
-    return { total, watched, pending: total - watched };
+    const pending = total - watched;
+    const watchedPercent = total ? Math.round((watched / total) * 100) : 0;
+    const pendingPercent = total ? Math.round((pending / total) * 100) : 0;
+    return { total, watched, pending, watchedPercent, pendingPercent };
   }, [list]);
 
   const joinList = useCallback(
@@ -218,12 +230,14 @@ export default function Page() {
           method: 'POST',
           body: JSON.stringify({
             title: title.trim(),
-            addedBy: addedBy.trim() || undefined
+            addedBy: addedBy.trim() || undefined,
+            poster: selectedPoster ?? undefined
           })
         });
         setList(data);
         setTitle('');
         setAddedBy('');
+        setSelectedPoster(null);
         setLastSynced(Date.now());
         setStatus('Item added to your watchlist.');
       } catch (err) {
@@ -232,7 +246,7 @@ export default function Page() {
         setAdding(false);
       }
     },
-    [addedBy, list, title]
+    [addedBy, list, selectedPoster, title]
   );
 
   const handleSelectSuggestion = useCallback(
@@ -244,6 +258,7 @@ export default function Page() {
       setSuggestions([]);
       setShowSuggestions(false);
       setHighlightedIndex(-1);
+      setSelectedPoster(suggestion.poster ?? null);
       if (blurTimeoutRef.current) {
         window.clearTimeout(blurTimeoutRef.current);
         blurTimeoutRef.current = null;
@@ -260,6 +275,7 @@ export default function Page() {
       setShowSuggestions(false);
       setSuggestions([]);
       setHighlightedIndex(-1);
+      setSelectedPoster(null);
     },
     []
   );
@@ -431,7 +447,8 @@ export default function Page() {
               .map((item: any) => ({
                 id: Number(item.id ?? 0),
                 title: String(item.title ?? ''),
-                year: item.year ? String(item.year) : undefined
+                year: item.year ? String(item.year) : undefined,
+                poster: item.poster ? String(item.poster) : undefined
               }))
               .filter((item: SearchSuggestion) => Boolean(item.title))
           : [];
@@ -457,194 +474,265 @@ export default function Page() {
     <main className={styles.viewport}>
       {list ? (
         <div className={styles.workspace}>
-          <section className={styles.listHeader}>
-            <div className={styles.listTitleRow}>
-              <h1 className={styles.listTitle}>{list.name}</h1>
-              <div className={styles.listActions}>
-                <button className={styles.buttonSurface} onClick={copyId}>
-                  <Copy size={18} /> Copy ID
-                </button>
-                <button
-                  className={styles.buttonSurface}
-                  onClick={() => refreshList(undefined, true)}
-                  disabled={refreshing}
-                >
-                  {refreshing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
-                  {refreshing ? 'Refreshing…' : 'Refresh'}
-                </button>
-                <button className={styles.buttonGhost} onClick={leaveList}>
-                  <LogOut size={18} /> Leave list
-                </button>
+          <div className={styles.primaryColumn}>
+            <section className={styles.listHeader}>
+              <div className={styles.listTitleRow}>
+                <h1 className={styles.listTitle}>{list.name}</h1>
+                <div className={styles.listActions}>
+                  <button className={styles.buttonSurface} onClick={copyId}>
+                    <Copy size={18} /> Copy ID
+                  </button>
+                  <button
+                    className={styles.buttonSurface}
+                    onClick={() => refreshList(undefined, true)}
+                    disabled={refreshing}
+                  >
+                    {refreshing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
+                    {refreshing ? 'Refreshing…' : 'Refresh'}
+                  </button>
+                  <button className={styles.buttonGhost} onClick={leaveList}>
+                    <LogOut size={18} /> Leave list
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className={styles.stats}>
-              <span>{stats.total} total titles</span>
-              <span>{stats.pending} on deck</span>
-              <span>{stats.watched} watched</span>
-            </div>
-          </section>
+            </section>
 
-          {(error || status) && (
-            <div className={`${styles.status} ${error ? styles.statusError : styles.statusSuccess}`}>
-              {error ? <Trash2 size={18} /> : <CheckCircle2 size={18} />}
-              {error ?? status}
-            </div>
-          )}
+            {(error || status) && (
+              <div className={`${styles.status} ${error ? styles.statusError : styles.statusSuccess}`}>
+                {error ? <Trash2 size={18} /> : <CheckCircle2 size={18} />}
+                {error ?? status}
+              </div>
+            )}
 
-          <section className={styles.formCard}>
-            <form className={`${styles.form} ${styles.formInline}`} onSubmit={addItem}>
-              <div className={styles.autocomplete}>
-                <label className={styles.visuallyHidden} htmlFor="title">
-                  Title
+            <section className={styles.formCard}>
+              <form className={`${styles.form} ${styles.formInline}`} onSubmit={addItem}>
+                <div className={styles.autocomplete}>
+                  <label className={styles.visuallyHidden} htmlFor="title">
+                    Title
+                  </label>
+                  <input
+                    id="title"
+                    ref={titleInputRef}
+                    className={`${styles.inputField} ${styles.inputCompact}`}
+                    placeholder="e.g. Dune: Part Two"
+                    value={title}
+                    onChange={handleTitleChange}
+                    onKeyDown={handleTitleKeyDown}
+                    onFocus={() => {
+                      if (blurTimeoutRef.current) {
+                        window.clearTimeout(blurTimeoutRef.current);
+                        blurTimeoutRef.current = null;
+                      }
+                      if (suggestions.length > 0) {
+                        setShowSuggestions(true);
+                      }
+                    }}
+                    onBlur={() => {
+                      blurTimeoutRef.current = window.setTimeout(() => {
+                        setShowSuggestions(false);
+                      }, 120);
+                    }}
+                    autoComplete="off"
+                    aria-autocomplete="list"
+                    aria-expanded={showSuggestions && suggestions.length > 0}
+                    aria-controls="title-suggestions"
+                    disabled={adding}
+                    required
+                  />
+                  {showSuggestions && suggestions.length > 0 && (
+                    <ul
+                      id="title-suggestions"
+                      className={styles.autocompleteList}
+                      role="listbox"
+                      aria-label="Suggested titles"
+                    >
+                      {suggestions.map((suggestion, index) => {
+                        const key = `${suggestion.id}-${suggestion.year ?? 'unknown'}-${index}`;
+                        return (
+                          <li
+                            key={key}
+                            role="option"
+                            aria-selected={index === highlightedIndex}
+                            className={`${styles.autocompleteItem} ${
+                              index === highlightedIndex ? styles.autocompleteItemActive : ''
+                            }`}
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              handleSelectSuggestion(suggestion);
+                            }}
+                            onMouseEnter={() => setHighlightedIndex(index)}
+                          >
+                            {suggestion.poster ? (
+                              <img
+                                src={suggestion.poster}
+                                alt=""
+                                className={styles.autocompletePoster}
+                                aria-hidden="true"
+                              />
+                            ) : (
+                              <div className={styles.autocompletePosterPlaceholder} aria-hidden="true">
+                                🎬
+                              </div>
+                            )}
+                            <div className={styles.autocompleteCopy}>
+                              <span className={styles.autocompleteTitle}>{suggestion.title}</span>
+                              {suggestion.year && (
+                                <span className={styles.autocompleteMeta}>{suggestion.year}</span>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+                <label className={styles.visuallyHidden} htmlFor="added-by">
+                  Added by (optional)
                 </label>
                 <input
-                  id="title"
-                  ref={titleInputRef}
+                  id="added-by"
                   className={`${styles.inputField} ${styles.inputCompact}`}
-                  placeholder="e.g. Dune: Part Two"
-                  value={title}
-                  onChange={handleTitleChange}
-                  onKeyDown={handleTitleKeyDown}
-                  onFocus={() => {
-                    if (blurTimeoutRef.current) {
-                      window.clearTimeout(blurTimeoutRef.current);
-                      blurTimeoutRef.current = null;
-                    }
-                    if (suggestions.length > 0) {
-                      setShowSuggestions(true);
-                    }
-                  }}
-                  onBlur={() => {
-                    blurTimeoutRef.current = window.setTimeout(() => {
-                      setShowSuggestions(false);
-                    }, 120);
-                  }}
-                  autoComplete="off"
-                  aria-autocomplete="list"
-                  aria-expanded={showSuggestions && suggestions.length > 0}
-                  aria-controls="title-suggestions"
+                  placeholder="Name or initials (optional)"
+                  value={addedBy}
+                  onChange={(event) => setAddedBy(event.target.value)}
                   disabled={adding}
-                  required
                 />
-                {showSuggestions && suggestions.length > 0 && (
-                  <ul
-                    id="title-suggestions"
-                    className={styles.autocompleteList}
-                    role="listbox"
-                    aria-label="Suggested titles"
-                  >
-                    {suggestions.map((suggestion, index) => {
-                      const key = `${suggestion.id}-${suggestion.year ?? 'unknown'}-${index}`;
-                      return (
-                        <li
-                          key={key}
-                          role="option"
-                          aria-selected={index === highlightedIndex}
-                          className={`${styles.autocompleteItem} ${
-                            index === highlightedIndex ? styles.autocompleteItemActive : ''
-                          }`}
-                          onMouseDown={(event) => {
-                            event.preventDefault();
-                            handleSelectSuggestion(suggestion);
-                          }}
-                          onMouseEnter={() => setHighlightedIndex(index)}
-                        >
-                          <span className={styles.autocompleteTitle}>{suggestion.title}</span>
-                          {suggestion.year && (
-                            <span className={styles.autocompleteMeta}>{suggestion.year}</span>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-              <label className={styles.visuallyHidden} htmlFor="added-by">
-                Added by (optional)
-              </label>
-              <input
-                id="added-by"
-                className={`${styles.inputField} ${styles.inputCompact}`}
-                placeholder="Name or initials (optional)"
-                value={addedBy}
-                onChange={(event) => setAddedBy(event.target.value)}
-                disabled={adding}
-              />
-              <button className={styles.buttonPrimary} type="submit" disabled={adding}>
-                {adding ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
-                {adding ? 'Adding…' : 'Add to list'}
-              </button>
-            </form>
-          </section>
-
-          {list.items.length > 0 ? (
-            <section className={styles.itemGrid}>
-              {list.items.map((item) => {
-                const meta = [
-                  item.addedBy ? `Added by ${item.addedBy}` : null,
-                  `Created ${formatDate(item.createdAt)}`
-                ].filter(Boolean);
-                return (
-                  <article
-                    key={item.id}
-                    className={`${styles.itemCard} ${item.watched ? styles.itemWatched : ''}`}
-                  >
-                    <h3 className={styles.itemTitle}>{item.title}</h3>
-                    <div className={styles.itemMeta}>
-                      {meta.map((entry) => (
-                        <span key={entry}>{entry}</span>
-                      ))}
-                    </div>
-                    <div className={styles.itemActions}>
-                      <button type="button" onClick={() => toggleWatched(item)}>
-                        {item.watched ? <Check size={16} /> : <CheckCircle2 size={16} />}
-                        {item.watched ? 'Watched' : 'Mark watched'}
-                      </button>
-                      <button type="button" onClick={() => removeItem(item)}>
-                        <Trash2 size={16} /> Remove
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
+                <button className={styles.buttonPrimary} type="submit" disabled={adding}>
+                  {adding ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
+                  {adding ? 'Adding…' : 'Add to list'}
+                </button>
+              </form>
             </section>
-          ) : (
-            <div className={styles.emptyState}>
-              <CheckCircle2 size={40} />
-              <p>Your watchlist is feeling fresh. Add something to get started!</p>
-              <div className={styles.quickLinks}>
-                <button type="button" onClick={() => setTitle('Dune: Part Two')}>
-                  Suggest “Dune: Part Two”
-                </button>
-                <button type="button" onClick={() => setTitle('The Bear S03E01')}>
-                  Suggest “The Bear S03E01”
-                </button>
-              </div>
-            </div>
-          )}
 
-          <footer className={styles.listFooter}>
-            <div className={styles.footerItem}>
-              <span className={styles.footerLabel}>ID</span>
-              <code>{list.id}</code>
+            {list.items.length > 0 ? (
+              <section className={styles.posterGrid}>
+                {list.items.map((item) => {
+                  const meta = [
+                    item.addedBy ? `Added by ${item.addedBy}` : null,
+                    `Created ${formatDate(item.createdAt)}`
+                  ].filter(Boolean);
+                  const initials = item.title
+                    .split(' ')
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((part) => part[0]?.toUpperCase())
+                    .join('');
+                  return (
+                    <article
+                      key={item.id}
+                      className={`${styles.posterCard} ${item.watched ? styles.posterWatched : ''}`}
+                    >
+                      <div className={styles.posterFrame}>
+                        {item.poster ? (
+                          <img src={item.poster} alt={`${item.title} poster`} />
+                        ) : (
+                          <div className={styles.posterFallback} aria-hidden="true">
+                            <span>{initials || '🎬'}</span>
+                          </div>
+                        )}
+                        {item.watched && <span className={styles.posterBadge}>Watched</span>}
+                      </div>
+                      <div className={styles.posterInfo}>
+                        <h3 className={styles.posterTitle}>{item.title}</h3>
+                        <div className={styles.posterMeta}>
+                          {meta.map((entry) => (
+                            <span key={entry}>{entry}</span>
+                          ))}
+                        </div>
+                        <div className={styles.posterActions}>
+                          <button type="button" onClick={() => toggleWatched(item)}>
+                            {item.watched ? <Check size={16} /> : <CheckCircle2 size={16} />}
+                            {item.watched ? 'Watched' : 'Mark watched'}
+                          </button>
+                          <button type="button" onClick={() => removeItem(item)}>
+                            <Trash2 size={16} /> Remove
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </section>
+            ) : (
+              <div className={styles.emptyState}>
+                <CheckCircle2 size={40} />
+                <p>Your watchlist is feeling fresh. Add something to get started!</p>
+                <div className={styles.quickLinks}>
+                  <button type="button" onClick={() => setTitle('Dune: Part Two')}>
+                    Suggest “Dune: Part Two”
+                  </button>
+                  <button type="button" onClick={() => setTitle('The Bear S03E01')}>
+                    Suggest “The Bear S03E01”
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <footer className={styles.listFooter}>
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel}>ID</span>
+                <code>{list.id}</code>
+              </div>
+              {lastUpdated && (
+                <div className={styles.footerItem}>
+                  <span className={styles.footerLabel}>Updated</span>
+                  <span>{lastUpdated}</span>
+                </div>
+              )}
+              {lastSyncedAgo && (
+                <div className={styles.footerItem}>
+                  <span className={styles.footerLabel}>Synced</span>
+                  <span>{lastSyncedAgo}</span>
+                </div>
+              )}
+            </footer>
+          </div>
+
+          <aside className={styles.statsPanel} aria-label="Watchlist statistics">
+            <header className={styles.statsHeader}>
+              <h2>List stats</h2>
+              <span>{stats.total} title{stats.total === 1 ? '' : 's'}</span>
+            </header>
+            <div className={styles.statsPulse}>
+              <div className={styles.pulseTrack}>
+                <div
+                  className={styles.pulseFill}
+                  style={{ width: `${stats.total ? stats.watchedPercent : 0}%` }}
+                />
+              </div>
+              <span className={styles.pulseLabel}>{stats.watchedPercent}% watched</span>
             </div>
-            {lastUpdated && (
-              <div className={styles.footerItem}>
-                <span className={styles.footerLabel}>Updated</span>
-                <span>
-                  <Clock size={16} /> {lastUpdated}
-                </span>
-              </div>
-            )}
-            {lastSyncedAgo && (
-              <div className={styles.footerItem}>
-                <span className={styles.footerLabel}>Synced</span>
-                <span>
-                  <RefreshCw size={16} /> {lastSyncedAgo}
-                </span>
-              </div>
-            )}
-          </footer>
+            <ul className={styles.statsList}>
+              <li className={styles.statsRow}>
+                <div className={styles.statsMetric}>
+                  <span className={styles.metricLabel}>Watched</span>
+                  <span className={styles.metricValue}>{stats.watched}</span>
+                </div>
+                <div className={styles.metricBar}>
+                  <div
+                    className={styles.metricFill}
+                    style={{ width: `${stats.total ? stats.watchedPercent : 0}%` }}
+                  />
+                </div>
+              </li>
+              <li className={styles.statsRow}>
+                <div className={styles.statsMetric}>
+                  <span className={styles.metricLabel}>On deck</span>
+                  <span className={styles.metricValue}>{stats.pending}</span>
+                </div>
+                <div className={styles.metricBar}>
+                  <div
+                    className={styles.metricFillPending}
+                    style={{ width: `${stats.total ? stats.pendingPercent : 0}%` }}
+                  />
+                </div>
+              </li>
+            </ul>
+            <div className={styles.statsFootnote}>
+              {lastUpdated ? `Last update ${lastUpdated}` : 'No updates yet'}
+              {lastSyncedAgo ? ` • Synced ${lastSyncedAgo}` : ''}
+            </div>
+          </aside>
         </div>
       ) : (
         <div className={styles.content}>
