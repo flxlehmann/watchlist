@@ -9,13 +9,23 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 export async function POST(req: NextRequest, { params }: { params: { id: string }}){
   const list = await getList(params.id);
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  const { title, addedBy, poster } = await req.json();
+  const { title, addedBy, poster, runtimeMinutes, releaseDate } = await req.json();
+  const runtimeValue =
+    typeof runtimeMinutes === 'number' && Number.isFinite(runtimeMinutes)
+      ? Math.max(0, Math.round(runtimeMinutes))
+      : undefined;
+  const releaseValue =
+    typeof releaseDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(releaseDate.trim())
+      ? releaseDate.trim()
+      : undefined;
   const item: Item = {
     id: crypto.randomUUID(),
     title: String(title || '').trim().slice(0, 140),
     watched: false,
     addedBy: addedBy ? String(addedBy).slice(0, 40) : undefined,
     poster: poster ? String(poster) : undefined,
+    runtimeMinutes: runtimeValue,
+    releaseDate: releaseValue,
     createdAt: now(),
     updatedAt: now()
   };
@@ -28,13 +38,25 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string }}){
   const list = await getList(params.id);
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  const { itemId, title, watched, poster } = await req.json();
+  const { itemId, title, watched, poster, runtimeMinutes, releaseDate } = await req.json();
   const idx = list.items.findIndex(i => i.id === itemId);
   if(idx === -1) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
   const item = list.items[idx];
   if(typeof title === 'string') item.title = title.trim().slice(0, 140);
   if(typeof watched === 'boolean') item.watched = watched;
   if(typeof poster === 'string' || poster === null) item.poster = poster || undefined;
+  if(typeof runtimeMinutes === 'number' && Number.isFinite(runtimeMinutes)){
+    item.runtimeMinutes = Math.max(0, Math.round(runtimeMinutes));
+  }
+  if(runtimeMinutes === null){
+    item.runtimeMinutes = undefined;
+  }
+  if(typeof releaseDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(releaseDate.trim())){
+    item.releaseDate = releaseDate.trim();
+  }
+  if(releaseDate === null){
+    item.releaseDate = undefined;
+  }
   item.updatedAt = now();
   list.items[idx] = item;
   list.updatedAt = now();

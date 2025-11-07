@@ -18,7 +18,8 @@ export async function GET(req: NextRequest){
     id: m.id,
     title: m.title || m.original_title || '',
     year: (m.release_date || '').slice(0,4) || undefined,
-    poster: m.poster_path ? `${base}${m.poster_path}` : undefined
+    poster: m.poster_path ? `${base}${m.poster_path}` : undefined,
+    releaseDate: m.release_date || undefined
   })) : [];
   return NextResponse.json({ results });
 }

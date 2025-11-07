@@ -22,6 +22,8 @@ type Item = {
   watched: boolean;
   addedBy?: string;
   poster?: string;
+  runtimeMinutes?: number;
+  releaseDate?: string;
   createdAt: number;
   updatedAt: number;
 };
@@ -38,7 +40,10 @@ type SearchSuggestion = {
   title: string;
   year?: string;
   poster?: string;
+  releaseDate?: string;
 };
+
+type SortOption = 'added' | 'released' | 'title';
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
@@ -85,6 +90,39 @@ function formatRelative(timestamp: number | null): string | null {
   return `${days} day${days === 1 ? '' : 's'} ago`;
 }
 
+function formatRuntime(minutes: number): string {
+  if (!minutes) return '0m';
+  const hours = Math.floor(minutes / 60);
+  const remaining = minutes % 60;
+  if (hours && remaining) return `${hours}h ${remaining}m`;
+  if (hours) return `${hours}h`;
+  return `${remaining}m`;
+}
+
+function getReleaseTimestamp(item: Item): number | null {
+  if (item.releaseDate) {
+    const parsed = Date.parse(item.releaseDate);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  const match = item.title.match(/\((\d{4})\)$/);
+  if (match) {
+    const year = Number(match[1]);
+    if (!Number.isNaN(year)) {
+      const parsed = Date.parse(`${match[1]}-01-01T00:00:00Z`);
+      if (!Number.isNaN(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
+
+function getComparableTitle(item: Item): string {
+  return item.title.replace(/\s*\(\d{4}\)$/, '').trim().toLowerCase();
+}
+
 export default function Page() {
   const [list, setList] = useState<List | null>(null);
   const [listName, setListName] = useState('');
@@ -103,8 +141,13 @@ export default function Page() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
+  const [selectedRuntime, setSelectedRuntime] = useState<number | null>(null);
+  const [selectedReleaseDate, setSelectedReleaseDate] = useState<string | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [sortOption, setSortOption] = useState<SortOption>('added');
   const blurTimeoutRef = useRef<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
+  const detailsRequestRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -129,7 +172,12 @@ export default function Page() {
         watched: 0,
         pending: 0,
         watchedPercent: 0,
-        pendingPercent: 0
+        pendingPercent: 0,
+        totalRuntime: 0,
+        watchedRuntime: 0,
+        pendingRuntime: 0,
+        watchedRuntimePercent: 0,
+        watchedRuntimeShare: 0
       };
     }
     const total = list.items.length;
@@ -137,8 +185,63 @@ export default function Page() {
     const pending = total - watched;
     const watchedPercent = total ? Math.round((watched / total) * 100) : 0;
     const pendingPercent = total ? Math.round((pending / total) * 100) : 0;
-    return { total, watched, pending, watchedPercent, pendingPercent };
+    const totalRuntime = list.items.reduce(
+      (sum, item) => sum + (item.runtimeMinutes ? Math.max(item.runtimeMinutes, 0) : 0),
+      0
+    );
+    const watchedRuntime = list.items.reduce((sum, item) => {
+      if (!item.watched) return sum;
+      return sum + (item.runtimeMinutes ? Math.max(item.runtimeMinutes, 0) : 0);
+    }, 0);
+    const pendingRuntime = Math.max(totalRuntime - watchedRuntime, 0);
+    const watchedRuntimeShare = totalRuntime
+      ? Math.min(100, Math.max((watchedRuntime / totalRuntime) * 100, 0))
+      : 0;
+    const watchedRuntimePercent = Math.round(watchedRuntimeShare);
+    return {
+      total,
+      watched,
+      pending,
+      watchedPercent,
+      pendingPercent,
+      totalRuntime,
+      watchedRuntime,
+      pendingRuntime,
+      watchedRuntimePercent,
+      watchedRuntimeShare
+    };
   }, [list]);
+
+  const sortedItems = useMemo(() => {
+    if (!list) return [] as Item[];
+    const items = [...list.items];
+    switch (sortOption) {
+      case 'released': {
+        return items.sort((a, b) => {
+          const aTime = getReleaseTimestamp(a);
+          const bTime = getReleaseTimestamp(b);
+          if (aTime === null && bTime === null) {
+            return b.createdAt - a.createdAt;
+          }
+          if (aTime === null) return 1;
+          if (bTime === null) return -1;
+          return bTime - aTime;
+        });
+      }
+      case 'title': {
+        return items.sort((a, b) => {
+          const aTitle = getComparableTitle(a);
+          const bTitle = getComparableTitle(b);
+          if (aTitle === bTitle) {
+            return a.title.localeCompare(b.title);
+          }
+          return aTitle.localeCompare(bTitle);
+        });
+      }
+      default:
+        return items.sort((a, b) => b.createdAt - a.createdAt);
+    }
+  }, [list, sortOption]);
 
   const joinList = useCallback(
     async (id: string) => {
@@ -222,13 +325,17 @@ export default function Page() {
           body: JSON.stringify({
             title: title.trim(),
             addedBy: addedBy.trim() || undefined,
-            poster: selectedPoster ?? undefined
+            poster: selectedPoster ?? undefined,
+            runtimeMinutes: selectedRuntime ?? undefined,
+            releaseDate: selectedReleaseDate ?? undefined
           })
         });
         setList(data);
         setTitle('');
         setAddedBy('');
         setSelectedPoster(null);
+        setSelectedRuntime(null);
+        setSelectedReleaseDate(null);
         setLastSynced(Date.now());
         setStatus('Item added to your watchlist.');
       } catch (err) {
@@ -237,8 +344,41 @@ export default function Page() {
         setAdding(false);
       }
     },
-    [addedBy, list, selectedPoster, title]
+    [addedBy, list, selectedPoster, selectedReleaseDate, selectedRuntime, title]
   );
+
+  const fetchSuggestionDetails = useCallback(async (id: number) => {
+    const requestId = detailsRequestRef.current + 1;
+    detailsRequestRef.current = requestId;
+    setDetailsLoading(true);
+    try {
+      const response = await fetch(`/api/movies/${id}`);
+      if (!response.ok) {
+        throw new Error('Unable to fetch details.');
+      }
+      const data = await response.json();
+      if (detailsRequestRef.current !== requestId) return;
+      const runtimeValue =
+        typeof data?.runtimeMinutes === 'number' && Number.isFinite(data.runtimeMinutes)
+          ? data.runtimeMinutes
+          : null;
+      setSelectedRuntime(runtimeValue);
+      setSelectedReleaseDate((previous) => {
+        if (typeof data?.releaseDate === 'string' && data.releaseDate) {
+          return data.releaseDate;
+        }
+        return previous;
+      });
+    } catch (err) {
+      if (detailsRequestRef.current !== requestId) return;
+      setSelectedRuntime(null);
+      console.error(err);
+    } finally {
+      if (detailsRequestRef.current === requestId) {
+        setDetailsLoading(false);
+      }
+    }
+  }, []);
 
   const handleSelectSuggestion = useCallback(
     (suggestion: SearchSuggestion) => {
@@ -250,13 +390,16 @@ export default function Page() {
       setShowSuggestions(false);
       setHighlightedIndex(-1);
       setSelectedPoster(suggestion.poster ?? null);
+      setSelectedRuntime(null);
+      setSelectedReleaseDate(suggestion.releaseDate ?? null);
+      void fetchSuggestionDetails(suggestion.id);
       if (blurTimeoutRef.current) {
         window.clearTimeout(blurTimeoutRef.current);
         blurTimeoutRef.current = null;
       }
       titleInputRef.current?.focus();
     },
-    []
+    [fetchSuggestionDetails]
   );
 
   const handleTitleChange = useCallback(
@@ -267,6 +410,10 @@ export default function Page() {
       setSuggestions([]);
       setHighlightedIndex(-1);
       setSelectedPoster(null);
+      setSelectedRuntime(null);
+      setSelectedReleaseDate(null);
+      detailsRequestRef.current += 1;
+      setDetailsLoading(false);
     },
     []
   );
@@ -407,6 +554,10 @@ export default function Page() {
   const lastSyncedAgo = formatRelative(lastSynced);
 
   useEffect(() => {
+    setSortOption('added');
+  }, [list?.id]);
+
+  useEffect(() => {
     if (!title.trim()) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -439,7 +590,8 @@ export default function Page() {
                 id: Number(item.id ?? 0),
                 title: String(item.title ?? ''),
                 year: item.year ? String(item.year) : undefined,
-                poster: item.poster ? String(item.poster) : undefined
+                poster: item.poster ? String(item.poster) : undefined,
+                releaseDate: item.releaseDate ? String(item.releaseDate) : undefined
               }))
               .filter((item: SearchSuggestion) => Boolean(item.title))
           : [];
@@ -588,21 +740,28 @@ export default function Page() {
                   onChange={(event) => setAddedBy(event.target.value)}
                   disabled={adding}
                 />
-                <button className={styles.buttonPrimary} type="submit" disabled={adding}>
-                  {adding ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
-                  {adding ? 'Adding…' : 'Add'}
+                <button className={styles.buttonPrimary} type="submit" disabled={adding || detailsLoading}>
+                  {adding || detailsLoading ? (
+                    <Loader2 size={18} className="spin" />
+                  ) : (
+                    <Plus size={18} />
+                  )}
+                  {adding ? 'Adding…' : detailsLoading ? 'Fetching details…' : 'Add'}
                 </button>
               </form>
             </section>
 
-            {list.items.length > 0 ? (
+            {sortedItems.length > 0 ? (
               <section className={styles.posterGrid}>
-                {list.items.map((item) => {
+                {sortedItems.map((item) => {
                   const yearMatch = item.title.match(/\((\d{4})\)$/);
                   const displayTitle = yearMatch
                     ? item.title.replace(/\s*\(\d{4}\)$/, '').trim()
                     : item.title;
                   const displayYear = yearMatch ? yearMatch[1] : null;
+                  const releaseYear = item.releaseDate
+                    ? item.releaseDate.slice(0, 4)
+                    : displayYear;
                   const addedByLabel = item.addedBy?.trim() || 'Unknown';
                   const initials = item.title
                     .split(' ')
@@ -631,7 +790,7 @@ export default function Page() {
                           <div className={styles.posterDetails}>
                             <h3 className={styles.posterTitle}>{displayTitle}</h3>
                             <div className={styles.posterMeta}>
-                              {displayYear && <span>{displayYear}</span>}
+                              {releaseYear && <span>{releaseYear}</span>}
                               <span>Added by {addedByLabel}</span>
                             </div>
                           </div>
@@ -680,78 +839,122 @@ export default function Page() {
               </div>
             )}
 
-            <footer className={styles.listFooter}>
-              <div className={styles.footerItem}>
-                <span className={styles.footerLabel}>ID</span>
-                <code>{list.id}</code>
-              </div>
-              {lastUpdated && (
-                <div className={styles.footerItem}>
-                  <Clock size={16} aria-hidden="true" />
-                  <span className={styles.visuallyHidden}>Last updated</span>
-                  <span className={styles.footerMeta}>{lastUpdated}</span>
-                </div>
-              )}
-              {lastSyncedAgo && (
-                <div className={styles.footerItem}>
-                  <RefreshCw size={16} aria-hidden="true" />
-                  <span className={styles.visuallyHidden}>Last synced</span>
-                  <span className={styles.footerMeta}>{lastSyncedAgo}</span>
-                </div>
-              )}
-            </footer>
           </div>
 
-          <aside className={styles.statsPanel} aria-label="Watchlist statistics">
-            <header className={styles.statsHeader}>
-              <h2>List stats</h2>
-              <span className={styles.statsTotal}>
-                {stats.total} title{stats.total === 1 ? '' : 's'}
-              </span>
-            </header>
-            <ul className={styles.statsList}>
-              <li className={styles.statsRow}>
-                <div className={styles.statsMetric}>
-                  <span className={styles.metricLabel}>Watched</span>
-                  <span className={styles.metricValue}>{stats.watched}</span>
-                </div>
-                <div className={styles.metricBar}>
-                  <div
-                    className={styles.metricFill}
-                    style={{ width: `${stats.total ? stats.watchedPercent : 0}%` }}
-                  />
-                </div>
-              </li>
-              <li className={styles.statsRow}>
-                <div className={styles.statsMetric}>
-                  <span className={styles.metricLabel}>On deck</span>
-                  <span className={styles.metricValue}>{stats.pending}</span>
-                </div>
-                <div className={styles.metricBar}>
-                  <div
-                    className={styles.metricFillPending}
-                    style={{ width: `${stats.total ? stats.pendingPercent : 0}%` }}
-                  />
-                </div>
-              </li>
-            </ul>
-            <div className={styles.statsFootnote}>
-              {lastUpdated ? (
-                <span className={styles.statsFootnoteItem}>
-                  <Clock size={14} aria-hidden="true" />
-                  <span className={styles.visuallyHidden}>Last updated</span>
-                  {lastUpdated}
+          <aside className={styles.statsColumn} aria-label="Watchlist controls and statistics">
+            <div className={styles.sortControls} role="radiogroup" aria-label="Sort watchlist">
+              <span className={styles.sortLabel}>Sort titles</span>
+              <div className={styles.sortButtons}>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    sortOption === 'added' ? styles.sortButtonActive : ''
+                  }`}
+                  onClick={() => setSortOption('added')}
+                  aria-pressed={sortOption === 'added'}
+                >
+                  Time added
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    sortOption === 'released' ? styles.sortButtonActive : ''
+                  }`}
+                  onClick={() => setSortOption('released')}
+                  aria-pressed={sortOption === 'released'}
+                >
+                  Release date
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    sortOption === 'title' ? styles.sortButtonActive : ''
+                  }`}
+                  onClick={() => setSortOption('title')}
+                  aria-pressed={sortOption === 'title'}
+                >
+                  Alphabetical
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.statsPanel} aria-label="Watchlist statistics">
+              <header className={styles.statsHeader}>
+                <h2>List stats</h2>
+                <span className={styles.statsTotal}>
+                  {stats.total} title{stats.total === 1 ? '' : 's'}
                 </span>
+              </header>
+              <ul className={styles.statsList}>
+                <li className={styles.statsRow}>
+                  <div className={styles.statsMetric}>
+                    <span className={styles.metricLabel}>Watched</span>
+                    <span className={styles.metricValue}>{stats.watched}</span>
+                  </div>
+                  <div className={styles.metricBar}>
+                    <div
+                      className={styles.metricFill}
+                      style={{ width: `${stats.total ? stats.watchedPercent : 0}%` }}
+                    />
+                  </div>
+                </li>
+                <li className={styles.statsRow}>
+                  <div className={styles.statsMetric}>
+                    <span className={styles.metricLabel}>On deck</span>
+                    <span className={styles.metricValue}>{stats.pending}</span>
+                  </div>
+                  <div className={styles.metricBar}>
+                    <div
+                      className={styles.metricFillPending}
+                      style={{ width: `${stats.total ? stats.pendingPercent : 0}%` }}
+                    />
+                  </div>
+                </li>
+              </ul>
+              {stats.totalRuntime > 0 ? (
+                <div className={styles.runtimeSection}>
+                  <div className={styles.runtimeHeader}>
+                    <span className={styles.metricLabel}>Runtime</span>
+                    <span className={styles.runtimePercent}>{stats.watchedRuntimePercent}% watched</span>
+                  </div>
+                  <div className={styles.runtimeSummary}>
+                    <span>Watched {formatRuntime(stats.watchedRuntime)}</span>
+                    <span>Total {formatRuntime(stats.totalRuntime)}</span>
+                  </div>
+                  <div
+                    className={styles.runtimeBar}
+                    role="img"
+                    aria-label={`Watched ${stats.watchedRuntimePercent}% of total runtime`}
+                  >
+                    <div
+                      className={styles.runtimeBarFill}
+                      style={{ width: `${stats.watchedRuntimeShare}%` }}
+                    />
+                  </div>
+                </div>
               ) : (
-                <span className={styles.statsFootnoteItem}>No updates yet</span>
+                <div className={styles.runtimeEmpty}>
+                  Runtime insights will appear when titles include runtime data.
+                </div>
               )}
-              {lastSyncedAgo && (
-                <span className={styles.statsFootnoteItem}>
-                  <RefreshCw size={14} aria-hidden="true" />
-                  <span className={styles.visuallyHidden}>Last synced</span>
-                  {lastSyncedAgo}
-                </span>
-              )}
+              <div className={styles.statsFootnote}>
+                {lastUpdated ? (
+                  <span className={styles.statsFootnoteItem}>
+                    <Clock size={14} aria-hidden="true" />
+                    <span className={styles.visuallyHidden}>Last updated</span>
+                    {lastUpdated}
+                  </span>
+                ) : (
+                  <span className={styles.statsFootnoteItem}>No updates yet</span>
+                )}
+                {lastSyncedAgo && (
+                  <span className={styles.statsFootnoteItem}>
+                    <RefreshCw size={14} aria-hidden="true" />
+                    <span className={styles.visuallyHidden}>Last synced</span>
+                    {lastSyncedAgo}
+                  </span>
+                )}
+              </div>
             </div>
           </aside>
         </div>

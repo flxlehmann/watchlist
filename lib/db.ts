@@ -6,6 +6,8 @@ export type Item = {
   watched: boolean;
   addedBy?: string;
   poster?: string;
+  runtimeMinutes?: number;
+  releaseDate?: string;
   createdAt: number;
   updatedAt: number;
 };
