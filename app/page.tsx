@@ -34,7 +34,7 @@ export default function Page(){
   const [showSugs, setShowSugs] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [posterForNextAdd, setPosterForNextAdd] = useState<string | undefined>(undefined);
-  const [view, setView] = useState<'list'|'grid'>(() => (typeof window !== 'undefined' ? (localStorage.getItem('view') as 'list'|'grid' | null) : null) || 'list');
+    const [view, setView] = useState<'list'|'grid'>(() => (typeof window !== 'undefined' ? (localStorage.getItem('view') as 'list'|'grid' | null) : null) || 'list');
   const pollRef = useRef<number | null>(null);
   const acTimer = useRef<number | null>(null);
   const acAbort = useRef<AbortController | null>(null);
