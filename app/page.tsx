@@ -367,13 +367,6 @@ export default function Page() {
           )}
 
           <section className={styles.formCard}>
-            <div>
-              <h2 className={styles.formTitle}>Add a title</h2>
-              <p className={styles.formDescription}>
-                Drop in the next movie or episode you want to watch. You can optionally
-                tag who added it for quick context later.
-              </p>
-            </div>
             <form className={`${styles.form} ${styles.formInline}`} onSubmit={addItem}>
               <label className={styles.visuallyHidden} htmlFor="title">
                 Title
@@ -404,29 +397,6 @@ export default function Page() {
               </button>
             </form>
           </section>
-
-          <footer className={styles.listFooter}>
-            <div className={styles.footerItem}>
-              <span className={styles.footerLabel}>ID</span>
-              <code>{list.id}</code>
-            </div>
-            {lastUpdated && (
-              <div className={styles.footerItem}>
-                <span className={styles.footerLabel}>Updated</span>
-                <span>
-                  <Clock size={16} /> {lastUpdated}
-                </span>
-              </div>
-            )}
-            {lastSyncedAgo && (
-              <div className={styles.footerItem}>
-                <span className={styles.footerLabel}>Synced</span>
-                <span>
-                  <RefreshCw size={16} /> {lastSyncedAgo}
-                </span>
-              </div>
-            )}
-          </footer>
 
           {list.items.length > 0 ? (
             <section className={styles.itemGrid}>
@@ -473,6 +443,29 @@ export default function Page() {
               </div>
             </div>
           )}
+
+          <footer className={styles.listFooter}>
+            <div className={styles.footerItem}>
+              <span className={styles.footerLabel}>ID</span>
+              <code>{list.id}</code>
+            </div>
+            {lastUpdated && (
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel}>Updated</span>
+                <span>
+                  <Clock size={16} /> {lastUpdated}
+                </span>
+              </div>
+            )}
+            {lastSyncedAgo && (
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel}>Synced</span>
+                <span>
+                  <RefreshCw size={16} /> {lastSyncedAgo}
+                </span>
+              </div>
+            )}
+          </footer>
         </div>
       ) : (
         <div className={styles.content}>
