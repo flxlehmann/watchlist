@@ -287,8 +287,6 @@ export default function Page(){
                       <div className="layout">
               {view==='list' ? (
 
-            <div className="layout">
-
             <div className="list">
               {list.items.length === 0 && (
                 <div className="empty">No items yet. Use the form above to add your first title 👆</div>
@@ -318,21 +316,6 @@ export default function Page(){
                   </div>
                 </div>
               ))}
-            </div>
-          
-              <aside className="stats-panel" aria-label="List statistics">
-                <div className="stats-head">Statistics</div>
-                <div className="stat-cards">
-                  <div className="stat"><div className="num">{stats.total}</div><div className="lbl">Total</div></div>
-                  <div className="stat"><div className="num">{stats.watched}</div><div className="lbl">Watched</div></div>
-                  <div className="stat"><div className="num">{stats.total - stats.watched}</div><div className="lbl">Left</div></div>
-                </div>
-                <div className="stats-bar" role="progressbar" aria-label="Watched percentage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.pct}>
-                  <span className="fill" style={{ width: `${stats.pct}%` }} />
-                </div>
-                <div className="stats-legend"><span>{stats.pct}% watched</span><span>{stats.total - stats.watched} remaining</span></div>
-              </aside>
-
             </div>
           
               ) : (
