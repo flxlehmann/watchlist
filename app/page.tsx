@@ -1,385 +1,596 @@
 'use client';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Eye, Trash2, Plus, RefreshCw, LogOut, LayoutGrid, List as ListIcon } from 'lucide-react';
 
-type Item = { id: string; title: string; watched: boolean; addedBy?: string; poster?: string; createdAt: number; updatedAt: number };
-type List = { id: string; name: string; items: Item[]; updatedAt: number };
-type Suggestion = { id: number; title: string; year?: string; poster?: string };
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Clock,
+  Copy,
+  Loader2,
+  LogOut,
+  Plus,
+  RefreshCw,
+  Sparkles,
+  Trash2
+} from 'lucide-react';
+import styles from './page.module.css';
 
-async function api<T>(path: string, opts?: RequestInit): Promise<T>{
-  const res = await fetch(path, { cache: 'no-store', ...opts });
-  if(!res.ok) throw new Error(await res.text());
+type Item = {
+  id: string;
+  title: string;
+  watched: boolean;
+  addedBy?: string;
+  poster?: string;
+  createdAt: number;
+  updatedAt: number;
+};
+
+type List = {
+  id: string;
+  name: string;
+  items: Item[];
+  updatedAt: number;
+};
+
+async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers);
+  if (init?.body && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const res = await fetch(path, {
+    cache: 'no-store',
+    ...init,
+    headers
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    let message = text || 'Request failed';
+    try {
+      const data = JSON.parse(text);
+      message = data.error ?? data.message ?? message;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(message);
+  }
+
   return res.json();
 }
 
-
-function getHiResPoster(url?: string): string | undefined {
-  if(!url) return url as any;
-  try{
-    return url.replace(/\/image\.tmdb\.org\/t\/p\/w(92|154|185|342|500|780)\//, '/image.tmdb.org/t/p/w500/');
-  }catch{ return url as any; }
+function parseError(err: unknown): string {
+  if (err instanceof Error) return err.message || 'Something went wrong.';
+  if (typeof err === 'string') return err;
+  return 'Something went wrong. Please try again.';
 }
-const timeOpts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
 
-export default function Page(){
+function formatRelative(timestamp: number | null): string | null {
+  if (!timestamp) return null;
+  const diff = Date.now() - timestamp;
+  const minutes = Math.round(diff / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  const days = Math.round(hours / 24);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
+}
+
+function formatDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  return new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
+export default function Page() {
   const [list, setList] = useState<List | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [listName, setListName] = useState('');
+  const [listIdInput, setListIdInput] = useState('');
   const [title, setTitle] = useState('');
-  const [name, setName] = useState('');
-  const [who, setWho] = useState('');
+  const [addedBy, setAddedBy] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastId, setLastId] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const [lastListId, setLastListId] = useState<string | null>(null);
   const [lastSynced, setLastSynced] = useState<number | null>(null);
-  const [sugs, setSugs] = useState<Suggestion[]>([]);
-  const [showSugs, setShowSugs] = useState(false);
-  const [activeIdx, setActiveIdx] = useState(-1);
-  const [posterForNextAdd, setPosterForNextAdd] = useState<string | undefined>(undefined);
-  const [view, setView] = useState<'list'|'grid'>(() => (typeof window !== 'undefined' ? (localStorage.getItem('view') as 'list'|'grid' | null) : null) || 'list');
-  const pollRef = useRef<number | null>(null);
-  const acTimer = useRef<number | null>(null);
-  const acAbort = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
-    const urlId = params.get('list');
-    const stored = localStorage.getItem('listId');
-    setLastId(stored || null);
-    if(urlId) join(urlId);
-  }, []);
-
-  const join = useCallback(async (id: string) => {
-    setError(null);
-    try {
-      const data = await api<List>(`/api/lists/${id}`);
-      setList(data);
-      setName(data.name);
-      localStorage.setItem('listId', id);
-      const url = new URL(window.location.href);
-      url.searchParams.set('list', id);
-      history.replaceState({}, '', url.toString());
-      setLastSynced(Date.now());
-      startPolling(id);
-    } catch(e: any){ setError(parseErr(e)); }
-  }, []);
-
-  const leave = useCallback(() => {
-    if(pollRef.current) window.clearInterval(pollRef.current);
-    localStorage.removeItem('listId');
-    setList(null);
-    setTitle('');
-    const url = new URL(window.location.href);
-    url.searchParams.delete('list');
-    history.replaceState({}, '', url.toString());
-    const stored = localStorage.getItem('listId');
-    setLastId(stored || null);
-  }, []);
-
-  const create = useCallback(async () => {
-    setLoading(true); setError(null);
-    try {
-      const data = await api<List>(`/api/lists`, { method: 'POST', body: JSON.stringify({ name }) });
-      setList(data);
-      setName(data.name);
-      localStorage.setItem('listId', data.id);
-      const url = new URL(window.location.href);
-      url.searchParams.set('list', data.id);
-      history.replaceState({}, '', url.toString());
-      setLastSynced(Date.now());
-      startPolling(data.id);
-    } catch(e: any){ setError(parseErr(e)); }
-    finally { setLoading(false); }
-  }, [name]);
-
-  const quickStart = useCallback(async () => {
-    if(list) return;
-    setName(n => n || 'Watchlist');
-    await create();
-  }, [create, list]);
-
-  // Hourly auto-sync
-  const startPolling = (id: string) => {
-    const interval = 60 * 60 * 1000;
-    if(pollRef.current) window.clearInterval(pollRef.current);
-    pollRef.current = window.setInterval(async () => {
-      await refresh(id);
-    }, interval);
-  };
-  useEffect(() => () => { if(pollRef.current) window.clearInterval(pollRef.current); }, []);
-
-  const refresh = useCallback(async (id?: string) => {
-    const targetId = id ?? list?.id;
-    if(!targetId) return;
-    try {
-      const data = await api<List>(`/api/lists/${targetId}`);
-      setList(prev => (prev?.updatedAt !== data.updatedAt ? data : prev));
-      setLastSynced(Date.now());
-    } catch(e:any){
-      setError(parseErr(e));
+    const queryId = params.get('list');
+    const stored = window.localStorage.getItem('listId');
+    if (stored) {
+      setLastListId(stored);
+      setListIdInput(stored);
     }
-  }, [list?.id]);
-
-  // Autocomplete
-  const onTitleChange = (v: string) => {
-    setTitle(v);
-    setPosterForNextAdd(undefined);
-    if(acTimer.current) window.clearTimeout(acTimer.current);
-    if(acAbort.current){ acAbort.current.abort(); acAbort.current = null; }
-    if(!v.trim()){
-      setSugs([]); setShowSugs(false); return;
+    if (queryId) {
+      setListIdInput(queryId);
+      void joinList(queryId);
     }
-    acTimer.current = window.setTimeout(async () => {
-      try{
-        acAbort.current = new AbortController();
-        const r = await fetch(`/api/search?q=${encodeURIComponent(v.trim())}`, { signal: acAbort.current.signal });
-        if(!r.ok) throw new Error(await r.text());
-        const j = await r.json();
-        setSugs(j.results || []);
-        setShowSugs(true);
-        setActiveIdx(-1);
-      }catch(_){}
-      finally{ acAbort.current = null; }
-    }, 250);
-  };
-
-  const pick = (s: Suggestion) => {
-    const t = s.year ? `${s.title} (${s.year})` : s.title;
-    setTitle(t);
-    setPosterForNextAdd(s.poster);
-    setShowSugs(false);
-    setActiveIdx(-1);
-  };
-
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if(!showSugs || sugs.length === 0) return;
-    if(e.key === 'ArrowDown'){ e.preventDefault(); setActiveIdx(i => Math.min(i+1, sugs.length-1)); }
-    else if(e.key === 'ArrowUp'){ e.preventDefault(); setActiveIdx(i => Math.max(i-1, 0)); }
-    else if(e.key === 'Enter'){
-      if(activeIdx >= 0){ e.preventDefault(); pick(sugs[activeIdx]); }
-    } else if(e.key === 'Escape'){ setShowSugs(false); setActiveIdx(-1); }
-  };
-
-  const add = useCallback(async () => {
-    if(!list) return;
-    const titleClean = title.trim();
-    if(!titleClean) return;
-    const poster = posterForNextAdd;
-    setTitle(''); setPosterForNextAdd(undefined); setSugs([]); setShowSugs(false); setActiveIdx(-1);
-    try{
-      const data = await api<List>(`/api/lists/${list.id}`, { method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
-      setList(data);
-      setLastSynced(Date.now());
-    }catch(e:any){ setError(parseErr(e)); }
-  }, [list, title, who, posterForNextAdd]);
-
-  const update = useCallback(async (itemId: string, patch: Partial<Pick<Item, 'title'|'watched'|'poster'>>) => {
-    if(!list) return;
-    try{
-      const data = await api<List>(`/api/lists/${list.id}`, { method:'PATCH', body: JSON.stringify({ itemId, ...patch }) });
-      setList(data);
-      setLastSynced(Date.now());
-    }catch(e:any){ setError(parseErr(e)); }
-  }, [list]);
-
-  const remove = useCallback(async (itemId: string) => {
-    if(!list) return;
-    try{
-      const data = await api<List>(`/api/lists/${list.id}`, { method:'DELETE', body: JSON.stringify({ itemId }) });
-      setList(data);
-      setLastSynced(Date.now());
-    }catch(e:any){ setError(parseErr(e)); }
-  }, [list]);
-
-  const shareUrl = useMemo(() => list ? `${location.origin}?list=${encodeURIComponent(list.id)}` : '', [list]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const stats = useMemo(() => {
-    const total = list?.items.length ?? 0;
-    const watched = list ? list.items.filter(i => i.watched).length : 0;
-    const pct = total ? Math.round((watched / total) * 1000) / 10 : 0;
-    return { total, watched, pct };
+    if (!list) return { total: 0, watched: 0, pending: 0 };
+    const total = list.items.length;
+    const watched = list.items.filter((item) => item.watched).length;
+    return { total, watched, pending: total - watched };
   }, [list]);
 
-  useEffect(() => {
-    localStorage.setItem('view', view);
-  }, [view]);
+  const joinList = useCallback(
+    async (id: string) => {
+      const cleanId = id.trim();
+      if (!cleanId) {
+        setError('Enter a list ID to continue.');
+        return;
+      }
+      setJoining(true);
+      setError(null);
+      setStatus(null);
+      try {
+        const data = await api<List>(`/api/lists/${cleanId}`);
+        setList(data);
+        setListName(data.name);
+        setLastSynced(Date.now());
+        setLastListId(data.id);
+        setListIdInput('');
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('listId', data.id);
+          const url = new URL(window.location.href);
+          url.searchParams.set('list', data.id);
+          window.history.replaceState({}, '', url.toString());
+        }
+      } catch (err) {
+        setError(parseError(err));
+      } finally {
+        setJoining(false);
+      }
+    },
+    []
+  );
+
+  const createList = useCallback(async () => {
+    setCreating(true);
+    setError(null);
+    setStatus(null);
+    try {
+      const data = await api<List>(`/api/lists`, {
+        method: 'POST',
+        body: JSON.stringify({ name: listName.trim() || 'Watchlist' })
+      });
+      setList(data);
+      setListName(data.name);
+      setLastSynced(Date.now());
+      setLastListId(data.id);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('listId', data.id);
+        const url = new URL(window.location.href);
+        url.searchParams.set('list', data.id);
+        window.history.replaceState({}, '', url.toString());
+      }
+    } catch (err) {
+      setError(parseError(err));
+    } finally {
+      setCreating(false);
+    }
+  }, [listName]);
+
+  const quickStart = useCallback(async () => {
+    if (list) return;
+    if (!listName.trim()) setListName('Watchlist');
+    await createList();
+  }, [createList, list, listName]);
+
+  const addItem = useCallback(
+    async (event?: React.FormEvent) => {
+      event?.preventDefault();
+      if (!list) return;
+      if (!title.trim()) {
+        setError('Add a title to include an item.');
+        setStatus(null);
+        return;
+      }
+      setAdding(true);
+      setError(null);
+      setStatus(null);
+      try {
+        const data = await api<List>(`/api/lists/${list.id}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            title: title.trim(),
+            addedBy: addedBy.trim() || undefined
+          })
+        });
+        setList(data);
+        setTitle('');
+        setAddedBy('');
+        setLastSynced(Date.now());
+        setStatus('Item added to your watchlist.');
+      } catch (err) {
+        setError(parseError(err));
+      } finally {
+        setAdding(false);
+      }
+    },
+    [addedBy, list, title]
+  );
+
+  const toggleWatched = useCallback(
+    async (item: Item) => {
+      if (!list) return;
+      const optimistic = {
+        ...list,
+        items: list.items.map((i) =>
+          i.id === item.id
+            ? { ...i, watched: !item.watched, updatedAt: Date.now() }
+            : i
+        )
+      };
+      setList(optimistic);
+      setStatus(null);
+      try {
+        const data = await api<List>(`/api/lists/${list.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ itemId: item.id, watched: !item.watched })
+        });
+        setList(data);
+        setLastSynced(Date.now());
+      } catch (err) {
+        setError(parseError(err));
+        await refreshList(list.id, false);
+      }
+    },
+    [list]
+  );
+
+  const removeItem = useCallback(
+    async (item: Item) => {
+      if (!list) return;
+      setStatus(null);
+      try {
+        const data = await api<List>(`/api/lists/${list.id}`, {
+          method: 'DELETE',
+          body: JSON.stringify({ itemId: item.id })
+        });
+        setList(data);
+        setLastSynced(Date.now());
+        setStatus('Item removed.');
+      } catch (err) {
+        setError(parseError(err));
+        await refreshList(list.id, false);
+      }
+    },
+    [list]
+  );
+
+  const refreshList = useCallback(
+    async (id?: string, showStatus = true) => {
+      const target = id ?? list?.id;
+      if (!target) return;
+      setRefreshing(true);
+      if (showStatus) {
+        setStatus('Syncing latest changes…');
+      }
+      try {
+        const data = await api<List>(`/api/lists/${target}`);
+        setList(data);
+        setLastSynced(Date.now());
+      } catch (err) {
+        setError(parseError(err));
+      } finally {
+        setRefreshing(false);
+        if (showStatus) {
+          setStatus(null);
+        }
+      }
+    },
+    [list?.id]
+  );
+
+  const leaveList = useCallback(() => {
+    const previousId = list?.id ?? null;
+    setList(null);
+    setTitle('');
+    setAddedBy('');
+    setStatus(null);
+    setError(null);
+    setLastSynced(null);
+    setListIdInput(previousId ?? '');
+    setLastListId(previousId);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('listId');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('list');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [list]);
+
+  const copyId = useCallback(async () => {
+    if (!list) return;
+    try {
+      await navigator.clipboard.writeText(list.id);
+      setStatus('List ID copied to clipboard.');
+      setError(null);
+    } catch (err) {
+      setError('Unable to copy. Copy it manually instead.');
+    }
+  }, [list]);
+
+  const lastUpdated = list ? formatRelative(list.updatedAt) : null;
+  const lastSyncedAgo = formatRelative(lastSynced);
 
   return (
-    <div className="page-wrapper">
-      <div className="card">
-        <div className="header">
-          <div className="h1">🎬 Watchlists</div>
-          <div className="sep" />
-          {list && (
-            <>
-              <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
-                {view==='list' ? <LayoutGrid size={18}/> : <ListIcon size={18}/>}
+    <main className={styles.viewport}>
+      {list ? (
+        <div className={styles.workspace}>
+          <section className={styles.listHeader}>
+            <div className={styles.listMeta}>
+              <span className={styles.listKicker}>
+                <Sparkles size={16} /> Active watchlist
+              </span>
+              <h1 className={styles.listTitle}>{list.name}</h1>
+              <div className={styles.tagRow}>
+                <span className={styles.tag}>
+                  ID: {list.id}
+                </span>
+                {lastUpdated && (
+                  <span className={styles.tag}>
+                    <Clock size={16} /> Updated {lastUpdated}
+                  </span>
+                )}
+                {lastSyncedAgo && (
+                  <span className={styles.tag}>
+                    <RefreshCw size={16} /> Synced {lastSyncedAgo}
+                  </span>
+                )}
+              </div>
+              <div className={styles.stats}>
+                <span>{stats.total} total titles</span>
+                <span>{stats.pending} on deck</span>
+                <span>{stats.watched} watched</span>
+              </div>
+            </div>
+            <div className={styles.listActions}>
+              <button className={styles.buttonSurface} onClick={copyId}>
+                <Copy size={18} /> Copy ID
               </button>
-              <button className="iconbtn blue" onClick={()=>refresh()} aria-label="Sync"><RefreshCw size={18}/></button>
-              <button className="iconbtn red" onClick={leave} aria-label="Leave list"><LogOut size={18}/></button>
-            </>
+              <button
+                className={styles.buttonSurface}
+                onClick={() => refreshList(undefined, true)}
+                disabled={refreshing}
+              >
+                {refreshing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
+                {refreshing ? 'Refreshing…' : 'Refresh'}
+              </button>
+              <button className={styles.buttonGhost} onClick={leaveList}>
+                <LogOut size={18} /> Leave list
+              </button>
+            </div>
+          </section>
+
+          {(error || status) && (
+            <div className={`${styles.status} ${error ? styles.statusError : styles.statusSuccess}`}>
+              {error ? <Trash2 size={18} /> : <CheckCircle2 size={18} />}
+              {error ?? status}
+            </div>
+          )}
+
+          <section className={styles.formCard}>
+            <div>
+              <h2 className={styles.formTitle}>Add a title</h2>
+              <p className={styles.formDescription}>
+                Drop in the next movie or episode you want to watch. You can optionally
+                tag who added it for quick context later.
+              </p>
+            </div>
+            <form className={styles.form} onSubmit={addItem}>
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel} htmlFor="title">
+                  Title
+                </label>
+                <input
+                  id="title"
+                  className={styles.inputField}
+                  placeholder="e.g. Dune: Part Two"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  disabled={adding}
+                  required
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel} htmlFor="added-by">
+                  Added by (optional)
+                </label>
+                <input
+                  id="added-by"
+                  className={styles.inputField}
+                  placeholder="Name or initials"
+                  value={addedBy}
+                  onChange={(event) => setAddedBy(event.target.value)}
+                  disabled={adding}
+                />
+              </div>
+              <div className={styles.buttonRow}>
+                <button className={styles.buttonPrimary} type="submit" disabled={adding}>
+                  {adding ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
+                  {adding ? 'Adding…' : 'Add to list'}
+                </button>
+                <button
+                  className={styles.buttonSurface}
+                  type="button"
+                  onClick={() => refreshList(list.id, true)}
+                  disabled={refreshing}
+                >
+                  {refreshing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
+                  {refreshing ? 'Syncing…' : 'Sync latest'}
+                </button>
+              </div>
+            </form>
+          </section>
+
+          {list.items.length > 0 ? (
+            <section className={styles.itemGrid}>
+              {list.items.map((item) => {
+                const meta = [
+                  item.addedBy ? `Added by ${item.addedBy}` : null,
+                  `Created ${formatDate(item.createdAt)}`
+                ].filter(Boolean);
+                return (
+                  <article
+                    key={item.id}
+                    className={`${styles.itemCard} ${item.watched ? styles.itemWatched : ''}`}
+                  >
+                    <h3 className={styles.itemTitle}>{item.title}</h3>
+                    <div className={styles.itemMeta}>
+                      {meta.map((entry) => (
+                        <span key={entry}>{entry}</span>
+                      ))}
+                    </div>
+                    <div className={styles.itemActions}>
+                      <button type="button" onClick={() => toggleWatched(item)}>
+                        {item.watched ? <Check size={16} /> : <CheckCircle2 size={16} />}
+                        {item.watched ? 'Watched' : 'Mark watched'}
+                      </button>
+                      <button type="button" onClick={() => removeItem(item)}>
+                        <Trash2 size={16} /> Remove
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </section>
+          ) : (
+            <div className={styles.emptyState}>
+              <CheckCircle2 size={40} />
+              <p>Your watchlist is feeling fresh. Add something to get started!</p>
+              <div className={styles.quickLinks}>
+                <button type="button" onClick={() => setTitle('Dune: Part Two')}>
+                  Suggest “Dune: Part Two”
+                </button>
+                <button type="button" onClick={() => setTitle('The Bear S03E01')}>
+                  Suggest “The Bear S03E01”
+                </button>
+              </div>
+            </div>
           )}
         </div>
+      ) : (
+        <div className={styles.content}>
+          <section className={styles.hero}>
+            <span className={styles.heroBadge}>
+              <Sparkles size={16} /> Shared watchlists
+            </span>
+            <h1 className={styles.heroTitle}>Plan movie nights with zero friction</h1>
+            <p className={styles.heroSubtitle}>
+              Spin up a watchlist in seconds, invite friends with a single link, and
+              keep track of everything you want to stream next.
+            </p>
+          </section>
 
-        {!list && (
-          <div className="hero">
-            <h2>Create a shared watchlist</h2>
-            <p>Start a new list and share the link with friends.</p>
-            <div className="cta">
-              <input className="input" placeholder="List name" onChange={e=>setName(e.target.value)} style={{maxWidth:320}} />
-              <button className="iconbtn green lg" onClick={quickStart} aria-label="Create"><Plus size={18}/></button>
+          {error && (
+            <div className={`${styles.status} ${styles.statusError}`}>
+              <Trash2 size={18} /> {error}
             </div>
-            <div style={{marginTop:16}}>or join an existing list:</div>
-            <div className="cta" style={{marginTop:10}}>
-              <input className="input" placeholder="Enter list ID" onKeyDown={e=>{ if(e.key==="Enter"){ const id=(e.target as HTMLInputElement).value.trim(); if(id) join(id);} }} style={{maxWidth:320}} />
-              <button className="iconbtn blue" onClick={()=>{
-                const el = document.querySelector<HTMLInputElement>('input[placeholder^="Enter list ID"]');
-                if(el){ const id=el.value.trim(); if(id) join(id); }
-              }} aria-label="Join"><RefreshCw size={18}/></button>
-            </div>
-            {lastId && (
-              <div className="cta" style={{marginTop:20}}>
-                <button className="iconbtn blue" onClick={()=>join(lastId!)} aria-label="Resume"><RefreshCw size={18}/></button>
-              </div>
-            )}
-          </div>
-        )}
+          )}
 
-        {list && (
-          <>
-            <div className="toolbar">
-              <div className="ac-anchor">
-                <input
-                  className="input grow"
-                  placeholder="Add a movie or show"
-                  value={title}
-                  onChange={e=>onTitleChange(e.target.value)}
-                  onKeyDown={onKeyDown}
-                  onFocus={()=>{ if(sugs.length>0) setShowSugs(true);} }
-                />
-                {showSugs && (
-                  <div className="ac">
-                    {sugs.length === 0 && <div className="ac-empty">No matches</div>}
-                    {sugs.map((s, i) => (
-                      <div
-                        key={s.id}
-                        className={`ac-item ${i===activeIdx ? 'active' : ''}`}
-                        onMouseDown={(e)=>{ e.preventDefault(); pick(s); }}
-                        onMouseEnter={()=>setActiveIdx(i)}
-                      >
-                        <span>{s.title}</span>
-                        <span className="sub">{s.year || ''}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          <section className={styles.panels}>
+            <article className={styles.panel}>
+              <div className={styles.form}>
+                <h2 className={styles.panelTitle}>Create a new list</h2>
+                <p className={styles.panelSubtitle}>
+                  Give it a name, hit create, and start dropping in titles straight away.
+                </p>
+                <div className={styles.inputGroup}>
+                  <label className={styles.inputLabel} htmlFor="list-name">
+                    List name
+                  </label>
+                  <input
+                    id="list-name"
+                    className={styles.inputField}
+                    placeholder="e.g. Friday Movie Club"
+                    value={listName}
+                    onChange={(event) => setListName(event.target.value)}
+                    disabled={creating}
+                  />
+                </div>
+                <div className={styles.buttonRow}>
+                  <button
+                    className={styles.buttonPrimary}
+                    type="button"
+                    onClick={createList}
+                    disabled={creating}
+                  >
+                    {creating ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
+                    {creating ? 'Creating…' : 'Create watchlist'}
+                  </button>
+                  <button
+                    className={styles.buttonGhost}
+                    type="button"
+                    onClick={quickStart}
+                    disabled={creating}
+                  >
+                    Quick start
+                  </button>
+                </div>
               </div>
-              <input className="input" style={{maxWidth:220, flexShrink:0}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
-              <button className="iconbtn green lg" onClick={add} aria-label="Add movie">
-                <Plus size={18} />
-              </button>
-            </div>
+            </article>
 
-            {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
-            {view==='list' ? (
-              <div className="list">
-                {list.items.length === 0 && (
-                  <div className="empty">No items yet. Use the form above to add your first title 👆</div>
-                )}
-                {list.items.map(item => (
-                  <div className={`item ${item.watched ? 'watched' : ''}`} key={item.id}>
-                    <div className="thumb">
-                      {item.poster ? <img src={getHiResPoster(item.poster)} alt="" /> : <span>🎬</span>}
-                    </div>
-                    <div className="title" title={item.title}>{item.title}</div>
-                    <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
-                    <div className="actions">
-                      <button
-                        className="iconbtn green"
-                        aria-label="Toggle watched"
-                        onClick={()=>update(item.id, { watched: !item.watched })}
-                      >
-                        <Eye size={18} />
-                      </button>
-                      <button
-                        className="iconbtn red"
-                        aria-label="Remove movie"
-                        onClick={()=>remove(item.id)}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+            <article className={styles.panel}>
+              <div className={styles.form}>
+                <h2 className={styles.panelTitle}>Open an existing list</h2>
+                <p className={styles.panelSubtitle}>
+                  Drop in a list ID to jump back into a shared queue, or continue where
+                  you left off.
+                </p>
+                <div className={styles.inputGroup}>
+                  <label className={styles.inputLabel} htmlFor="list-id">
+                    List ID
+                  </label>
+                  <input
+                    id="list-id"
+                    className={styles.inputField}
+                    placeholder="Paste the list ID"
+                    value={listIdInput}
+                    onChange={(event) => setListIdInput(event.target.value)}
+                    disabled={joining}
+                  />
+                </div>
+                <div className={styles.buttonRow}>
+                  <button
+                    className={styles.buttonSurface}
+                    type="button"
+                    onClick={() => joinList(listIdInput)}
+                    disabled={joining}
+                  >
+                    {joining ? <Loader2 size={18} className="spin" /> : <ArrowRight size={18} />}
+                    {joining ? 'Opening…' : 'Open list'}
+                  </button>
+                  {lastListId && (
+                    <button
+                      className={styles.buttonGhost}
+                      type="button"
+                      onClick={() => joinList(lastListId)}
+                      disabled={joining}
+                    >
+                      Continue last list
+                    </button>
+                  )}
+                </div>
               </div>
-            ) : (
-              <div className="grid">
-                {list.items.length === 0 && (
-                  <div className="empty" style={{gridColumn:'1 / -1'}}>No items yet. Use the form above to add your first title 👆</div>
-                )}
-                {list.items.map(item => (
-                  <div className={`poster-card ${item.watched ? 'watched' : ''}`} key={item.id}>
-                    <div className="poster">
-                      {item.poster ? (
-                        <img src={getHiResPoster(item.poster)} alt="" />
-                      ) : (
-                        <div className="poster-fallback">🎬</div>
-                      )}
-                      <div className="hover">
-                        <div className="meta">
-                          <div className="title" title={item.title}>{item.title}</div>
-                          {item.addedBy ? <div className="sub">by {item.addedBy}</div> : null}
-                        </div>
-                        <div className="actions">
-                          <button
-                            className="iconbtn green"
-                            aria-label="Toggle watched"
-                            onClick={()=>update(item.id, { watched: !item.watched })}
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            className="iconbtn red"
-                            aria-label="Remove movie"
-                            onClick={()=>remove(item.id)}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="footer">
-              <span className="sub">Share this link:</span>
-              <span className="badge copy" onClick={()=>{ navigator.clipboard?.writeText(shareUrl); }} title="Click to copy">{shareUrl}</span>
-              <span className="badge">list: <span className="copy">{list.id}</span></span>
-              <div className="sep" />
-              <span className="sub">Updated: {new Date(list.updatedAt).toLocaleTimeString([], timeOpts)}</span>
-              {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString([], timeOpts)}</span>}
-            </div>
-          </>
-        )}
-      </div>
-      {list && (
-        <aside className="stats-panel floating" aria-label="List statistics">
-          <div className="stats-head">Statistics</div>
-          <div className="stat-cards">
-            <div className="stat"><div className="num">{stats.total}</div><div className="lbl">Total</div></div>
-            <div className="stat"><div className="num">{stats.watched}</div><div className="lbl">Watched</div></div>
-            <div className="stat"><div className="num">{stats.total - stats.watched}</div><div className="lbl">Left</div></div>
-          </div>
-          <div className="stats-bar" role="progressbar" aria-label="Watched percentage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.pct}>
-            <span className="fill" style={{ width: `${stats.pct}%` }} />
-          </div>
-          <div className="stats-legend"><span>{stats.pct}% watched</span><span>{stats.total - stats.watched} remaining</span></div>
-        </aside>
+            </article>
+          </section>
+        </div>
       )}
-    </div>
+    </main>
   );
-}
-
-function parseErr(e: any){
-  try{ const j = JSON.parse(String(e?.message ?? e)); return j.error || String(e); }catch{ return String(e?.message ?? e); }
 }
