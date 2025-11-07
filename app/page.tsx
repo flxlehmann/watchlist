@@ -203,122 +203,114 @@ export default function Page(){
   }, [view]);
 
   return (
-    <div className="card">
-      <div className="header">
-        <div className="h1">🎬 Watchlists</div>
-        <div className="sep" />
-        {list && (
-          <>
-            <div className="stats">
-              <span className="sub">{stats.watched} watched</span>
-              <div className="progress" aria-hidden="true">
-                <span style={{ width: `${stats.pct}%` }} />
-              </div>
-              <span className="sub">{stats.pct}%</span>
-            </div>
-            <div className="sep" />
-            <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
-              {view==='list' ? <LayoutGrid size={18}/> : <ListIcon size={18}/>}
-            </button>
-            <button className="iconbtn blue" onClick={()=>refresh()} aria-label="Sync"><RefreshCw size={18}/></button>
-            <button className="iconbtn red" onClick={leave} aria-label="Leave list"><LogOut size={18}/></button>
-          </>
-        )}
-      </div>
-
-      {!list && (
-        <div className="hero">
-          <h2>Create a shared watchlist</h2>
-          <p>Start a new list and share the link with friends.</p>
-          <div className="cta">
-            <input className="input" placeholder="List name" onChange={e=>setName(e.target.value)} style={{maxWidth:320}} />
-            <button className="iconbtn green lg" onClick={quickStart} aria-label="Create"><Plus size={18}/></button>
-          </div>
-          <div style={{marginTop:16}}>or join an existing list:</div>
-          <div className="cta" style={{marginTop:10}}>
-            <input className="input" placeholder="Enter list ID" onKeyDown={e=>{ if(e.key==="Enter"){ const id=(e.target as HTMLInputElement).value.trim(); if(id) join(id);} }} style={{maxWidth:320}} />
-            <button className="iconbtn blue" onClick={()=>{
-              const el = document.querySelector<HTMLInputElement>('input[placeholder^="Enter list ID"]');
-              if(el){ const id=el.value.trim(); if(id) join(id); }
-            }} aria-label="Join"><RefreshCw size={18}/></button>
-          </div>
-          {lastId && (
-            <div className="cta" style={{marginTop:20}}>
-              <button className="iconbtn blue" onClick={()=>join(lastId!)} aria-label="Resume"><RefreshCw size={18}/></button>
-            </div>
+    <div className="page-wrapper">
+      <div className="card">
+        <div className="header">
+          <div className="h1">🎬 Watchlists</div>
+          <div className="sep" />
+          {list && (
+            <>
+              <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
+                {view==='list' ? <LayoutGrid size={18}/> : <ListIcon size={18}/>}
+              </button>
+              <button className="iconbtn blue" onClick={()=>refresh()} aria-label="Sync"><RefreshCw size={18}/></button>
+              <button className="iconbtn red" onClick={leave} aria-label="Leave list"><LogOut size={18}/></button>
+            </>
           )}
         </div>
-      )}
 
-      {list && (
-        <>
-          <div className="toolbar">
-            <div className="ac-anchor">
-              <input
-                className="input grow"
-                placeholder="Add a movie or show"
-                value={title}
-                onChange={e=>onTitleChange(e.target.value)}
-                onKeyDown={onKeyDown}
-                onFocus={()=>{ if(sugs.length>0) setShowSugs(true);} }
-              />
-              {showSugs && (
-                <div className="ac">
-                  {sugs.length === 0 && <div className="ac-empty">No matches</div>}
-                  {sugs.map((s, i) => (
-                    <div
-                      key={s.id}
-                      className={`ac-item ${i===activeIdx ? 'active' : ''}`}
-                      onMouseDown={(e)=>{ e.preventDefault(); pick(s); }}
-                      onMouseEnter={()=>setActiveIdx(i)}
-                    >
-                      <span>{s.title}</span>
-                      <span className="sub">{s.year || ''}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+        {!list && (
+          <div className="hero">
+            <h2>Create a shared watchlist</h2>
+            <p>Start a new list and share the link with friends.</p>
+            <div className="cta">
+              <input className="input" placeholder="List name" onChange={e=>setName(e.target.value)} style={{maxWidth:320}} />
+              <button className="iconbtn green lg" onClick={quickStart} aria-label="Create"><Plus size={18}/></button>
             </div>
-            <input className="input" style={{maxWidth:220, flexShrink:0}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
-            <button className="iconbtn green lg" onClick={add} aria-label="Add movie">
-              <Plus size={18} />
-            </button>
+            <div style={{marginTop:16}}>or join an existing list:</div>
+            <div className="cta" style={{marginTop:10}}>
+              <input className="input" placeholder="Enter list ID" onKeyDown={e=>{ if(e.key==="Enter"){ const id=(e.target as HTMLInputElement).value.trim(); if(id) join(id);} }} style={{maxWidth:320}} />
+              <button className="iconbtn blue" onClick={()=>{
+                const el = document.querySelector<HTMLInputElement>('input[placeholder^="Enter list ID"]');
+                if(el){ const id=el.value.trim(); if(id) join(id); }
+              }} aria-label="Join"><RefreshCw size={18}/></button>
+            </div>
+            {lastId && (
+              <div className="cta" style={{marginTop:20}}>
+                <button className="iconbtn blue" onClick={()=>join(lastId!)} aria-label="Resume"><RefreshCw size={18}/></button>
+              </div>
+            )}
           </div>
+        )}
 
-          {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
-          {view==='list' ? (
-            <div className="list">
-              {list.items.length === 0 && (
-                <div className="empty">No items yet. Use the form above to add your first title 👆</div>
-              )}
-              {list.items.map(item => (
-                <div className={`item ${item.watched ? 'watched' : ''}`} key={item.id}>
-                  <div className="thumb">
-                    {item.poster ? <img src={getHiResPoster(item.poster)} alt="" /> : <span>🎬</span>}
+        {list && (
+          <>
+            <div className="toolbar">
+              <div className="ac-anchor">
+                <input
+                  className="input grow"
+                  placeholder="Add a movie or show"
+                  value={title}
+                  onChange={e=>onTitleChange(e.target.value)}
+                  onKeyDown={onKeyDown}
+                  onFocus={()=>{ if(sugs.length>0) setShowSugs(true);} }
+                />
+                {showSugs && (
+                  <div className="ac">
+                    {sugs.length === 0 && <div className="ac-empty">No matches</div>}
+                    {sugs.map((s, i) => (
+                      <div
+                        key={s.id}
+                        className={`ac-item ${i===activeIdx ? 'active' : ''}`}
+                        onMouseDown={(e)=>{ e.preventDefault(); pick(s); }}
+                        onMouseEnter={()=>setActiveIdx(i)}
+                      >
+                        <span>{s.title}</span>
+                        <span className="sub">{s.year || ''}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="title" title={item.title}>{item.title}</div>
-                  <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
-                  <div className="actions">
-                    <button
-                      className="iconbtn green"
-                      aria-label="Toggle watched"
-                      onClick={()=>update(item.id, { watched: !item.watched })}
-                    >
-                      <Eye size={18} />
-                    </button>
-                    <button
-                      className="iconbtn red"
-                      aria-label="Remove movie"
-                      onClick={()=>remove(item.id)}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )}
+              </div>
+              <input className="input" style={{maxWidth:220, flexShrink:0}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
+              <button className="iconbtn green lg" onClick={add} aria-label="Add movie">
+                <Plus size={18} />
+              </button>
             </div>
-          ) : (
-            <div className="layout">
+
+            {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
+            {view==='list' ? (
+              <div className="list">
+                {list.items.length === 0 && (
+                  <div className="empty">No items yet. Use the form above to add your first title 👆</div>
+                )}
+                {list.items.map(item => (
+                  <div className={`item ${item.watched ? 'watched' : ''}`} key={item.id}>
+                    <div className="thumb">
+                      {item.poster ? <img src={getHiResPoster(item.poster)} alt="" /> : <span>🎬</span>}
+                    </div>
+                    <div className="title" title={item.title}>{item.title}</div>
+                    <div className="sub">{item.addedBy ? `by ${item.addedBy}` : ''}</div>
+                    <div className="actions">
+                      <button
+                        className="iconbtn green"
+                        aria-label="Toggle watched"
+                        onClick={()=>update(item.id, { watched: !item.watched })}
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        className="iconbtn red"
+                        aria-label="Remove movie"
+                        onClick={()=>remove(item.id)}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
               <div className="grid">
                 {list.items.length === 0 && (
                   <div className="empty" style={{gridColumn:'1 / -1'}}>No items yet. Use the form above to add your first title 👆</div>
@@ -357,30 +349,32 @@ export default function Page(){
                   </div>
                 ))}
               </div>
-              <aside className="stats-panel floating" aria-label="List statistics">
-                <div className="stats-head">Statistics</div>
-                <div className="stat-cards">
-                  <div className="stat"><div className="num">{stats.total}</div><div className="lbl">Total</div></div>
-                  <div className="stat"><div className="num">{stats.watched}</div><div className="lbl">Watched</div></div>
-                  <div className="stat"><div className="num">{stats.total - stats.watched}</div><div className="lbl">Left</div></div>
-                </div>
-                <div className="stats-bar" role="progressbar" aria-label="Watched percentage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.pct}>
-                  <span className="fill" style={{ width: `${stats.pct}%` }} />
-                </div>
-                <div className="stats-legend"><span>{stats.pct}% watched</span><span>{stats.total - stats.watched} remaining</span></div>
-              </aside>
-            </div>
-          )}
+            )}
 
-          <div className="footer">
-            <span className="sub">Share this link:</span>
-            <span className="badge copy" onClick={()=>{ navigator.clipboard?.writeText(shareUrl); }} title="Click to copy">{shareUrl}</span>
-            <span className="badge">list: <span className="copy">{list.id}</span></span>
-            <div className="sep" />
-            <span className="sub">Updated: {new Date(list.updatedAt).toLocaleTimeString([], timeOpts)}</span>
-            {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString([], timeOpts)}</span>}
+            <div className="footer">
+              <span className="sub">Share this link:</span>
+              <span className="badge copy" onClick={()=>{ navigator.clipboard?.writeText(shareUrl); }} title="Click to copy">{shareUrl}</span>
+              <span className="badge">list: <span className="copy">{list.id}</span></span>
+              <div className="sep" />
+              <span className="sub">Updated: {new Date(list.updatedAt).toLocaleTimeString([], timeOpts)}</span>
+              {lastSynced && <span className="sub" style={{marginLeft:8}}>Last synced: {new Date(lastSynced).toLocaleTimeString([], timeOpts)}</span>}
+            </div>
+          </>
+        )}
+      </div>
+      {list && (
+        <aside className="stats-panel floating" aria-label="List statistics">
+          <div className="stats-head">Statistics</div>
+          <div className="stat-cards">
+            <div className="stat"><div className="num">{stats.total}</div><div className="lbl">Total</div></div>
+            <div className="stat"><div className="num">{stats.watched}</div><div className="lbl">Watched</div></div>
+            <div className="stat"><div className="num">{stats.total - stats.watched}</div><div className="lbl">Left</div></div>
           </div>
-        </>
+          <div className="stats-bar" role="progressbar" aria-label="Watched percentage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.pct}>
+            <span className="fill" style={{ width: `${stats.pct}%` }} />
+          </div>
+          <div className="stats-legend"><span>{stats.pct}% watched</span><span>{stats.total - stats.watched} remaining</span></div>
+        </aside>
       )}
     </div>
   );
