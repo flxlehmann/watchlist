@@ -233,7 +233,7 @@ export default function Page(){
           </div>
           <div style={{marginTop:16}}>or join an existing list:</div>
           <div className="cta" style={{marginTop:10}}>
-            <input className="input" placeholder="Enter list ID…" onKeyDown={(e)=>{ if(e.key==='Enter'){ const id=(e.target as HTMLInputElement).value.trim(); if(id) join(id);} }} style={{maxWidth:320}} />
+            <input className="input" placeholder="Enter list ID" onKeyDown={e=>{ if(e.key==="Enter"){ const id=(e.target as HTMLInputElement).value.trim(); if(id) join(id);} }} style={{maxWidth:320}} />
             <button className="iconbtn blue" onClick={()=>{
               const el = document.querySelector<HTMLInputElement>('input[placeholder^="Enter list ID"]');
               if(el){ const id=el.value.trim(); if(id) join(id); }
