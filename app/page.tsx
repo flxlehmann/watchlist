@@ -333,47 +333,29 @@ export default function Page() {
       {list ? (
         <div className={styles.workspace}>
           <section className={styles.listHeader}>
-            <div className={styles.listMeta}>
-              <span className={styles.listKicker}>
-                <Sparkles size={16} /> Active watchlist
-              </span>
+            <div className={styles.listTitleRow}>
               <h1 className={styles.listTitle}>{list.name}</h1>
-              <div className={styles.tagRow}>
-                <span className={styles.tag}>
-                  ID: {list.id}
-                </span>
-                {lastUpdated && (
-                  <span className={styles.tag}>
-                    <Clock size={16} /> Updated {lastUpdated}
-                  </span>
-                )}
-                {lastSyncedAgo && (
-                  <span className={styles.tag}>
-                    <RefreshCw size={16} /> Synced {lastSyncedAgo}
-                  </span>
-                )}
-              </div>
-              <div className={styles.stats}>
-                <span>{stats.total} total titles</span>
-                <span>{stats.pending} on deck</span>
-                <span>{stats.watched} watched</span>
+              <div className={styles.listActions}>
+                <button className={styles.buttonSurface} onClick={copyId}>
+                  <Copy size={18} /> Copy ID
+                </button>
+                <button
+                  className={styles.buttonSurface}
+                  onClick={() => refreshList(undefined, true)}
+                  disabled={refreshing}
+                >
+                  {refreshing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
+                  {refreshing ? 'Refreshing…' : 'Refresh'}
+                </button>
+                <button className={styles.buttonGhost} onClick={leaveList}>
+                  <LogOut size={18} /> Leave list
+                </button>
               </div>
             </div>
-            <div className={styles.listActions}>
-              <button className={styles.buttonSurface} onClick={copyId}>
-                <Copy size={18} /> Copy ID
-              </button>
-              <button
-                className={styles.buttonSurface}
-                onClick={() => refreshList(undefined, true)}
-                disabled={refreshing}
-              >
-                {refreshing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
-                {refreshing ? 'Refreshing…' : 'Refresh'}
-              </button>
-              <button className={styles.buttonGhost} onClick={leaveList}>
-                <LogOut size={18} /> Leave list
-              </button>
+            <div className={styles.stats}>
+              <span>{stats.total} total titles</span>
+              <span>{stats.pending} on deck</span>
+              <span>{stats.watched} watched</span>
             </div>
           </section>
 
@@ -392,51 +374,59 @@ export default function Page() {
                 tag who added it for quick context later.
               </p>
             </div>
-            <form className={styles.form} onSubmit={addItem}>
-              <div className={styles.inputGroup}>
-                <label className={styles.inputLabel} htmlFor="title">
-                  Title
-                </label>
-                <input
-                  id="title"
-                  className={styles.inputField}
-                  placeholder="e.g. Dune: Part Two"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  disabled={adding}
-                  required
-                />
-              </div>
-              <div className={styles.inputGroup}>
-                <label className={styles.inputLabel} htmlFor="added-by">
-                  Added by (optional)
-                </label>
-                <input
-                  id="added-by"
-                  className={styles.inputField}
-                  placeholder="Name or initials"
-                  value={addedBy}
-                  onChange={(event) => setAddedBy(event.target.value)}
-                  disabled={adding}
-                />
-              </div>
-              <div className={styles.buttonRow}>
-                <button className={styles.buttonPrimary} type="submit" disabled={adding}>
-                  {adding ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
-                  {adding ? 'Adding…' : 'Add to list'}
-                </button>
-                <button
-                  className={styles.buttonSurface}
-                  type="button"
-                  onClick={() => refreshList(list.id, true)}
-                  disabled={refreshing}
-                >
-                  {refreshing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
-                  {refreshing ? 'Syncing…' : 'Sync latest'}
-                </button>
-              </div>
+            <form className={`${styles.form} ${styles.formInline}`} onSubmit={addItem}>
+              <label className={styles.visuallyHidden} htmlFor="title">
+                Title
+              </label>
+              <input
+                id="title"
+                className={`${styles.inputField} ${styles.inputCompact}`}
+                placeholder="e.g. Dune: Part Two"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                disabled={adding}
+                required
+              />
+              <label className={styles.visuallyHidden} htmlFor="added-by">
+                Added by (optional)
+              </label>
+              <input
+                id="added-by"
+                className={`${styles.inputField} ${styles.inputCompact}`}
+                placeholder="Name or initials (optional)"
+                value={addedBy}
+                onChange={(event) => setAddedBy(event.target.value)}
+                disabled={adding}
+              />
+              <button className={styles.buttonPrimary} type="submit" disabled={adding}>
+                {adding ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
+                {adding ? 'Adding…' : 'Add to list'}
+              </button>
             </form>
           </section>
+
+          <footer className={styles.listFooter}>
+            <div className={styles.footerItem}>
+              <span className={styles.footerLabel}>ID</span>
+              <code>{list.id}</code>
+            </div>
+            {lastUpdated && (
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel}>Updated</span>
+                <span>
+                  <Clock size={16} /> {lastUpdated}
+                </span>
+              </div>
+            )}
+            {lastSyncedAgo && (
+              <div className={styles.footerItem}>
+                <span className={styles.footerLabel}>Synced</span>
+                <span>
+                  <RefreshCw size={16} /> {lastSyncedAgo}
+                </span>
+              </div>
+            )}
+          </footer>
 
           {list.items.length > 0 ? (
             <section className={styles.itemGrid}>
