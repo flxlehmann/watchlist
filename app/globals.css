@@ -61,7 +61,7 @@ button, input, textarea, select{
   border-radius:12px;
   cursor:pointer;
   transition:background .15s ease, border-color .15s ease, transform .06s ease;
-}
+color:var(--text);}
 .iconbtn.lg{width:44px;height:44px}.iconbtn:hover{filter:brightness(1.05)}.iconbtn:active{transform:translateY(1px)}.iconbtn svg{width:18px;height:18px;stroke:currentColor}
 .iconbtn.blue:hover{background:var(--blue);border-color:var(--blue-d)}.iconbtn.red:hover{background:var(--red);border-color:var(--red-d)}.iconbtn.green:hover{background:var(--green);border-color:var(--green-d)}
 .toolbar{position:relative;display:flex;gap:10px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--ring);background:linear-gradient(180deg,var(--panel),rgba(255,255,255,0))}
