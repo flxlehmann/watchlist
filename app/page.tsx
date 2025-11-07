@@ -285,9 +285,9 @@ export default function Page(){
           {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
 
           {view==='list' ? (
-            
             <div className="layout">
-              <div className="list">
+
+            <div className="list">
               {list.items.length === 0 && (
                 <div className="empty">No items yet. Use the form above to add your first title 👆</div>
               )}
@@ -314,7 +314,10 @@ export default function Page(){
                       <Trash2 size={18} />
                     </button>
                   </div>
-        
+                </div>
+              ))}
+            </div>
+          
               <aside className="stats-panel" aria-label="List statistics">
                 <div className="stats-head">Statistics</div>
                 <div className="stat-cards">
@@ -327,9 +330,7 @@ export default function Page(){
                 </div>
                 <div className="stats-legend"><span>{stats.pct}% watched</span><span>{stats.total - stats.watched} remaining</span></div>
               </aside>
-            </div>
-        </div>
-              ))}
+
             </div>
           ) : (
             
