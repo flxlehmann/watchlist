@@ -12,7 +12,8 @@ import {
   Plus,
   RefreshCw,
   Sparkles,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react';
 import styles from './page.module.css';
 
@@ -134,7 +135,9 @@ export default function Page() {
   const [adding, setAdding] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<
+    Array<{ id: number; type: 'success' | 'error'; message: string }>
+  >([]);
   const [lastListId, setLastListId] = useState<string | null>(null);
   const [lastSynced, setLastSynced] = useState<number | null>(null);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -148,6 +151,46 @@ export default function Page() {
   const blurTimeoutRef = useRef<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const detailsRequestRef = useRef(0);
+  const notificationIdRef = useRef(0);
+  const notificationTimeoutsRef = useRef<Map<number, number>>(new Map());
+
+  const dismissNotification = useCallback((id: number) => {
+    setNotifications((current) => current.filter((note) => note.id !== id));
+    if (typeof window !== 'undefined') {
+      const timeout = notificationTimeoutsRef.current.get(id);
+      if (timeout) {
+        window.clearTimeout(timeout);
+        notificationTimeoutsRef.current.delete(id);
+      }
+    }
+  }, []);
+
+  const pushNotification = useCallback(
+    (type: 'success' | 'error', message: string) => {
+      notificationIdRef.current += 1;
+      const id = notificationIdRef.current;
+      setNotifications((current) => [...current, { id, type, message }]);
+      if (typeof window !== 'undefined') {
+        const timeout = window.setTimeout(() => {
+          dismissNotification(id);
+          notificationTimeoutsRef.current.delete(id);
+        }, 4000);
+        notificationTimeoutsRef.current.set(id, timeout);
+      }
+    },
+    [dismissNotification]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined') {
+        notificationTimeoutsRef.current.forEach((timeout) => {
+          window.clearTimeout(timeout);
+        });
+      }
+      notificationTimeoutsRef.current.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -247,12 +290,15 @@ export default function Page() {
     async (id: string) => {
       const cleanId = id.trim();
       if (!cleanId) {
-        setError('Enter a list ID to continue.');
+        const message = 'Enter a list ID to continue.';
+        setError(message);
+        if (list) {
+          pushNotification('error', message);
+        }
         return;
       }
       setJoining(true);
       setError(null);
-      setStatus(null);
       try {
         const data = await api<List>(`/api/lists/${cleanId}`);
         setList(data);
@@ -267,18 +313,21 @@ export default function Page() {
           window.history.replaceState({}, '', url.toString());
         }
       } catch (err) {
-        setError(parseError(err));
+        const message = parseError(err);
+        setError(message);
+        if (list) {
+          pushNotification('error', message);
+        }
       } finally {
         setJoining(false);
       }
     },
-    []
+    [list, pushNotification]
   );
 
   const createList = useCallback(async () => {
     setCreating(true);
     setError(null);
-    setStatus(null);
     try {
       const data = await api<List>(`/api/lists`, {
         method: 'POST',
@@ -295,11 +344,13 @@ export default function Page() {
         window.history.replaceState({}, '', url.toString());
       }
     } catch (err) {
-      setError(parseError(err));
+      const message = parseError(err);
+      setError(message);
+      pushNotification('error', message);
     } finally {
       setCreating(false);
     }
-  }, [listName]);
+  }, [listName, pushNotification]);
 
   const quickStart = useCallback(async () => {
     if (list) return;
@@ -312,13 +363,13 @@ export default function Page() {
       event?.preventDefault();
       if (!list) return;
       if (!title.trim()) {
-        setError('Add a title to include an item.');
-        setStatus(null);
+        const message = 'Add a title to include an item.';
+        setError(message);
+        pushNotification('error', message);
         return;
       }
       setAdding(true);
       setError(null);
-      setStatus(null);
       try {
         const data = await api<List>(`/api/lists/${list.id}`, {
           method: 'POST',
@@ -337,14 +388,16 @@ export default function Page() {
         setSelectedRuntime(null);
         setSelectedReleaseDate(null);
         setLastSynced(Date.now());
-        setStatus('Item added to your watchlist.');
+        pushNotification('success', 'Item added to your watchlist.');
       } catch (err) {
-        setError(parseError(err));
+        const message = parseError(err);
+        setError(message);
+        pushNotification('error', message);
       } finally {
         setAdding(false);
       }
     },
-    [addedBy, list, selectedPoster, selectedReleaseDate, selectedRuntime, title]
+    [addedBy, list, pushNotification, selectedPoster, selectedReleaseDate, selectedRuntime, title]
   );
 
   const fetchSuggestionDetails = useCallback(async (id: number) => {
@@ -461,7 +514,6 @@ export default function Page() {
         )
       };
       setList(optimistic);
-      setStatus(null);
       try {
         const data = await api<List>(`/api/lists/${list.id}`, {
           method: 'PATCH',
@@ -470,17 +522,18 @@ export default function Page() {
         setList(data);
         setLastSynced(Date.now());
       } catch (err) {
-        setError(parseError(err));
+        const message = parseError(err);
+        setError(message);
+        pushNotification('error', message);
         await refreshList(list.id, false);
       }
     },
-    [list]
+    [list, pushNotification, refreshList]
   );
 
   const removeItem = useCallback(
     async (item: Item) => {
       if (!list) return;
-      setStatus(null);
       try {
         const data = await api<List>(`/api/lists/${list.id}`, {
           method: 'DELETE',
@@ -488,13 +541,15 @@ export default function Page() {
         });
         setList(data);
         setLastSynced(Date.now());
-        setStatus('Item removed.');
+        pushNotification('success', 'Item removed.');
       } catch (err) {
-        setError(parseError(err));
+        const message = parseError(err);
+        setError(message);
+        pushNotification('error', message);
         await refreshList(list.id, false);
       }
     },
-    [list]
+    [list, pushNotification, refreshList]
   );
 
   const refreshList = useCallback(
@@ -502,23 +557,21 @@ export default function Page() {
       const target = id ?? list?.id;
       if (!target) return;
       setRefreshing(true);
-      if (showStatus) {
-        setStatus('Syncing latest changes…');
-      }
       try {
         const data = await api<List>(`/api/lists/${target}`);
         setList(data);
         setLastSynced(Date.now());
       } catch (err) {
-        setError(parseError(err));
+        const message = parseError(err);
+        setError(message);
+        if (showStatus) {
+          pushNotification('error', message);
+        }
       } finally {
         setRefreshing(false);
-        if (showStatus) {
-          setStatus(null);
-        }
       }
     },
-    [list?.id]
+    [list?.id, pushNotification]
   );
 
   const leaveList = useCallback(() => {
@@ -526,7 +579,6 @@ export default function Page() {
     setList(null);
     setTitle('');
     setAddedBy('');
-    setStatus(null);
     setError(null);
     setLastSynced(null);
     setListIdInput(previousId ?? '');
@@ -543,12 +595,14 @@ export default function Page() {
     if (!list) return;
     try {
       await navigator.clipboard.writeText(list.id);
-      setStatus('List ID copied to clipboard.');
       setError(null);
+      pushNotification('success', 'List ID copied to clipboard.');
     } catch (err) {
-      setError('Unable to copy. Copy it manually instead.');
+      const message = 'Unable to copy. Copy it manually instead.';
+      setError(message);
+      pushNotification('error', message);
     }
-  }, [list]);
+  }, [list, pushNotification]);
 
   const lastUpdated = list ? formatRelative(list.updatedAt) : null;
   const lastSyncedAgo = formatRelative(lastSynced);
@@ -615,6 +669,37 @@ export default function Page() {
 
   return (
     <main className={styles.viewport}>
+      {notifications.length > 0 && (
+        <div className={styles.notificationStack} role="status" aria-live="polite">
+          {notifications.map((notification) => (
+            <div
+              key={notification.id}
+              className={`${styles.notification} ${
+                notification.type === 'success'
+                  ? styles.notificationSuccess
+                  : styles.notificationError
+              }`}
+            >
+              <div className={styles.notificationIcon} aria-hidden="true">
+                {notification.type === 'success' ? (
+                  <CheckCircle2 size={18} />
+                ) : (
+                  <Trash2 size={18} />
+                )}
+              </div>
+              <span className={styles.notificationMessage}>{notification.message}</span>
+              <button
+                type="button"
+                className={styles.notificationDismiss}
+                onClick={() => dismissNotification(notification.id)}
+                aria-label="Dismiss notification"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       {list ? (
         <div className={styles.workspace}>
           <section className={styles.listHeader}>
@@ -640,13 +725,6 @@ export default function Page() {
           </section>
 
           <div className={styles.primaryColumn}>
-            {(error || status) && (
-              <div className={`${styles.status} ${error ? styles.statusError : styles.statusSuccess}`}>
-                {error ? <Trash2 size={18} /> : <CheckCircle2 size={18} />}
-                {error ?? status}
-              </div>
-            )}
-
             <section className={styles.formCard}>
               <form className={`${styles.form} ${styles.formInline}`} onSubmit={addItem}>
                 <div className={styles.autocomplete}>
