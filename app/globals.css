@@ -253,26 +253,35 @@
 html,body{background:var(--bg)}
 body::before{
   content:"";
-  position:fixed; inset:0; z-index:-2;
+  position:fixed; inset:0; z-index:0;
   background:
     radial-gradient(1200px 800px at 10% 10%, rgba(58,160,255,0.08), transparent 60%),
-    radial-gradient(1000px 700px at 90% 30%, rgba(63,209,143,0.05), transparent 60%),
+    radial-gradient(1000px 700px at 90% 30%, rgba(63,209,143,0.06), transparent 60%),
     linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
   pointer-events:none;
 }
 body::after{
   content:"";
-  position:fixed; inset:-10% -10%; z-index:-1;
-  background: radial-gradient(60% 40% at 50% 50%, rgba(58,160,255,0.06), rgba(0,0,0,0) 70%), 
-              linear-gradient(120deg, rgba(58,160,255,0.03) 0%, rgba(63,209,143,0.03) 100%);
-  filter: blur(20px);
+  position:fixed; inset:0; z-index:0;
+  background:
+    radial-gradient(60% 40% at 60% 35%, rgba(58,160,255,0.07), rgba(0,0,0,0) 70%),
+    radial-gradient(50% 35% at 35% 70%, rgba(63,209,143,0.06), rgba(0,0,0,0) 70%);
+  filter: blur(24px);
   animation: bgShift 28s ease-in-out infinite alternate;
-  opacity:.8;
+  opacity:.9;
   pointer-events:none;
+  will-change: transform, opacity;
 }
 @keyframes bgShift{
   0%{ transform: translate3d(-2%, -1%, 0) scale(1.02) rotate(0.2deg); }
   50%{ transform: translate3d(1%, 2%, 0) scale(1.03) rotate(-0.2deg); }
   100%{ transform: translate3d(3%, -2%, 0) scale(1.02) rotate(0.1deg); }
 }
+
+
+
+/* Animation overlay stacking fix */
+html, body { height: 100%; }
+body { position: relative; background: var(--bg); }
+body > * { position: relative; z-index: 1; }
 
