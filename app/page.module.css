@@ -425,48 +425,38 @@
 
 .posterGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1.1rem;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 1.35rem;
 }
 
 .posterCard {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  background: var(--surface-raised);
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(122, 148, 228, 0.18);
-  padding: 0.85rem;
-  box-shadow: 0 18px 45px rgba(6, 9, 20, 0.45);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: calc(var(--radius-lg) * 1.15);
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(34, 40, 78, 0.85), rgba(11, 14, 28, 0.92));
+  box-shadow: 0 26px 55px rgba(6, 9, 20, 0.55);
+  transition: transform 0.28s ease, box-shadow 0.28s ease, opacity 0.28s ease;
+  isolation: isolate;
 }
 
-.posterCard:hover {
-  transform: translateY(-4px);
-  border-color: rgba(122, 148, 228, 0.45);
-  box-shadow: 0 26px 60px rgba(5, 8, 20, 0.55);
+.posterCard:hover,
+.posterCard:focus-within {
+  transform: translateY(-6px);
+  box-shadow: 0 34px 70px rgba(5, 8, 20, 0.65);
 }
 
 .posterFrame {
   position: relative;
   width: 100%;
-  aspect-ratio: 2 / 3;
-  border-radius: calc(var(--radius-md) * 1.1);
-  overflow: hidden;
-  background: linear-gradient(140deg, rgba(118, 137, 255, 0.18), rgba(16, 20, 36, 0.9));
-  display: grid;
-  place-items: center;
+  height: 100%;
 }
 
-.posterFrame img {
+.posterImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.35s ease;
-}
-
-.posterCard:hover .posterFrame img {
-  transform: scale(1.04);
+  transition: transform 0.45s ease, filter 0.45s ease;
 }
 
 .posterFallback {
@@ -474,88 +464,135 @@
   height: 100%;
   display: grid;
   place-items: center;
-  color: rgba(226, 233, 255, 0.85);
-  font-size: 1.8rem;
-  letter-spacing: 0.05em;
+  background: linear-gradient(140deg, rgba(118, 137, 255, 0.22), rgba(16, 20, 36, 0.92));
+  color: rgba(226, 233, 255, 0.88);
+  font-size: 1.9rem;
+  letter-spacing: 0.06em;
+  transition: transform 0.45s ease, filter 0.45s ease;
 }
 
 .posterFallback span {
   font-weight: 600;
 }
 
-.posterBadge {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  background: rgba(100, 244, 196, 0.85);
-  color: #05221a;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.3rem 0.55rem;
-  border-radius: 999px;
-  animation: popIn 0.4s ease;
+.posterCard:hover .posterImage,
+.posterCard:focus-within .posterImage,
+.posterCard:hover .posterFallback,
+.posterCard:focus-within .posterFallback {
+  transform: scale(1.06);
+  filter: blur(8px) brightness(0.6);
 }
 
-.posterInfo {
+.posterOverlay {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.6rem;
+  text-align: center;
+  color: #f5f7ff;
+  background: rgba(9, 13, 26, 0.55);
+  backdrop-filter: blur(18px) saturate(1.2);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.posterCard:hover .posterOverlay,
+.posterCard:focus-within .posterOverlay {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.posterDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: center;
 }
 
 .posterTitle {
+  font-size: 1.05rem;
   font-weight: 600;
-  font-size: 1.02rem;
-  line-height: 1.4;
+  letter-spacing: 0.01em;
+  margin: 0;
 }
 
 .posterMeta {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.82rem;
-  color: var(--muted);
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: rgba(218, 225, 255, 0.78);
+}
+
+.posterMeta span {
+  display: block;
 }
 
 .posterActions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.2rem;
+  gap: 0.75rem;
 }
 
-.posterActions button {
-  border-radius: var(--radius-sm);
-  padding: 0.45rem 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(122, 148, 228, 0.25);
-  color: var(--muted);
-  font-size: 0.82rem;
+.posterIconButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(228, 234, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(234, 240, 255, 0.88);
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.posterActions button:hover {
-  color: var(--text);
-  border-color: rgba(122, 148, 228, 0.45);
-  background: rgba(118, 137, 255, 0.18);
+.posterIconButton:hover {
+  transform: translateY(-2px);
+  background: rgba(122, 148, 255, 0.2);
+  border-color: rgba(159, 182, 255, 0.55);
+  color: #ffffff;
+}
+
+.posterIconButton:focus-visible {
+  outline: none;
+  transform: translateY(-2px);
+  background: rgba(122, 148, 255, 0.22);
+  border-color: rgba(159, 182, 255, 0.65);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.35);
+}
+
+.posterIconButtonActive {
+  background: rgba(100, 244, 196, 0.24);
+  border-color: rgba(100, 244, 196, 0.6);
+  color: #053222;
+}
+
+.posterIconButtonActive:hover {
+  background: rgba(100, 244, 196, 0.35);
+  border-color: rgba(100, 244, 196, 0.8);
+  color: #05221a;
+}
+
+.posterIconButtonActive:focus-visible {
+  box-shadow: 0 0 0 3px rgba(100, 244, 196, 0.45);
 }
 
 .posterWatched {
-  border-color: rgba(100, 244, 196, 0.32);
-  background: rgba(18, 27, 40, 0.95);
+  opacity: 0.28;
 }
 
-.posterWatched .posterTitle {
-  color: #dffcee;
-}
-
-.posterWatched .posterMeta {
-  color: rgba(204, 248, 230, 0.75);
-}
-
-.posterWatched .posterActions button {
-  border-color: rgba(100, 244, 196, 0.35);
+.posterWatched:hover,
+.posterWatched:focus-within {
+  opacity: 1;
 }
 
 .statsPanel {
@@ -724,17 +761,6 @@
   }
   50% {
     transform: translate3d(-10%, 6%, 0);
-  }
-}
-
-@keyframes popIn {
-  0% {
-    transform: scale(0.85);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
   }
 }
 

@@ -85,16 +85,6 @@ function formatRelative(timestamp: number | null): string | null {
   return `${days} day${days === 1 ? '' : 's'} ago`;
 }
 
-function formatDate(timestamp: number): string {
-  const date = new Date(timestamp);
-  return new Intl.DateTimeFormat('en', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date);
-}
-
 export default function Page() {
   const [list, setList] = useState<List | null>(null);
   const [listName, setListName] = useState('');
@@ -608,10 +598,12 @@ export default function Page() {
             {list.items.length > 0 ? (
               <section className={styles.posterGrid}>
                 {list.items.map((item) => {
-                  const meta = [
-                    item.addedBy ? `Added by ${item.addedBy}` : null,
-                    `Created ${formatDate(item.createdAt)}`
-                  ].filter(Boolean);
+                  const yearMatch = item.title.match(/\((\d{4})\)$/);
+                  const displayTitle = yearMatch
+                    ? item.title.replace(/\s*\(\d{4}\)$/, '').trim()
+                    : item.title;
+                  const displayYear = yearMatch ? yearMatch[1] : null;
+                  const addedByLabel = item.addedBy?.trim() || 'Unknown';
                   const initials = item.title
                     .split(' ')
                     .filter(Boolean)
@@ -625,29 +617,48 @@ export default function Page() {
                     >
                       <div className={styles.posterFrame}>
                         {item.poster ? (
-                          <img src={item.poster} alt={`${item.title} poster`} />
+                          <img
+                            src={item.poster}
+                            alt={`${displayTitle} poster`}
+                            className={styles.posterImage}
+                          />
                         ) : (
                           <div className={styles.posterFallback} aria-hidden="true">
                             <span>{initials || '🎬'}</span>
                           </div>
                         )}
-                        {item.watched && <span className={styles.posterBadge}>Watched</span>}
-                      </div>
-                      <div className={styles.posterInfo}>
-                        <h3 className={styles.posterTitle}>{item.title}</h3>
-                        <div className={styles.posterMeta}>
-                          {meta.map((entry) => (
-                            <span key={entry}>{entry}</span>
-                          ))}
-                        </div>
-                        <div className={styles.posterActions}>
-                          <button type="button" onClick={() => toggleWatched(item)}>
-                            {item.watched ? <Check size={16} /> : <CheckCircle2 size={16} />}
-                            {item.watched ? 'Watched' : 'Mark watched'}
-                          </button>
-                          <button type="button" onClick={() => removeItem(item)}>
-                            <Trash2 size={16} /> Remove
-                          </button>
+                        <div className={styles.posterOverlay}>
+                          <div className={styles.posterDetails}>
+                            <h3 className={styles.posterTitle}>{displayTitle}</h3>
+                            <div className={styles.posterMeta}>
+                              {displayYear && <span>{displayYear}</span>}
+                              <span>Added by {addedByLabel}</span>
+                            </div>
+                          </div>
+                          <div className={styles.posterActions}>
+                            <button
+                              type="button"
+                              className={`${styles.posterIconButton} ${
+                                item.watched ? styles.posterIconButtonActive : ''
+                              }`}
+                              onClick={() => toggleWatched(item)}
+                              aria-label={
+                                item.watched
+                                  ? `Mark ${displayTitle} as not watched`
+                                  : `Mark ${displayTitle} as watched`
+                              }
+                            >
+                              {item.watched ? <Check size={20} /> : <CheckCircle2 size={20} />}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.posterIconButton}
+                              onClick={() => removeItem(item)}
+                              aria-label={`Remove ${displayTitle} from list`}
+                            >
+                              <Trash2 size={20} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </article>
