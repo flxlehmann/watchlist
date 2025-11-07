@@ -165,7 +165,7 @@ export default function Page(){
     const poster = posterForNextAdd;
     setTitle(''); setPosterForNextAdd(undefined); setSugs([]); setShowSugs(false); setActiveIdx(-1);
     try{
-      const data = await api<List>(`/api/lists/${list.id}`,{ method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
+      const data = await api<List>(`/api/lists/${list.id}`, { method:'POST', body: JSON.stringify({ title: titleClean, addedBy: who, poster }) });
       setList(data);
       setLastSynced(Date.now());
     }catch(e:any){ setError(parseErr(e)); }
@@ -228,7 +228,7 @@ export default function Page(){
           <h2>Create a shared watchlist</h2>
           <p>Start a new list and share the link with friends.</p>
           <div className="cta">
-            <input className="input" placeholder="List name (optional)" value={name} onChange={e=>setName(e.target.value)} style={{maxWidth:320}} />
+            <input className="input" placeholder="List name" onChange={e=>setName(e.target.value)} style={{maxWidth:320}} />
             <button className="iconbtn green lg" onClick={quickStart} aria-label="Create"><Plus size={18}/></button>
           </div>
           <div style={{marginTop:16}}>or join an existing list:</div>
@@ -276,7 +276,7 @@ export default function Page(){
                 </div>
               )}
             </div>
-            <input className="input" style={{maxWidth:220, flex:'0 0 220px'}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
+            <input className="input" style={{maxWidth:220, flexShrink:0}} placeholder="Your name (optional)" value={who} onChange={e=>setWho(e.target.value)} />
             <button className="iconbtn green lg" onClick={add} aria-label="Add movie">
               <Plus size={18} />
             </button>
