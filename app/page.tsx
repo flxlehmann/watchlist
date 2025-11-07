@@ -502,6 +502,28 @@ export default function Page() {
     [handleSelectSuggestion, highlightedIndex, showSuggestions, suggestions]
   );
 
+  const refreshList = useCallback(
+    async (id?: string, showStatus = true) => {
+      const target = id ?? list?.id;
+      if (!target) return;
+      setRefreshing(true);
+      try {
+        const data = await api<List>(`/api/lists/${target}`);
+        setList(data);
+        setLastSynced(Date.now());
+      } catch (err) {
+        const message = parseError(err);
+        setError(message);
+        if (showStatus) {
+          pushNotification('error', message);
+        }
+      } finally {
+        setRefreshing(false);
+      }
+    },
+    [list?.id, pushNotification]
+  );
+
   const toggleWatched = useCallback(
     async (item: Item) => {
       if (!list) return;
@@ -550,28 +572,6 @@ export default function Page() {
       }
     },
     [list, pushNotification, refreshList]
-  );
-
-  const refreshList = useCallback(
-    async (id?: string, showStatus = true) => {
-      const target = id ?? list?.id;
-      if (!target) return;
-      setRefreshing(true);
-      try {
-        const data = await api<List>(`/api/lists/${target}`);
-        setList(data);
-        setLastSynced(Date.now());
-      } catch (err) {
-        const message = parseError(err);
-        setError(message);
-        if (showStatus) {
-          pushNotification('error', message);
-        }
-      } finally {
-        setRefreshing(false);
-      }
-    },
-    [list?.id, pushNotification]
   );
 
   const leaveList = useCallback(() => {
