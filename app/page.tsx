@@ -210,8 +210,8 @@ export default function Page(){
         {list && (
           <>
             <div className="stats">
-              <span className="badge">Stats: {stats.total} total • {stats.watched} watched • {stats.pct}%</span>
-              <div className="progress" aria-label="Watched percentage"><span style={{ width: `${stats.pct}%` }} /></div>
+              
+              
             </div>
             <div className="sep" />
             <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
@@ -285,7 +285,9 @@ export default function Page(){
           {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
 
           {view==='list' ? (
-            <div className="list">
+            
+            <div className="layout">
+              <div className="list">
               {list.items.length === 0 && (
                 <div className="empty">No items yet. Use the form above to add your first title 👆</div>
               )}
@@ -312,7 +314,21 @@ export default function Page(){
                       <Trash2 size={18} />
                     </button>
                   </div>
+        
+              <aside className="stats-panel" aria-label="List statistics">
+                <div className="stats-head">Statistics</div>
+                <div className="stat-cards">
+                  <div className="stat"><div className="num">{stats.total}</div><div className="lbl">Total</div></div>
+                  <div className="stat"><div className="num">{stats.watched}</div><div className="lbl">Watched</div></div>
+                  <div className="stat"><div className="num">{stats.total - stats.watched}</div><div className="lbl">Left</div></div>
                 </div>
+                <div className="stats-bar" role="progressbar" aria-label="Watched percentage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.pct}>
+                  <span className="fill" style={{ width: `${stats.pct}%` }} />
+                </div>
+                <div className="stats-legend"><span>{stats.pct}% watched</span><span>{stats.total - stats.watched} remaining</span></div>
+              </aside>
+            </div>
+        </div>
               ))}
             </div>
           ) : (
