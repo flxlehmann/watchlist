@@ -314,6 +314,202 @@
   }
 }
 
+.randomOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  z-index: 200;
+}
+
+.randomBackdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(20, 24, 54, 0.9), rgba(6, 8, 18, 0.96));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: pulseGlow 6s ease-in-out infinite;
+}
+
+.randomContent {
+  position: relative;
+  background: linear-gradient(160deg, rgba(35, 41, 90, 0.9), rgba(16, 20, 40, 0.95));
+  border: 1px solid rgba(122, 148, 228, 0.55);
+  border-radius: calc(var(--radius-xl) * 1.2);
+  padding: 2.5rem 2.75rem 2.25rem;
+  max-width: min(520px, 90vw);
+  width: 100%;
+  box-shadow: 0 32px 120px rgba(4, 6, 18, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.randomContent::before,
+.randomContent::after {
+  content: '';
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(118, 137, 255, 0.28), transparent 70%);
+  filter: blur(1.2rem);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.randomContent::before {
+  top: -80px;
+  left: -60px;
+}
+
+.randomContent::after {
+  bottom: -60px;
+  right: -40px;
+}
+
+.randomClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: 1px solid rgba(122, 148, 228, 0.4);
+  background: rgba(10, 13, 28, 0.7);
+  color: rgba(235, 240, 255, 0.85);
+  border-radius: 999px;
+  padding: 0.35rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.randomClose:hover {
+  transform: scale(1.05);
+  background: rgba(122, 148, 255, 0.2);
+}
+
+.randomClose:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(118, 137, 255, 0.4);
+}
+
+.randomHeading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(122, 148, 255, 0.12);
+  color: rgba(214, 224, 255, 0.9);
+  font-size: 0.85rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.randomBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.randomTitle {
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f7f8ff;
+  margin: 0;
+}
+
+.randomPoster {
+  width: 180px;
+  height: 270px;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  box-shadow: 0 18px 50px rgba(5, 8, 20, 0.6);
+}
+
+.randomPosterPlaceholder {
+  width: 180px;
+  height: 270px;
+  border-radius: var(--radius-lg);
+  display: grid;
+  place-items: center;
+  font-size: 3rem;
+  background: rgba(20, 24, 46, 0.7);
+  color: rgba(230, 236, 255, 0.8);
+  box-shadow: 0 18px 50px rgba(5, 8, 20, 0.6);
+}
+
+.randomCopy {
+  font-size: 1rem;
+  color: rgba(219, 228, 255, 0.82);
+  line-height: 1.6;
+  max-width: 28ch;
+}
+
+.randomActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.randomPrimary,
+.randomSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.randomPrimary {
+  background: linear-gradient(150deg, rgba(122, 148, 255, 0.88), rgba(93, 210, 255, 0.85));
+  border: none;
+  color: #061020;
+  box-shadow: 0 16px 40px rgba(20, 115, 255, 0.4);
+}
+
+.randomPrimary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 26px 60px rgba(20, 115, 255, 0.5);
+}
+
+.randomSecondary {
+  border: 1px solid rgba(122, 148, 228, 0.55);
+  background: rgba(12, 16, 34, 0.8);
+  color: rgba(219, 228, 255, 0.88);
+  box-shadow: 0 12px 34px rgba(6, 9, 24, 0.45);
+}
+
+.randomSecondary:hover {
+  transform: translateY(-2px);
+  background: rgba(122, 148, 255, 0.2);
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 
 .workspace {
   width: min(1140px, 100%);
@@ -358,6 +554,122 @@
   font-weight: 700;
   letter-spacing: -0.015em;
   margin: 0;
+}
+
+.listTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.listTitleDisplay {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.renameTrigger {
+  border: 1px solid rgba(122, 148, 228, 0.4);
+  background: rgba(15, 19, 34, 0.45);
+  color: rgba(204, 215, 255, 0.78);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.renameTrigger:hover {
+  background: rgba(122, 148, 255, 0.18);
+  border-color: rgba(122, 148, 255, 0.55);
+  color: #e5eaff;
+  transform: translateY(-1px);
+}
+
+.renameTrigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(118, 137, 255, 0.45);
+}
+
+.renameForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+  width: min(380px, 100%);
+}
+
+.renameInput {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(122, 148, 228, 0.4);
+  background: rgba(9, 12, 24, 0.9);
+  padding: 0.65rem 0.75rem;
+  color: #f7f8ff;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  width: 100%;
+}
+
+.renameInput:focus-visible {
+  outline: none;
+  border-color: rgba(122, 148, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(118, 137, 255, 0.35);
+}
+
+.renameActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.renameSave,
+.renameCancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: var(--radius-md);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.renameSave {
+  background: linear-gradient(140deg, rgba(122, 148, 255, 0.8), rgba(92, 206, 255, 0.85));
+  border: 1px solid rgba(118, 137, 255, 0.8);
+  color: #060814;
+}
+
+.renameSave:disabled {
+  opacity: 0.6;
+  transform: none;
+}
+
+.renameSave:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.renameCancel {
+  border: 1px solid rgba(122, 148, 228, 0.4);
+  background: rgba(15, 19, 34, 0.6);
+  color: rgba(204, 215, 255, 0.75);
+}
+
+.renameCancel:hover {
+  transform: translateY(-1px);
+  background: rgba(122, 148, 255, 0.18);
+  border-color: rgba(122, 148, 255, 0.55);
+  color: #e5eaff;
+}
+
+.renameCancel:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(118, 137, 255, 0.35);
 }
 
 .listActions {
@@ -669,6 +981,35 @@
 
 .statsColumn > * {
   pointer-events: auto;
+}
+
+.randomButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: calc(var(--radius-lg) * 0.8);
+  border: 1px solid rgba(122, 148, 228, 0.45);
+  background: linear-gradient(160deg, rgba(118, 137, 255, 0.22), rgba(92, 206, 255, 0.18));
+  color: #f4f6ff;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.8rem 1rem;
+  box-shadow: 0 18px 45px rgba(5, 8, 20, 0.4);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.randomButton:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 24px 60px rgba(6, 9, 25, 0.55);
+  background: linear-gradient(160deg, rgba(118, 137, 255, 0.36), rgba(92, 206, 255, 0.28));
+}
+
+.randomButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(118, 137, 255, 0.45);
 }
 
 .statsPanel {
@@ -1042,5 +1383,23 @@
 
   .listActions {
     width: 100%;
+  }
+
+  .randomOverlay {
+    padding: 1.5rem;
+  }
+
+  .randomContent {
+    padding: 1.9rem 1.6rem 1.6rem;
+  }
+
+  .randomPoster,
+  .randomPosterPlaceholder {
+    width: 150px;
+    height: 225px;
+  }
+
+  .randomActions {
+    flex-direction: column;
   }
 }

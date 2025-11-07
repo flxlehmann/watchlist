@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   Check,
@@ -44,7 +44,11 @@ type SearchSuggestion = {
   releaseDate?: string;
 };
 
-type SortOption = 'added' | 'released' | 'titleAsc' | 'titleDesc';
+type SortOption = 'added' | 'releaseAsc' | 'releaseDesc' | 'titleAsc' | 'titleDesc';
+
+function normalizeTitle(value: string): string {
+  return value.replace(/\s*\(\d{4}\)$/, '').trim().toLowerCase();
+}
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
@@ -138,6 +142,9 @@ export default function Page() {
   const [notifications, setNotifications] = useState<
     Array<{ id: number; type: 'success' | 'error'; message: string }>
   >([]);
+  const [renaming, setRenaming] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const [savingName, setSavingName] = useState(false);
   const [lastListId, setLastListId] = useState<string | null>(null);
   const [lastSynced, setLastSynced] = useState<number | null>(null);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -148,11 +155,16 @@ export default function Page() {
   const [selectedReleaseDate, setSelectedReleaseDate] = useState<string | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [sortOption, setSortOption] = useState<SortOption>('added');
+  const [randomPick, setRandomPick] = useState<Item | null>(null);
+  const [showRandomOverlay, setShowRandomOverlay] = useState(false);
+  const randomTitleId = useId();
+  const randomDescriptionId = useId();
   const blurTimeoutRef = useRef<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const detailsRequestRef = useRef(0);
   const notificationIdRef = useRef(0);
   const notificationTimeoutsRef = useRef<Map<number, number>>(new Map());
+  const randomCloseRef = useRef<HTMLButtonElement | null>(null);
 
   const dismissNotification = useCallback((id: number) => {
     setNotifications((current) => current.filter((note) => note.id !== id));
@@ -180,6 +192,16 @@ export default function Page() {
     },
     [dismissNotification]
   );
+
+  useEffect(() => {
+    if (list) {
+      setNameDraft(list.name);
+    } else {
+      setRenaming(false);
+      setShowRandomOverlay(false);
+      setRandomPick(null);
+    }
+  }, [list]);
 
   useEffect(() => {
     return () => {
@@ -259,7 +281,7 @@ export default function Page() {
     if (!list) return [] as Item[];
     const items = [...list.items];
     switch (sortOption) {
-      case 'released': {
+      case 'releaseDesc': {
         return items.sort((a, b) => {
           const aTime = getReleaseTimestamp(a);
           const bTime = getReleaseTimestamp(b);
@@ -269,6 +291,18 @@ export default function Page() {
           if (aTime === null) return 1;
           if (bTime === null) return -1;
           return bTime - aTime;
+        });
+      }
+      case 'releaseAsc': {
+        return items.sort((a, b) => {
+          const aTime = getReleaseTimestamp(a);
+          const bTime = getReleaseTimestamp(b);
+          if (aTime === null && bTime === null) {
+            return b.createdAt - a.createdAt;
+          }
+          if (aTime === null) return 1;
+          if (bTime === null) return -1;
+          return aTime - bTime;
         });
       }
       case 'titleAsc': {
@@ -374,6 +408,22 @@ export default function Page() {
       if (!list) return;
       if (!title.trim()) {
         const message = 'Add a title to include an item.';
+        setError(message);
+        pushNotification('error', message);
+        return;
+      }
+      const normalizedInput = normalizeTitle(title);
+      const hasDuplicate = list.items.some((item) => {
+        if (normalizeTitle(item.title) !== normalizedInput) {
+          return false;
+        }
+        if (selectedReleaseDate && item.releaseDate) {
+          return item.releaseDate === selectedReleaseDate;
+        }
+        return true;
+      });
+      if (hasDuplicate) {
+        const message = 'That movie is already on your watchlist.';
         setError(message);
         pushNotification('error', message);
         return;
@@ -614,12 +664,80 @@ export default function Page() {
     }
   }, [list, pushNotification]);
 
+  const saveListName = useCallback(
+    async (event?: React.FormEvent) => {
+      event?.preventDefault();
+      if (!list) return;
+      const trimmed = nameDraft.trim();
+      if (!trimmed) {
+        const message = 'Give your watchlist a name first.';
+        setError(message);
+        pushNotification('error', message);
+        return;
+      }
+      if (trimmed === list.name) {
+        setRenaming(false);
+        return;
+      }
+      setSavingName(true);
+      setError(null);
+      try {
+        const data = await api<List>(`/api/lists/${list.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ name: trimmed })
+        });
+        setList(data);
+        setListName(data.name);
+        setRenaming(false);
+        setLastSynced(Date.now());
+        pushNotification('success', 'List name updated.');
+      } catch (err) {
+        const message = parseError(err);
+        setError(message);
+        pushNotification('error', message);
+      } finally {
+        setSavingName(false);
+      }
+    },
+    [list, nameDraft, pushNotification]
+  );
+
+  const chooseRandomPick = useCallback(() => {
+    if (!list) return;
+    const unwatched = list.items.filter((item) => !item.watched);
+    if (unwatched.length === 0) {
+      const message = 'Every movie here has already been watched!';
+      setError(message);
+      pushNotification('error', message);
+      setShowRandomOverlay(false);
+      setRandomPick(null);
+      return;
+    }
+    const pick = unwatched[Math.floor(Math.random() * unwatched.length)];
+    setRandomPick(pick);
+    setShowRandomOverlay(true);
+  }, [list, pushNotification]);
+
   const lastUpdated = list ? formatRelative(list.updatedAt) : null;
   const lastSyncedAgo = formatRelative(lastSynced);
 
   useEffect(() => {
     setSortOption('added');
   }, [list?.id]);
+
+  useEffect(() => {
+    if (!showRandomOverlay) return undefined;
+    randomCloseRef.current?.focus();
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowRandomOverlay(false);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [showRandomOverlay]);
 
   useEffect(() => {
     if (!title.trim()) {
@@ -712,9 +830,123 @@ export default function Page() {
       )}
       {list ? (
         <div className={styles.workspace}>
+          {showRandomOverlay && randomPick && (
+            <div
+              className={styles.randomOverlay}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={randomTitleId}
+              aria-describedby={randomDescriptionId}
+            >
+              <div className={styles.randomBackdrop} aria-hidden="true" />
+              <div className={styles.randomContent}>
+                <button
+                  type="button"
+                  className={styles.randomClose}
+                  onClick={() => setShowRandomOverlay(false)}
+                  aria-label="Dismiss random pick"
+                  ref={randomCloseRef}
+                >
+                  <X size={20} />
+                </button>
+                <div className={styles.randomHeading}>
+                  <Sparkles size={28} aria-hidden="true" />
+                  <span className={styles.randomBadge}>Tonight's challenge</span>
+                </div>
+                <h2 id={randomTitleId} className={styles.randomTitle}>
+                  {randomPick.title}
+                </h2>
+                {randomPick.poster ? (
+                  <img
+                    src={randomPick.poster}
+                    alt=""
+                    className={styles.randomPoster}
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <div className={styles.randomPosterPlaceholder} aria-hidden="true">
+                    🎬
+                  </div>
+                )}
+                <p id={randomDescriptionId} className={styles.randomCopy}>
+                  Spin up some snacks, dim the lights, and press play. This one's waiting for you!
+                </p>
+                <div className={styles.randomActions}>
+                  <button type="button" className={styles.randomPrimary} onClick={chooseRandomPick}>
+                    <RefreshCw size={18} /> Spin again
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.randomSecondary}
+                    onClick={() => setShowRandomOverlay(false)}
+                  >
+                    <Check size={18} /> Let's watch it
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <section className={styles.listHeader}>
             <div className={styles.listTitleRow}>
-              <h1 className={styles.listTitle}>{list.name}</h1>
+              <div className={styles.listTitleGroup}>
+                {renaming ? (
+                  <form className={styles.renameForm} onSubmit={saveListName}>
+                    <label className={styles.visuallyHidden} htmlFor="list-rename">
+                      List name
+                    </label>
+                    <input
+                      id="list-rename"
+                      className={styles.renameInput}
+                      value={nameDraft}
+                      onChange={(event) => setNameDraft(event.target.value)}
+                      disabled={savingName}
+                      autoFocus
+                      onKeyDown={(event) => {
+                        if (event.key === 'Escape') {
+                          event.preventDefault();
+                          setRenaming(false);
+                          setNameDraft(list.name);
+                        }
+                      }}
+                    />
+                    <div className={styles.renameActions}>
+                      <button
+                        type="submit"
+                        className={styles.renameSave}
+                        disabled={savingName || !nameDraft.trim()}
+                      >
+                        {savingName ? <Loader2 size={16} className="spin" /> : <Check size={16} />}
+                        {savingName ? 'Saving…' : 'Save'}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.renameCancel}
+                        onClick={() => {
+                          setRenaming(false);
+                          setNameDraft(list.name);
+                        }}
+                        disabled={savingName}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className={styles.listTitleDisplay}>
+                    <h1 className={styles.listTitle}>{list.name}</h1>
+                    <button
+                      type="button"
+                      className={styles.renameTrigger}
+                      onClick={() => {
+                        setRenaming(true);
+                        setNameDraft(list.name);
+                      }}
+                    >
+                      Edit name
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className={styles.listActions}>
                 <button className={styles.buttonSurface} onClick={copyId}>
                   <Copy size={18} /> Copy ID
@@ -946,12 +1178,22 @@ export default function Page() {
                 <button
                   type="button"
                   className={`${styles.sortButton} ${
-                    sortOption === 'released' ? styles.sortButtonActive : ''
+                    sortOption === 'releaseDesc' ? styles.sortButtonActive : ''
                   }`}
-                  onClick={() => setSortOption('released')}
-                  aria-pressed={sortOption === 'released'}
+                  onClick={() => setSortOption('releaseDesc')}
+                  aria-pressed={sortOption === 'releaseDesc'}
                 >
-                  Release date
+                  Newest first
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    sortOption === 'releaseAsc' ? styles.sortButtonActive : ''
+                  }`}
+                  onClick={() => setSortOption('releaseAsc')}
+                  aria-pressed={sortOption === 'releaseAsc'}
+                >
+                  Oldest first
                 </button>
                 <button
                   type="button"
@@ -1059,6 +1301,10 @@ export default function Page() {
                 )}
               </div>
             </div>
+
+            <button type="button" className={styles.randomButton} onClick={chooseRandomPick}>
+              <Sparkles size={18} /> Surprise me
+            </button>
           </aside>
         </div>
       ) : (

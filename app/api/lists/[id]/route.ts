@@ -1,6 +1,10 @@
 export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
 import { getList, saveList, now, type Item } from '@/lib/db';
+
+function normalizeTitle(value: string): string {
+  return value.replace(/\s*\(\d{4}\)$/u, '').trim().toLowerCase();
+}
 export async function GET(_req: NextRequest, { params }: { params: { id: string }}){
   const list = await getList(params.id);
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -30,6 +34,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     updatedAt: now()
   };
   if(!item.title) return NextResponse.json({ error: 'Title required' }, { status: 422 });
+  const normalizedIncoming = normalizeTitle(item.title);
+  const hasDuplicate = list.items.some(existing => {
+    if (normalizeTitle(existing.title) !== normalizedIncoming) {
+      return false;
+    }
+    if (item.releaseDate && existing.releaseDate) {
+      return existing.releaseDate === item.releaseDate;
+    }
+    return true;
+  });
+  if(hasDuplicate){
+    return NextResponse.json({ error: 'That movie is already on this watchlist.' }, { status: 409 });
+  }
   list.items.unshift(item);
   list.updatedAt = now();
   await saveList(list);
@@ -38,7 +55,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string }}){
   const list = await getList(params.id);
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  const { itemId, title, watched, poster, runtimeMinutes, releaseDate } = await req.json();
+  const payload = await req.json();
+  if(typeof payload.name === 'string' && !payload.itemId){
+    const name = payload.name.trim().slice(0, 80);
+    if(!name){
+      return NextResponse.json({ error: 'Name required' }, { status: 422 });
+    }
+    list.name = name;
+    list.updatedAt = now();
+    await saveList(list);
+    return NextResponse.json(list);
+  }
+  const { itemId, title, watched, poster, runtimeMinutes, releaseDate } = payload;
   const idx = list.items.findIndex(i => i.id === itemId);
   if(idx === -1) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
   const item = list.items[idx];
