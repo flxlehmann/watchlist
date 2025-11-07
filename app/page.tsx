@@ -9,6 +9,7 @@ import {
   Copy,
   Loader2,
   LogOut,
+  Pencil,
   Plus,
   RefreshCw,
   Sparkles,
@@ -45,6 +46,7 @@ type SearchSuggestion = {
 };
 
 type SortOption = 'added' | 'releaseAsc' | 'releaseDesc' | 'titleAsc' | 'titleDesc';
+type VisibilityFilter = 'all' | 'watched' | 'unwatched';
 
 function normalizeTitle(value: string): string {
   return value.replace(/\s*\(\d{4}\)$/, '').trim().toLowerCase();
@@ -155,6 +157,7 @@ export default function Page() {
   const [selectedReleaseDate, setSelectedReleaseDate] = useState<string | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [sortOption, setSortOption] = useState<SortOption>('added');
+  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
   const [randomPick, setRandomPick] = useState<Item | null>(null);
   const [showRandomOverlay, setShowRandomOverlay] = useState(false);
   const randomTitleId = useId();
@@ -277,9 +280,14 @@ export default function Page() {
     };
   }, [list]);
 
-  const sortedItems = useMemo(() => {
+  const displayItems = useMemo(() => {
     if (!list) return [] as Item[];
-    const items = [...list.items];
+    let items = [...list.items];
+    if (visibilityFilter === 'watched') {
+      items = items.filter((item) => item.watched);
+    } else if (visibilityFilter === 'unwatched') {
+      items = items.filter((item) => !item.watched);
+    }
     switch (sortOption) {
       case 'releaseDesc': {
         return items.sort((a, b) => {
@@ -328,7 +336,7 @@ export default function Page() {
       default:
         return items.sort((a, b) => b.createdAt - a.createdAt);
     }
-  }, [list, sortOption]);
+  }, [list, sortOption, visibilityFilter]);
 
   const joinList = useCallback(
     async (id: string) => {
@@ -723,6 +731,7 @@ export default function Page() {
 
   useEffect(() => {
     setSortOption('added');
+    setVisibilityFilter('all');
   }, [list?.id]);
 
   useEffect(() => {
@@ -914,9 +923,9 @@ export default function Page() {
                         type="submit"
                         className={styles.renameSave}
                         disabled={savingName || !nameDraft.trim()}
+                        aria-label="Save new list name"
                       >
                         {savingName ? <Loader2 size={16} className="spin" /> : <Check size={16} />}
-                        {savingName ? 'Saving…' : 'Save'}
                       </button>
                       <button
                         type="button"
@@ -926,8 +935,9 @@ export default function Page() {
                           setNameDraft(list.name);
                         }}
                         disabled={savingName}
+                        aria-label="Cancel renaming"
                       >
-                        Cancel
+                        <X size={16} />
                       </button>
                     </div>
                   </form>
@@ -941,8 +951,10 @@ export default function Page() {
                         setRenaming(true);
                         setNameDraft(list.name);
                       }}
+                      aria-label="Edit list name"
+                      title="Edit list name"
                     >
-                      Edit name
+                      <Pencil size={18} />
                     </button>
                   </div>
                 )}
@@ -1071,9 +1083,9 @@ export default function Page() {
               </form>
             </section>
 
-            {sortedItems.length > 0 ? (
+            {displayItems.length > 0 ? (
               <section className={styles.posterGrid}>
-                {sortedItems.map((item) => {
+                {displayItems.map((item) => {
                   const yearMatch = item.title.match(/\((\d{4})\)$/);
                   const displayTitle = yearMatch
                     ? item.title.replace(/\s*\(\d{4}\)$/, '').trim()
@@ -1218,6 +1230,46 @@ export default function Page() {
               </div>
             </div>
 
+            <div
+              className={`${styles.sortControls} ${styles.filterControls}`}
+              role="radiogroup"
+              aria-label="Filter watchlist"
+            >
+              <span className={styles.sortLabel}>Filter</span>
+              <div className={styles.sortButtons}>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    visibilityFilter === 'all' ? styles.sortButtonActive : ''
+                  }`}
+                  onClick={() => setVisibilityFilter('all')}
+                  aria-pressed={visibilityFilter === 'all'}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    visibilityFilter === 'unwatched' ? styles.sortButtonActive : ''
+                  }`}
+                  onClick={() => setVisibilityFilter('unwatched')}
+                  aria-pressed={visibilityFilter === 'unwatched'}
+                >
+                  Unwatched
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    visibilityFilter === 'watched' ? styles.sortButtonActive : ''
+                  }`}
+                  onClick={() => setVisibilityFilter('watched')}
+                  aria-pressed={visibilityFilter === 'watched'}
+                >
+                  Watched
+                </button>
+              </div>
+            </div>
+
             <div className={styles.statsPanel} aria-label="Watchlist statistics">
               <header className={styles.statsHeader}>
                 <h2>List stats</h2>
@@ -1256,10 +1308,12 @@ export default function Page() {
                   <div className={styles.runtimeHeader}>
                     <span className={styles.metricLabel}>Runtime</span>
                     <span className={styles.runtimePercent}>
-                      <span className={styles.runtimePercentValue}>
+                      <span className={styles.runtimePercentValue} aria-hidden="true">
                         {stats.watchedRuntimePercent}%
                       </span>
-                      <span className={styles.runtimePercentLabel}>watched</span>
+                      <span className={styles.visuallyHidden}>
+                        {`Watched ${stats.watchedRuntimePercent}% of total runtime`}
+                      </span>
                     </span>
                   </div>
                   <div
