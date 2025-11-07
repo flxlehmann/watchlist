@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   Check,
@@ -31,6 +31,12 @@ type List = {
   name: string;
   items: Item[];
   updatedAt: number;
+};
+
+type SearchSuggestion = {
+  id: number;
+  title: string;
+  year?: string;
 };
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -102,6 +108,11 @@ export default function Page() {
   const [status, setStatus] = useState<string | null>(null);
   const [lastListId, setLastListId] = useState<string | null>(null);
   const [lastSynced, setLastSynced] = useState<number | null>(null);
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const blurTimeoutRef = useRef<number | null>(null);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -224,6 +235,66 @@ export default function Page() {
     [addedBy, list, title]
   );
 
+  const handleSelectSuggestion = useCallback(
+    (suggestion: SearchSuggestion) => {
+      const display = suggestion.year
+        ? `${suggestion.title} (${suggestion.year})`
+        : suggestion.title;
+      setTitle(display);
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setHighlightedIndex(-1);
+      if (blurTimeoutRef.current) {
+        window.clearTimeout(blurTimeoutRef.current);
+        blurTimeoutRef.current = null;
+      }
+      titleInputRef.current?.focus();
+    },
+    []
+  );
+
+  const handleTitleChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setTitle(value);
+      setShowSuggestions(false);
+      setSuggestions([]);
+      setHighlightedIndex(-1);
+    },
+    []
+  );
+
+  const handleTitleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (!showSuggestions || suggestions.length === 0) return;
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        setHighlightedIndex((index) => (index + 1) % suggestions.length);
+        return;
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        setHighlightedIndex((index) =>
+          index <= 0 ? suggestions.length - 1 : index - 1
+        );
+        return;
+      }
+      if (event.key === 'Enter') {
+        if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
+          event.preventDefault();
+          handleSelectSuggestion(suggestions[highlightedIndex]);
+        }
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
+      }
+    },
+    [handleSelectSuggestion, highlightedIndex, showSuggestions, suggestions]
+  );
+
   const toggleWatched = useCallback(
     async (item: Item) => {
       if (!list) return;
@@ -328,6 +399,60 @@ export default function Page() {
   const lastUpdated = list ? formatRelative(list.updatedAt) : null;
   const lastSyncedAgo = formatRelative(lastSynced);
 
+  useEffect(() => {
+    if (!title.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setHighlightedIndex(-1);
+      return;
+    }
+
+    const term = title.trim();
+    if (term.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setHighlightedIndex(-1);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(term)}`, {
+          signal: controller.signal
+        });
+        if (!response.ok) {
+          throw new Error('Unable to fetch suggestions.');
+        }
+        const data = await response.json();
+        if (controller.signal.aborted) return;
+        const results: SearchSuggestion[] = Array.isArray(data?.results)
+          ? data.results
+              .map((item: any) => ({
+                id: Number(item.id ?? 0),
+                title: String(item.title ?? ''),
+                year: item.year ? String(item.year) : undefined
+              }))
+              .filter((item: SearchSuggestion) => Boolean(item.title))
+          : [];
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+        setHighlightedIndex(results.length > 0 ? 0 : -1);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error(err);
+        setSuggestions([]);
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeout);
+    };
+  }, [title]);
+
   return (
     <main className={styles.viewport}>
       {list ? (
@@ -368,18 +493,72 @@ export default function Page() {
 
           <section className={styles.formCard}>
             <form className={`${styles.form} ${styles.formInline}`} onSubmit={addItem}>
-              <label className={styles.visuallyHidden} htmlFor="title">
-                Title
-              </label>
-              <input
-                id="title"
-                className={`${styles.inputField} ${styles.inputCompact}`}
-                placeholder="e.g. Dune: Part Two"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                disabled={adding}
-                required
-              />
+              <div className={styles.autocomplete}>
+                <label className={styles.visuallyHidden} htmlFor="title">
+                  Title
+                </label>
+                <input
+                  id="title"
+                  ref={titleInputRef}
+                  className={`${styles.inputField} ${styles.inputCompact}`}
+                  placeholder="e.g. Dune: Part Two"
+                  value={title}
+                  onChange={handleTitleChange}
+                  onKeyDown={handleTitleKeyDown}
+                  onFocus={() => {
+                    if (blurTimeoutRef.current) {
+                      window.clearTimeout(blurTimeoutRef.current);
+                      blurTimeoutRef.current = null;
+                    }
+                    if (suggestions.length > 0) {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    blurTimeoutRef.current = window.setTimeout(() => {
+                      setShowSuggestions(false);
+                    }, 120);
+                  }}
+                  autoComplete="off"
+                  aria-autocomplete="list"
+                  aria-expanded={showSuggestions && suggestions.length > 0}
+                  aria-controls="title-suggestions"
+                  disabled={adding}
+                  required
+                />
+                {showSuggestions && suggestions.length > 0 && (
+                  <ul
+                    id="title-suggestions"
+                    className={styles.autocompleteList}
+                    role="listbox"
+                    aria-label="Suggested titles"
+                  >
+                    {suggestions.map((suggestion, index) => {
+                      const key = `${suggestion.id}-${suggestion.year ?? 'unknown'}-${index}`;
+                      return (
+                        <li
+                          key={key}
+                          role="option"
+                          aria-selected={index === highlightedIndex}
+                          className={`${styles.autocompleteItem} ${
+                            index === highlightedIndex ? styles.autocompleteItemActive : ''
+                          }`}
+                          onMouseDown={(event) => {
+                            event.preventDefault();
+                            handleSelectSuggestion(suggestion);
+                          }}
+                          onMouseEnter={() => setHighlightedIndex(index)}
+                        >
+                          <span className={styles.autocompleteTitle}>{suggestion.title}</span>
+                          {suggestion.year && (
+                            <span className={styles.autocompleteMeta}>{suggestion.year}</span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
               <label className={styles.visuallyHidden} htmlFor="added-by">
                 Added by (optional)
               </label>
