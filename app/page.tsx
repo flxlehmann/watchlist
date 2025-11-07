@@ -253,7 +253,7 @@ export default function Page(){
             <div className="ac-anchor">
               <input
                 className="input grow"
-                placeholder="Add a movie or show…"
+                placeholder="Add a movie or show"
                 value={title}
                 onChange={e=>onTitleChange(e.target.value)}
                 onKeyDown={onKeyDown}
