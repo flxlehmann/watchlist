@@ -514,7 +514,7 @@ export default function Page() {
                   <input
                     id="title"
                     ref={titleInputRef}
-                    className={`${styles.inputField} ${styles.inputCompact}`}
+                    className={`${styles.inputField} ${styles.inputCompact} ${styles.titleField}`}
                     placeholder="e.g. Dune: Part Two"
                     value={title}
                     onChange={handleTitleChange}
@@ -592,15 +592,15 @@ export default function Page() {
                 </label>
                 <input
                   id="added-by"
-                  className={`${styles.inputField} ${styles.inputCompact}`}
-                  placeholder="Name or initials (optional)"
+                  className={`${styles.inputField} ${styles.inputCompact} ${styles.nameField}`}
+                  placeholder="Name (optional)"
                   value={addedBy}
                   onChange={(event) => setAddedBy(event.target.value)}
                   disabled={adding}
                 />
                 <button className={styles.buttonPrimary} type="submit" disabled={adding}>
                   {adding ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
-                  {adding ? 'Adding…' : 'Add to list'}
+                  {adding ? 'Adding…' : 'Add'}
                 </button>
               </form>
             </section>
