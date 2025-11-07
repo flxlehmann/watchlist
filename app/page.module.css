@@ -225,17 +225,22 @@
   width: min(1140px, 100%);
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  grid-template-areas:
+    'header header'
+    'primary stats';
   gap: 1.5rem;
   align-items: flex-start;
 }
 
 .primaryColumn {
+  grid-area: primary;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
 .listHeader {
+  grid-area: header;
   background: var(--surface-strong);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
@@ -295,7 +300,9 @@
   top: calc(100% + 0.4rem);
   left: 0;
   right: 0;
-  background: var(--surface-raised);
+  background: rgba(15, 19, 34, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(122, 148, 228, 0.35);
   border-radius: var(--radius-md);
   box-shadow: 0 18px 45px rgba(6, 9, 20, 0.45);
@@ -390,11 +397,20 @@
   gap: 0.4rem;
 }
 
+.footerItem svg {
+  color: rgba(201, 213, 255, 0.75);
+}
+
 .footerLabel {
   font-size: 0.78rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(190, 198, 255, 0.75);
+}
+
+.footerMeta {
+  font-size: 0.9rem;
+  color: inherit;
 }
 
 .posterGrid {
@@ -533,8 +549,9 @@
 }
 
 .statsPanel {
+  grid-area: stats;
   position: sticky;
-  top: 6rem;
+  top: 0;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -563,8 +580,9 @@
 
 .statsHeader {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .statsHeader h2 {
@@ -573,35 +591,10 @@
   letter-spacing: 0.02em;
 }
 
-.statsHeader span {
-  font-size: 0.9rem;
-  color: rgba(215, 222, 255, 0.75);
-}
-
-.statsPulse {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.pulseTrack {
-  width: 100%;
-  height: 0.55rem;
-  border-radius: 999px;
-  background: rgba(9, 13, 26, 0.65);
-  overflow: hidden;
-}
-
-.pulseFill {
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, rgba(118, 137, 255, 0.9), rgba(134, 240, 255, 0.95));
-  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.pulseLabel {
+.statsTotal {
   font-size: 0.85rem;
-  color: rgba(226, 233, 255, 0.75);
+  color: rgba(215, 222, 255, 0.75);
+  text-align: right;
 }
 
 .statsList {
@@ -662,9 +655,22 @@
 }
 
 .statsFootnote {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
   font-size: 0.78rem;
   letter-spacing: 0.04em;
   color: rgba(201, 213, 255, 0.6);
+}
+
+.statsFootnoteItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.statsFootnoteItem svg {
+  color: rgba(201, 213, 255, 0.8);
 }
 
 .emptyState {
@@ -724,6 +730,10 @@
 @media (max-width: 900px) {
   .workspace {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      'header'
+      'primary'
+      'stats';
   }
 
   .statsPanel {

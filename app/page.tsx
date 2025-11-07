@@ -5,6 +5,7 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
+  Clock,
   Copy,
   Loader2,
   LogOut,
@@ -77,9 +78,9 @@ function formatRelative(timestamp: number | null): string | null {
   const diff = Date.now() - timestamp;
   const minutes = Math.round(diff / 60000);
   if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  if (minutes < 60) return `${minutes} ${minutes === 1 ? 'min' : 'mins'} ago`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  if (hours < 24) return `${hours} ${hours === 1 ? 'hr' : 'hrs'} ago`;
   const days = Math.round(hours / 24);
   return `${days} day${days === 1 ? '' : 's'} ago`;
 }
@@ -474,29 +475,29 @@ export default function Page() {
     <main className={styles.viewport}>
       {list ? (
         <div className={styles.workspace}>
-          <div className={styles.primaryColumn}>
-            <section className={styles.listHeader}>
-              <div className={styles.listTitleRow}>
-                <h1 className={styles.listTitle}>{list.name}</h1>
-                <div className={styles.listActions}>
-                  <button className={styles.buttonSurface} onClick={copyId}>
-                    <Copy size={18} /> Copy ID
-                  </button>
-                  <button
-                    className={styles.buttonSurface}
-                    onClick={() => refreshList(undefined, true)}
-                    disabled={refreshing}
-                  >
-                    {refreshing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
-                    {refreshing ? 'Refreshing…' : 'Refresh'}
-                  </button>
-                  <button className={styles.buttonGhost} onClick={leaveList}>
-                    <LogOut size={18} /> Leave list
-                  </button>
-                </div>
+          <section className={styles.listHeader}>
+            <div className={styles.listTitleRow}>
+              <h1 className={styles.listTitle}>{list.name}</h1>
+              <div className={styles.listActions}>
+                <button className={styles.buttonSurface} onClick={copyId}>
+                  <Copy size={18} /> Copy ID
+                </button>
+                <button
+                  className={styles.buttonSurface}
+                  onClick={() => refreshList(undefined, true)}
+                  disabled={refreshing}
+                >
+                  {refreshing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
+                  {refreshing ? 'Refreshing…' : 'Refresh'}
+                </button>
+                <button className={styles.buttonGhost} onClick={leaveList}>
+                  <LogOut size={18} /> Leave list
+                </button>
               </div>
-            </section>
+            </div>
+          </section>
 
+          <div className={styles.primaryColumn}>
             {(error || status) && (
               <div className={`${styles.status} ${error ? styles.statusError : styles.statusSuccess}`}>
                 {error ? <Trash2 size={18} /> : <CheckCircle2 size={18} />}
@@ -675,14 +676,16 @@ export default function Page() {
               </div>
               {lastUpdated && (
                 <div className={styles.footerItem}>
-                  <span className={styles.footerLabel}>Updated</span>
-                  <span>{lastUpdated}</span>
+                  <Clock size={16} aria-hidden="true" />
+                  <span className={styles.visuallyHidden}>Last updated</span>
+                  <span className={styles.footerMeta}>{lastUpdated}</span>
                 </div>
               )}
               {lastSyncedAgo && (
                 <div className={styles.footerItem}>
-                  <span className={styles.footerLabel}>Synced</span>
-                  <span>{lastSyncedAgo}</span>
+                  <RefreshCw size={16} aria-hidden="true" />
+                  <span className={styles.visuallyHidden}>Last synced</span>
+                  <span className={styles.footerMeta}>{lastSyncedAgo}</span>
                 </div>
               )}
             </footer>
@@ -691,17 +694,10 @@ export default function Page() {
           <aside className={styles.statsPanel} aria-label="Watchlist statistics">
             <header className={styles.statsHeader}>
               <h2>List stats</h2>
-              <span>{stats.total} title{stats.total === 1 ? '' : 's'}</span>
+              <span className={styles.statsTotal}>
+                {stats.total} title{stats.total === 1 ? '' : 's'}
+              </span>
             </header>
-            <div className={styles.statsPulse}>
-              <div className={styles.pulseTrack}>
-                <div
-                  className={styles.pulseFill}
-                  style={{ width: `${stats.total ? stats.watchedPercent : 0}%` }}
-                />
-              </div>
-              <span className={styles.pulseLabel}>{stats.watchedPercent}% watched</span>
-            </div>
             <ul className={styles.statsList}>
               <li className={styles.statsRow}>
                 <div className={styles.statsMetric}>
@@ -729,8 +725,22 @@ export default function Page() {
               </li>
             </ul>
             <div className={styles.statsFootnote}>
-              {lastUpdated ? `Last update ${lastUpdated}` : 'No updates yet'}
-              {lastSyncedAgo ? ` • Synced ${lastSyncedAgo}` : ''}
+              {lastUpdated ? (
+                <span className={styles.statsFootnoteItem}>
+                  <Clock size={14} aria-hidden="true" />
+                  <span className={styles.visuallyHidden}>Last updated</span>
+                  {lastUpdated}
+                </span>
+              ) : (
+                <span className={styles.statsFootnoteItem}>No updates yet</span>
+              )}
+              {lastSyncedAgo && (
+                <span className={styles.statsFootnoteItem}>
+                  <RefreshCw size={14} aria-hidden="true" />
+                  <span className={styles.visuallyHidden}>Last synced</span>
+                  {lastSyncedAgo}
+                </span>
+              )}
             </div>
           </aside>
         </div>
