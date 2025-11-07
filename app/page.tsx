@@ -210,8 +210,11 @@ export default function Page(){
         {list && (
           <>
             <div className="stats">
-              
-              
+              <span className="sub">{stats.watched} watched</span>
+              <div className="progress" aria-hidden="true">
+                <span style={{ width: `${stats.pct}%` }} />
+              </div>
+              <span className="sub">{stats.pct}%</span>
             </div>
             <div className="sep" />
             <button className="iconbtn blue" onClick={()=>setView(v=> v==='list'?'grid':'list')} aria-label="Toggle view">
@@ -283,10 +286,7 @@ export default function Page(){
           </div>
 
           {error && <div style={{padding:'8px 20px', color:'var(--danger)'}}>{error}</div>}
-
-                      <div className="layout">
-              {view==='list' ? (
-
+          {view==='list' ? (
             <div className="list">
               {list.items.length === 0 && (
                 <div className="empty">No items yet. Use the form above to add your first title 👆</div>
@@ -317,16 +317,46 @@ export default function Page(){
                 </div>
               ))}
             </div>
-          
-              ) : (
-
-            
-            <div className="grid">
-              {list.items.length === 0 && (
-                <div className="empty" style={{gridColumn:'1 / -1'}}>No items yet. Use the form above to add your first title 👆</div>
-              
-              )}
-
+          ) : (
+            <div className="layout">
+              <div className="grid">
+                {list.items.length === 0 && (
+                  <div className="empty" style={{gridColumn:'1 / -1'}}>No items yet. Use the form above to add your first title 👆</div>
+                )}
+                {list.items.map(item => (
+                  <div className={`poster-card ${item.watched ? 'watched' : ''}`} key={item.id}>
+                    <div className="poster">
+                      {item.poster ? (
+                        <img src={getHiResPoster(item.poster)} alt="" />
+                      ) : (
+                        <div className="poster-fallback">🎬</div>
+                      )}
+                      <div className="hover">
+                        <div className="meta">
+                          <div className="title" title={item.title}>{item.title}</div>
+                          {item.addedBy ? <div className="sub">by {item.addedBy}</div> : null}
+                        </div>
+                        <div className="actions">
+                          <button
+                            className="iconbtn green"
+                            aria-label="Toggle watched"
+                            onClick={()=>update(item.id, { watched: !item.watched })}
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            className="iconbtn red"
+                            aria-label="Remove movie"
+                            onClick={()=>remove(item.id)}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
               <aside className="stats-panel floating" aria-label="List statistics">
                 <div className="stats-head">Statistics</div>
                 <div className="stat-cards">
@@ -339,40 +369,6 @@ export default function Page(){
                 </div>
                 <div className="stats-legend"><span>{stats.pct}% watched</span><span>{stats.total - stats.watched} remaining</span></div>
               </aside>
-            </div>
-              {list.items.map(item => (
-                <div className={`poster-card ${item.watched ? 'watched' : ''}`} key={item.id}>
-                  <div className="poster">
-                    {item.poster ? (
-                      <img src={getHiResPoster(item.poster)} alt="" />
-                    ) : (
-                      <div className="poster-fallback">🎬</div>
-                    )}
-                    <div className="hover">
-                      <div className="meta">
-                        <div className="title" title={item.title}>{item.title}</div>
-                        {item.addedBy ? <div className="sub">by {item.addedBy}</div> : null}
-                      </div>
-                      <div className="actions">
-                        <button
-                          className="iconbtn green"
-                          aria-label="Toggle watched"
-                          onClick={()=>update(item.id, { watched: !item.watched })}
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          className="iconbtn red"
-                          aria-label="Remove movie"
-                          onClick={()=>remove(item.id)}
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           )}
 
