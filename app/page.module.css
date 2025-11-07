@@ -494,8 +494,9 @@
   border-radius: calc(var(--radius-lg) * 1.15);
   overflow: hidden;
   background: linear-gradient(145deg, rgba(34, 40, 78, 0.85), rgba(11, 14, 28, 0.92));
+  border: 1px solid rgba(122, 148, 228, 0.28);
   box-shadow: 0 26px 55px rgba(6, 9, 20, 0.55);
-  transition: transform 0.28s ease, box-shadow 0.28s ease, opacity 0.28s ease;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, opacity 0.28s ease, border-color 0.28s ease;
   isolation: isolate;
 }
 
@@ -503,6 +504,7 @@
 .posterCard:focus-within {
   transform: translateY(-6px);
   box-shadow: 0 34px 70px rgba(5, 8, 20, 0.65);
+  border-color: rgba(122, 148, 255, 0.45);
 }
 
 .posterFrame {
@@ -698,14 +700,31 @@
 }
 
 .sortControls {
-  background: var(--surface-strong);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  padding: 1rem 1.15rem;
+  position: relative;
+  background: linear-gradient(165deg, rgba(35, 42, 86, 0.92), rgba(14, 18, 34, 0.96));
+  border-radius: calc(var(--radius-lg) * 1.2);
+  border: 1px solid rgba(122, 148, 228, 0.45);
+  box-shadow: 0 28px 80px rgba(5, 8, 20, 0.55);
+  padding: 1.25rem 1.35rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  overflow: hidden;
+}
+
+.sortControls::before {
+  content: "";
+  position: absolute;
+  inset: -35% -25%;
+  background: radial-gradient(circle, rgba(118, 137, 255, 0.25), transparent 60%);
+  filter: blur(0.45rem);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.sortControls > * {
+  position: relative;
+  z-index: 1;
 }
 
 .sortLabel {
@@ -848,8 +867,19 @@
 }
 
 .runtimePercent {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.runtimePercentValue {
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.runtimePercentLabel {
   font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(204, 215, 255, 0.72);
 }
@@ -894,17 +924,22 @@
 
 .statsFootnote {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
+  justify-content: center;
+  align-items: center;
   font-size: 0.78rem;
   letter-spacing: 0.04em;
   color: rgba(201, 213, 255, 0.6);
+  gap: 0.75rem;
 }
 
 .statsFootnoteItem {
+  flex: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
+  min-width: 50%;
+  text-align: center;
 }
 
 .statsFootnoteItem svg {

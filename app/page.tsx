@@ -44,7 +44,7 @@ type SearchSuggestion = {
   releaseDate?: string;
 };
 
-type SortOption = 'added' | 'released' | 'title';
+type SortOption = 'added' | 'released' | 'titleAsc' | 'titleDesc';
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
@@ -271,7 +271,7 @@ export default function Page() {
           return bTime - aTime;
         });
       }
-      case 'title': {
+      case 'titleAsc': {
         return items.sort((a, b) => {
           const aTitle = getComparableTitle(a);
           const bTitle = getComparableTitle(b);
@@ -279,6 +279,16 @@ export default function Page() {
             return a.title.localeCompare(b.title);
           }
           return aTitle.localeCompare(bTitle);
+        });
+      }
+      case 'titleDesc': {
+        return items.sort((a, b) => {
+          const aTitle = getComparableTitle(a);
+          const bTitle = getComparableTitle(b);
+          if (aTitle === bTitle) {
+            return b.title.localeCompare(a.title);
+          }
+          return bTitle.localeCompare(aTitle);
         });
       }
       default:
@@ -946,12 +956,22 @@ export default function Page() {
                 <button
                   type="button"
                   className={`${styles.sortButton} ${
-                    sortOption === 'title' ? styles.sortButtonActive : ''
+                    sortOption === 'titleAsc' ? styles.sortButtonActive : ''
                   }`}
-                  onClick={() => setSortOption('title')}
-                  aria-pressed={sortOption === 'title'}
+                  onClick={() => setSortOption('titleAsc')}
+                  aria-pressed={sortOption === 'titleAsc'}
                 >
-                  Alphabetical
+                  A → Z
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${
+                    sortOption === 'titleDesc' ? styles.sortButtonActive : ''
+                  }`}
+                  onClick={() => setSortOption('titleDesc')}
+                  aria-pressed={sortOption === 'titleDesc'}
+                >
+                  Z → A
                 </button>
               </div>
             </div>
@@ -993,11 +1013,12 @@ export default function Page() {
                 <div className={styles.runtimeSection}>
                   <div className={styles.runtimeHeader}>
                     <span className={styles.metricLabel}>Runtime</span>
-                    <span className={styles.runtimePercent}>{stats.watchedRuntimePercent}% watched</span>
-                  </div>
-                  <div className={styles.runtimeSummary}>
-                    <span>Watched {formatRuntime(stats.watchedRuntime)}</span>
-                    <span>Total {formatRuntime(stats.totalRuntime)}</span>
+                    <span className={styles.runtimePercent}>
+                      <span className={styles.runtimePercentValue}>
+                        {stats.watchedRuntimePercent}%
+                      </span>
+                      <span className={styles.runtimePercentLabel}>watched</span>
+                    </span>
                   </div>
                   <div
                     className={styles.runtimeBar}
@@ -1008,6 +1029,10 @@ export default function Page() {
                       className={styles.runtimeBarFill}
                       style={{ width: `${stats.watchedRuntimeShare}%` }}
                     />
+                  </div>
+                  <div className={styles.runtimeSummary}>
+                    <span>Watched {formatRuntime(stats.watchedRuntime)}</span>
+                    <span>Total {formatRuntime(stats.totalRuntime)}</span>
                   </div>
                 </div>
               ) : (
