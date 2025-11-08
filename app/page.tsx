@@ -8,11 +8,13 @@ import {
   Clock,
   Copy,
   KeyRound,
+  LayoutGrid,
   Link,
   Loader2,
   Menu,
   Pencil,
   Plus,
+  List as ListIcon,
   RefreshCw,
   ShieldPlus,
   Shield,
@@ -175,6 +177,8 @@ export default function Page() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [sortOption, setSortOption] = useState<SortOption>('addedRecent');
   const [showUnwatchedOnly, setShowUnwatchedOnly] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [gridColumns, setGridColumns] = useState<4 | 5>(5);
   const [randomPick, setRandomPick] = useState<Item | null>(null);
   const [showRandomOverlay, setShowRandomOverlay] = useState(false);
   const [countdownRemaining, setCountdownRemaining] = useState<number | null>(null);
@@ -1946,78 +1950,162 @@ export default function Page() {
             </section>
 
             {displayItems.length > 0 ? (
-              <section className={styles.posterGrid}>
-                {displayItems.map((item) => {
-                  const yearMatch = item.title.match(/\((\d{4})\)$/);
-                  const displayTitle = yearMatch
-                    ? item.title.replace(/\s*\(\d{4}\)$/, '').trim()
-                    : item.title;
-                  const displayYear = yearMatch ? yearMatch[1] : null;
-                  const releaseYear = item.releaseDate
-                    ? item.releaseDate.slice(0, 4)
-                    : displayYear;
-                  const addedByLabel = item.addedBy?.trim() || 'Unknown';
-                  const initials = item.title
-                    .split(' ')
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .map((part) => part[0]?.toUpperCase())
-                    .join('');
-                  return (
-                    <article
-                      key={item.id}
-                      className={`${styles.posterCard} ${item.watched ? styles.posterWatched : ''}`}
-                    >
-                      <div className={styles.posterFrame}>
-                        {item.poster ? (
-                          <img
-                            src={item.poster}
-                            alt={`${displayTitle} poster`}
-                            className={styles.posterImage}
-                          />
-                        ) : (
-                          <div className={styles.posterFallback} aria-hidden="true">
-                            <span>{initials || '🎬'}</span>
-                          </div>
-                        )}
-                        <div className={styles.posterOverlay}>
-                          <div className={styles.posterDetails}>
-                            <h3 className={styles.posterTitle}>{displayTitle}</h3>
-                            <div className={styles.posterMeta}>
-                              {releaseYear && <span>{releaseYear}</span>}
-                              <span>Added by {addedByLabel}</span>
+              viewMode === 'grid' ? (
+                <section
+                  className={`${styles.posterGrid} ${
+                    gridColumns === 4 ? styles.posterGridColumns4 : styles.posterGridColumns5
+                  }`}
+                >
+                  {displayItems.map((item) => {
+                    const yearMatch = item.title.match(/\((\d{4})\)$/);
+                    const displayTitle = yearMatch
+                      ? item.title.replace(/\s*\(\d{4}\)$/, '').trim()
+                      : item.title;
+                    const displayYear = yearMatch ? yearMatch[1] : null;
+                    const releaseYear = item.releaseDate
+                      ? item.releaseDate.slice(0, 4)
+                      : displayYear;
+                    const addedByLabel = item.addedBy?.trim() || 'Unknown';
+                    const initials = item.title
+                      .split(' ')
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((part) => part[0]?.toUpperCase())
+                      .join('');
+                    return (
+                      <article
+                        key={item.id}
+                        className={`${styles.posterCard} ${item.watched ? styles.posterWatched : ''}`}
+                      >
+                        <div className={styles.posterFrame}>
+                          {item.poster ? (
+                            <img
+                              src={item.poster}
+                              alt={`${displayTitle} poster`}
+                              className={styles.posterImage}
+                            />
+                          ) : (
+                            <div className={styles.posterFallback} aria-hidden="true">
+                              <span>{initials || '🎬'}</span>
+                            </div>
+                          )}
+                          <div className={styles.posterOverlay}>
+                            <div className={styles.posterDetails}>
+                              <h3 className={styles.posterTitle}>{displayTitle}</h3>
+                              <div className={styles.posterMeta}>
+                                {releaseYear && <span>{releaseYear}</span>}
+                                <span>Added by {addedByLabel}</span>
+                              </div>
+                            </div>
+                            <div className={styles.posterActions}>
+                              <button
+                                type="button"
+                                className={`${styles.posterIconButton} ${
+                                  item.watched ? styles.posterIconButtonActive : ''
+                                }`}
+                                onClick={() => toggleWatched(item)}
+                                aria-label={
+                                  item.watched
+                                    ? `Mark ${displayTitle} as not watched`
+                                    : `Mark ${displayTitle} as watched`
+                                }
+                              >
+                                {item.watched ? <Check size={20} /> : <CheckCircle2 size={20} />}
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.posterIconButton}
+                                onClick={() => removeItem(item)}
+                                aria-label={`Remove ${displayTitle} from list`}
+                              >
+                                <Trash2 size={20} />
+                              </button>
                             </div>
                           </div>
-                          <div className={styles.posterActions}>
-                            <button
-                              type="button"
-                              className={`${styles.posterIconButton} ${
-                                item.watched ? styles.posterIconButtonActive : ''
-                              }`}
-                              onClick={() => toggleWatched(item)}
-                              aria-label={
-                                item.watched
-                                  ? `Mark ${displayTitle} as not watched`
-                                  : `Mark ${displayTitle} as watched`
-                              }
-                            >
-                              {item.watched ? <Check size={20} /> : <CheckCircle2 size={20} />}
-                            </button>
-                            <button
-                              type="button"
-                              className={styles.posterIconButton}
-                              onClick={() => removeItem(item)}
-                              aria-label={`Remove ${displayTitle} from list`}
-                            >
-                              <Trash2 size={20} />
-                            </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </section>
+              ) : (
+                <section className={styles.listView}>
+                  {displayItems.map((item) => {
+                    const yearMatch = item.title.match(/\((\d{4})\)$/);
+                    const displayTitle = yearMatch
+                      ? item.title.replace(/\s*\(\d{4}\)$/, '').trim()
+                      : item.title;
+                    const displayYear = yearMatch ? yearMatch[1] : null;
+                    const releaseYear = item.releaseDate
+                      ? item.releaseDate.slice(0, 4)
+                      : displayYear;
+                    const runtimeLabel =
+                      typeof item.runtimeMinutes === 'number' && item.runtimeMinutes > 0
+                        ? formatRuntime(item.runtimeMinutes)
+                        : null;
+                    const addedByLabel = item.addedBy?.trim() || 'Unknown';
+                    const initials = item.title
+                      .split(' ')
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((part) => part[0]?.toUpperCase())
+                      .join('');
+                    return (
+                      <article
+                        key={item.id}
+                        className={`${styles.listRow} ${item.watched ? styles.listRowWatched : ''}`}
+                      >
+                        <div className={styles.listRowPoster}>
+                          {item.poster ? (
+                            <img
+                              src={item.poster}
+                              alt={`${displayTitle} poster`}
+                              className={styles.listRowPosterImage}
+                            />
+                          ) : (
+                            <div className={styles.listRowPosterFallback} aria-hidden="true">
+                              <span>{initials || '🎬'}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.listRowBody}>
+                          <div className={styles.listRowHeader}>
+                            <h3 className={styles.listRowTitle}>{displayTitle}</h3>
+                            {releaseYear && <span className={styles.listRowYear}>{releaseYear}</span>}
+                          </div>
+                          <div className={styles.listRowMeta}>
+                            {runtimeLabel && <span>{runtimeLabel}</span>}
+                            <span>Added by {addedByLabel}</span>
                           </div>
                         </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </section>
+                        <div className={styles.listRowActions}>
+                          <button
+                            type="button"
+                            className={`${styles.posterIconButton} ${
+                              item.watched ? styles.posterIconButtonActive : ''
+                            }`}
+                            onClick={() => toggleWatched(item)}
+                            aria-label={
+                              item.watched
+                                ? `Mark ${displayTitle} as not watched`
+                                : `Mark ${displayTitle} as watched`
+                            }
+                          >
+                            {item.watched ? <Check size={20} /> : <CheckCircle2 size={20} />}
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.posterIconButton}
+                            onClick={() => removeItem(item)}
+                            aria-label={`Remove ${displayTitle} from list`}
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </section>
+              )
             ) : (
               <div className={styles.emptyState}>
                 <CheckCircle2 size={40} />
@@ -2126,6 +2214,66 @@ export default function Page() {
                   </button>
                 </div>
               </div>
+
+              <div className={styles.organizeGroup} role="group" aria-label="Choose layout">
+                <span className={styles.groupLabel}>Layout</span>
+                <div className={styles.sortButtons}>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      viewMode === 'grid' ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => setViewMode('grid')}
+                    aria-pressed={viewMode === 'grid'}
+                  >
+                    <LayoutGrid size={16} aria-hidden="true" />
+                    <span>Grid</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      viewMode === 'list' ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => setViewMode('list')}
+                    aria-pressed={viewMode === 'list'}
+                  >
+                    <ListIcon size={16} aria-hidden="true" />
+                    <span>List</span>
+                  </button>
+                </div>
+              </div>
+
+              {viewMode === 'grid' && (
+                <div
+                  className={styles.organizeGroup}
+                  role="radiogroup"
+                  aria-label="Grid density"
+                >
+                  <span className={styles.groupLabel}>Columns</span>
+                  <div className={styles.sortButtons}>
+                    <button
+                      type="button"
+                      className={`${styles.sortButton} ${
+                        gridColumns === 4 ? styles.sortButtonActive : ''
+                      }`}
+                      onClick={() => setGridColumns(4)}
+                      aria-pressed={gridColumns === 4}
+                    >
+                      4 per row
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.sortButton} ${
+                        gridColumns === 5 ? styles.sortButtonActive : ''
+                      }`}
+                      onClick={() => setGridColumns(5)}
+                      aria-pressed={gridColumns === 5}
+                    >
+                      5 per row
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div
                 className={`${styles.organizeGroup} ${styles.filterGroup}`}
