@@ -180,6 +180,7 @@ export default function Page() {
   const [countdownRemaining, setCountdownRemaining] = useState<number | null>(null);
   const [countdownSession, setCountdownSession] = useState(0);
   const [listMenuOpen, setListMenuOpen] = useState(false);
+  const [initialListLoading, setInitialListLoading] = useState(false);
   const [passwordDialogType, setPasswordDialogType] = useState<
     'set' | 'change' | 'remove' | 'delete' | null
   >(null);
@@ -381,7 +382,10 @@ export default function Page() {
     }
     if (queryId) {
       setListIdInput(queryId);
-      void joinList(queryId);
+      setInitialListLoading(true);
+      void joinList(queryId).finally(() => {
+        setInitialListLoading(false);
+      });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1654,21 +1658,7 @@ export default function Page() {
                       </div>
                     </form>
                   ) : (
-                    <>
-                      <h1 className={styles.listTitle}>{list.name}</h1>
-                      <button
-                        type="button"
-                        className={styles.renameTrigger}
-                        onClick={() => {
-                          setRenaming(true);
-                          setNameDraft(list.name);
-                        }}
-                        aria-label="Edit list name"
-                        title="Edit list name"
-                      >
-                        <Pencil size={18} />
-                      </button>
-                    </>
+                    <h1 className={styles.listTitle}>{list.name}</h1>
                   )}
                 </div>
               </div>
@@ -1753,12 +1743,21 @@ export default function Page() {
                           )}{' '}
                           Refresh list
                         </button>
+                        <button
+                          type="button"
+                          className={styles.listMenuItem}
+                          role="menuitem"
+                          onClick={() => {
+                            setListMenuOpen(false);
+                            setRenaming(true);
+                            setNameDraft(list.name);
+                          }}
+                        >
+                          <Pencil size={16} /> Rename list
+                        </button>
                       </div>
                       <div className={styles.listMenuSeparator} role="none" />
                       <div className={styles.listMenuSection} role="none">
-                        <p className={styles.listMenuSectionLabel} role="presentation" aria-hidden="true">
-                          Password
-                        </p>
                         {list.protected ? (
                           <>
                             <button
@@ -1811,9 +1810,6 @@ export default function Page() {
                       </div>
                       <div className={styles.listMenuSeparator} role="none" />
                       <div className={styles.listMenuSection} role="none">
-                        <p className={styles.listMenuSectionLabel} role="presentation" aria-hidden="true">
-                          List
-                        </p>
                         <button
                           type="button"
                           className={styles.listMenuItem}
@@ -2230,6 +2226,14 @@ export default function Page() {
               <Sparkles size={18} /> Surprise me
             </button>
           </aside>
+        </div>
+      ) : initialListLoading ? (
+        <div className={styles.loadingState} role="status" aria-live="polite">
+          <div className={styles.loadingBackdrop} aria-hidden="true" />
+          <div className={styles.loadingContent}>
+            <Loader2 size={40} className={styles.loadingSpinner} aria-hidden="true" />
+            <p className={styles.loadingMessage}>Loading your watchlist…</p>
+          </div>
         </div>
       ) : (
         <div className={styles.content}>
