@@ -510,7 +510,6 @@ export default function Page() {
         }));
         setList(data);
         setTitle('');
-        setAddedBy('');
         setSelectedPoster(null);
         setSelectedRuntime(null);
         setSelectedReleaseDate(null);
@@ -903,6 +902,11 @@ export default function Page() {
 
   return (
     <main className={styles.viewport}>
+      <div className={styles.background} aria-hidden="true">
+        <div className={`${styles.backgroundOrb} ${styles.backgroundOrbPrimary}`} />
+        <div className={`${styles.backgroundOrb} ${styles.backgroundOrbSecondary}`} />
+        <div className={styles.backgroundGradient} />
+      </div>
       {notifications.length > 0 && (
         <div className={styles.notificationStack} role="status" aria-live="polite">
           {notifications.map((notification) => (
@@ -1373,11 +1377,11 @@ export default function Page() {
                 aria-label="Filter watchlist"
               >
                 <span className={styles.groupLabel}>Filter titles</span>
-                <div className={styles.filterButtons}>
+                <div className={styles.sortButtons}>
                   <button
                     type="button"
-                    className={`${styles.filterButton} ${
-                      showWatched ? styles.filterButtonActive : styles.filterButtonInactive
+                    className={`${styles.sortButton} ${
+                      showWatched ? styles.sortButtonActive : ''
                     }`}
                     onClick={() => toggleVisibility('watched')}
                     aria-pressed={showWatched}
@@ -1386,8 +1390,8 @@ export default function Page() {
                   </button>
                   <button
                     type="button"
-                    className={`${styles.filterButton} ${
-                      showUnwatched ? styles.filterButtonActive : styles.filterButtonInactive
+                    className={`${styles.sortButton} ${
+                      showUnwatched ? styles.sortButtonActive : ''
                     }`}
                     onClick={() => toggleVisibility('unwatched')}
                     aria-pressed={showUnwatched}
