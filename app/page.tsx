@@ -10,7 +10,6 @@ import {
   KeyRound,
   Link,
   Loader2,
-  LogOut,
   Menu,
   Pencil,
   Plus,
@@ -18,6 +17,7 @@ import {
   ShieldPlus,
   Shield,
   ShieldCheck,
+  ShieldX,
   Sparkles,
   Trash2,
   X
@@ -180,7 +180,9 @@ export default function Page() {
   const [countdownRemaining, setCountdownRemaining] = useState<number | null>(null);
   const [countdownSession, setCountdownSession] = useState(0);
   const [listMenuOpen, setListMenuOpen] = useState(false);
-  const [passwordDialogType, setPasswordDialogType] = useState<'set' | 'change' | 'delete' | null>(null);
+  const [passwordDialogType, setPasswordDialogType] = useState<
+    'set' | 'change' | 'remove' | 'delete' | null
+  >(null);
   const [passwordDialogNew, setPasswordDialogNew] = useState('');
   const [passwordDialogConfirm, setPasswordDialogConfirm] = useState('');
   const [passwordDialogCurrent, setPasswordDialogCurrent] = useState('');
@@ -285,7 +287,7 @@ export default function Page() {
     setPasswordDialogSubmitting(false);
   }, []);
 
-  const openPasswordDialog = useCallback((type: 'set' | 'change' | 'delete') => {
+  const openPasswordDialog = useCallback((type: 'set' | 'change' | 'remove' | 'delete') => {
     setPasswordDialogType(type);
     setPasswordDialogNew('');
     setPasswordDialogConfirm('');
@@ -960,6 +962,45 @@ export default function Page() {
         return;
       }
 
+      if (passwordDialogType === 'remove') {
+        if (!list.protected) {
+          closePasswordDialog();
+          return;
+        }
+        const authorizationPassword = trimmedCurrent || activePassword || undefined;
+        if (!authorizationPassword) {
+          setPasswordDialogError('Enter the password to remove it.');
+          return;
+        }
+        setPasswordDialogSubmitting(true);
+        setPasswordDialogError(null);
+        try {
+          const data = await api<List>(
+            `/api/lists/${list.id}`,
+            withPassword(
+              {
+                method: 'PATCH',
+                body: JSON.stringify({ password: null })
+              },
+              authorizationPassword
+            )
+          );
+          setList(data);
+          setLastSynced(Date.now());
+          setActivePassword(null);
+          setError(null);
+          pushNotification('success', 'Password removed.');
+          closePasswordDialog();
+        } catch (err) {
+          const message = parseError(err);
+          setPasswordDialogError(message);
+          setError(message);
+        } finally {
+          setPasswordDialogSubmitting(false);
+        }
+        return;
+      }
+
       if (passwordDialogType === 'delete') {
         const authorizationPassword = list.protected
           ? trimmedCurrent || activePassword || undefined
@@ -1238,6 +1279,8 @@ export default function Page() {
                   <Trash2 size={24} />
                 ) : passwordDialogType === 'change' ? (
                   <ShieldCheck size={24} />
+                ) : passwordDialogType === 'remove' ? (
+                  <ShieldX size={24} />
                 ) : (
                   <ShieldPlus size={24} />
                 )}
@@ -1248,6 +1291,8 @@ export default function Page() {
                     ? 'Delete this watchlist'
                     : passwordDialogType === 'change'
                     ? 'Change password'
+                    : passwordDialogType === 'remove'
+                    ? 'Remove password'
                     : 'Protect this watchlist'}
                 </h2>
                 <p id={passwordDialogDescriptionId} className={styles.dialogDescription}>
@@ -1257,6 +1302,8 @@ export default function Page() {
                       : 'This will permanently delete the entire watchlist. This cannot be undone.'
                     : passwordDialogType === 'change'
                     ? 'Update the password that protects this watchlist.'
+                    : passwordDialogType === 'remove'
+                    ? 'Remove the password protection from this watchlist.'
                     : 'Add a password so only people you share it with can join.'}
                 </p>
               </div>
@@ -1352,6 +1399,25 @@ export default function Page() {
                   </label>
                 </>
               )}
+              {passwordDialogType === 'remove' && list.protected && (
+                <label className={styles.dialogField} htmlFor={passwordDialogCurrentId}>
+                  <span className={styles.dialogLabel}>Password</span>
+                  <input
+                    id={passwordDialogCurrentId}
+                    ref={passwordDialogInputRef}
+                    className={styles.dialogInput}
+                    type="password"
+                    autoComplete="current-password"
+                    value={passwordDialogCurrent}
+                    onChange={(event) => {
+                      setPasswordDialogCurrent(event.target.value);
+                      setPasswordDialogError(null);
+                    }}
+                    placeholder="Enter password to remove"
+                    required
+                  />
+                </label>
+              )}
               {passwordDialogType === 'delete' && list.protected && (
                 <label className={styles.dialogField} htmlFor={passwordDialogCurrentId}>
                   <span className={styles.dialogLabel}>Password</span>
@@ -1397,10 +1463,12 @@ export default function Page() {
                   (passwordDialogType === 'delete'
                     ? list.protected && !trimmedCurrentPassword
                     : passwordDialogType === 'change'
-                    ? !trimmedCurrentPassword ||
-                      !trimmedNewPassword ||
-                      trimmedConfirmPassword !== trimmedNewPassword
-                    : !trimmedNewPassword || trimmedConfirmPassword !== trimmedNewPassword)
+                      ? !trimmedCurrentPassword ||
+                        !trimmedNewPassword ||
+                        trimmedConfirmPassword !== trimmedNewPassword
+                      : passwordDialogType === 'remove'
+                      ? !trimmedCurrentPassword
+                      : !trimmedNewPassword || trimmedConfirmPassword !== trimmedNewPassword)
                 }
               >
                 {passwordDialogSubmitting ? (
@@ -1412,6 +1480,8 @@ export default function Page() {
                   'Delete watchlist'
                 ) : passwordDialogType === 'change' ? (
                   'Change password'
+                ) : passwordDialogType === 'remove' ? (
+                  'Remove password'
                 ) : (
                   'Add password'
                 )}
@@ -1603,6 +1673,26 @@ export default function Page() {
                 </div>
               </div>
               <div className={styles.listActions}>
+                <div className={styles.listMeta} aria-live="polite">
+                  <span className={styles.listMetaItem}>
+                    {lastUpdated ? (
+                      <>
+                        <Clock size={14} aria-hidden="true" />
+                        <span className={styles.visuallyHidden}>Last updated</span>
+                        {lastUpdated}
+                      </>
+                    ) : (
+                      'No updates yet'
+                    )}
+                  </span>
+                  {lastSyncedAgo && (
+                    <span className={styles.listMetaItem}>
+                      <RefreshCw size={14} aria-hidden="true" />
+                      <span className={styles.visuallyHidden}>Last synced</span>
+                      {lastSyncedAgo}
+                    </span>
+                  )}
+                </div>
                 <div className={styles.listMenu} ref={listMenuRef}>
                   <button
                     type="button"
@@ -1623,101 +1713,130 @@ export default function Page() {
                       role="menu"
                       aria-labelledby={listMenuButtonId}
                     >
-                      <button
-                        type="button"
-                        className={styles.listMenuItem}
-                        role="menuitem"
-                        onClick={() => {
-                          setListMenuOpen(false);
-                          void copyLink();
-                        }}
-                      >
-                        <Link size={16} /> Copy link
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.listMenuItem}
-                        role="menuitem"
-                        onClick={() => {
-                          setListMenuOpen(false);
-                          void copyId();
-                        }}
-                      >
-                        <Copy size={16} /> Copy ID
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.listMenuItem}
-                        role="menuitem"
-                        onClick={() => {
-                          setListMenuOpen(false);
-                          void refreshList(undefined, true);
-                        }}
-                        disabled={refreshing}
-                      >
-                        {refreshing ? <Loader2 size={16} className="spin" /> : <RefreshCw size={16} />} Refresh list
-                      </button>
-                      {list.protected ? (
-                        <>
-                          <button
-                            type="button"
-                            className={styles.listMenuItem}
-                            role="menuitem"
-                            onClick={() => {
-                              setListMenuOpen(false);
-                              void copyPassword();
-                            }}
-                          >
-                            <KeyRound size={16} /> Copy password
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.listMenuItem}
-                            role="menuitem"
-                            onClick={() => {
-                              setListMenuOpen(false);
-                              openPasswordDialog('change');
-                            }}
-                          >
-                            <ShieldCheck size={16} /> Change password
-                          </button>
-                        </>
-                      ) : (
+                      <div className={styles.listMenuSection} role="none">
                         <button
                           type="button"
                           className={styles.listMenuItem}
                           role="menuitem"
                           onClick={() => {
                             setListMenuOpen(false);
-                            openPasswordDialog('set');
+                            void copyLink();
                           }}
                         >
-                          <ShieldPlus size={16} /> Set password
+                          <Link size={16} /> Copy link
                         </button>
-                      )}
+                        <button
+                          type="button"
+                          className={styles.listMenuItem}
+                          role="menuitem"
+                          onClick={() => {
+                            setListMenuOpen(false);
+                            void copyId();
+                          }}
+                        >
+                          <Copy size={16} /> Copy ID
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.listMenuItem}
+                          role="menuitem"
+                          onClick={() => {
+                            setListMenuOpen(false);
+                            void refreshList(undefined, true);
+                          }}
+                          disabled={refreshing}
+                        >
+                          {refreshing ? (
+                            <Loader2 size={16} className="spin" />
+                          ) : (
+                            <RefreshCw size={16} />
+                          )}{' '}
+                          Refresh list
+                        </button>
+                      </div>
                       <div className={styles.listMenuSeparator} role="none" />
-                      <button
-                        type="button"
-                        className={styles.listMenuItem}
-                        role="menuitem"
-                        onClick={() => {
-                          setListMenuOpen(false);
-                          leaveList();
-                        }}
-                      >
-                        <LogOut size={16} /> Leave list
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.listMenuItem} ${styles.listMenuItemDanger}`}
-                        role="menuitem"
-                        onClick={() => {
-                          setListMenuOpen(false);
-                          openPasswordDialog('delete');
-                        }}
-                      >
-                        <Trash2 size={16} /> Delete list
-                      </button>
+                      <div className={styles.listMenuSection} role="none">
+                        <p className={styles.listMenuSectionLabel} role="presentation" aria-hidden="true">
+                          Password
+                        </p>
+                        {list.protected ? (
+                          <>
+                            <button
+                              type="button"
+                              className={styles.listMenuItem}
+                              role="menuitem"
+                              onClick={() => {
+                                setListMenuOpen(false);
+                                void copyPassword();
+                              }}
+                            >
+                              <KeyRound size={16} /> Copy password
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.listMenuItem}
+                              role="menuitem"
+                              onClick={() => {
+                                setListMenuOpen(false);
+                                openPasswordDialog('change');
+                              }}
+                            >
+                              <ShieldCheck size={16} /> Change password
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.listMenuItem}
+                              role="menuitem"
+                              onClick={() => {
+                                setListMenuOpen(false);
+                                openPasswordDialog('remove');
+                              }}
+                            >
+                              <ShieldX size={16} /> Remove password
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            className={styles.listMenuItem}
+                            role="menuitem"
+                            onClick={() => {
+                              setListMenuOpen(false);
+                              openPasswordDialog('set');
+                            }}
+                          >
+                            <ShieldPlus size={16} /> Set password
+                          </button>
+                        )}
+                      </div>
+                      <div className={styles.listMenuSeparator} role="none" />
+                      <div className={styles.listMenuSection} role="none">
+                        <p className={styles.listMenuSectionLabel} role="presentation" aria-hidden="true">
+                          List
+                        </p>
+                        <button
+                          type="button"
+                          className={styles.listMenuItem}
+                          role="menuitem"
+                          onClick={() => {
+                            setListMenuOpen(false);
+                            leaveList();
+                          }}
+                        >
+                          <ArrowRight size={16} /> To start page
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.listMenuItem} ${styles.listMenuItemDanger}`}
+                          role="menuitem"
+                          onClick={() => {
+                            setListMenuOpen(false);
+                            openPasswordDialog('delete');
+                          }}
+                        >
+                          <Trash2 size={16} /> Delete list
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2105,24 +2224,6 @@ export default function Page() {
                   Runtime insights will appear when titles include runtime data.
                 </div>
               )}
-              <div className={styles.statsFootnote}>
-                {lastUpdated ? (
-                  <span className={styles.statsFootnoteItem}>
-                    <Clock size={14} aria-hidden="true" />
-                    <span className={styles.visuallyHidden}>Last updated</span>
-                    {lastUpdated}
-                  </span>
-                ) : (
-                  <span className={styles.statsFootnoteItem}>No updates yet</span>
-                )}
-                {lastSyncedAgo && (
-                  <span className={styles.statsFootnoteItem}>
-                    <RefreshCw size={14} aria-hidden="true" />
-                    <span className={styles.visuallyHidden}>Last synced</span>
-                    {lastSyncedAgo}
-                  </span>
-                )}
-              </div>
             </div>
 
             <button type="button" className={styles.randomButton} onClick={chooseRandomPick}>

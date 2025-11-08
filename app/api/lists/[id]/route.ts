@@ -80,15 +80,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const authError = await authorize(req, list);
   if (authError) return authError;
   const payload = await req.json();
-  if(typeof payload.password === 'string' && !payload.itemId){
-    const password = payload.password.trim();
-    if(!password){
-      return NextResponse.json({ error: 'Password required' }, { status: 422 });
+  if('password' in payload && !payload.itemId){
+    if(typeof payload.password === 'string'){
+      const password = payload.password.trim();
+      if(!password){
+        return NextResponse.json({ error: 'Password required' }, { status: 422 });
+      }
+      list.passwordHash = await hashPassword(password);
+      list.updatedAt = now();
+      await saveList(list);
+      return NextResponse.json(toPublicList(list));
     }
-    list.passwordHash = await hashPassword(password);
-    list.updatedAt = now();
-    await saveList(list);
-    return NextResponse.json(toPublicList(list));
+    if(payload.password === null){
+      list.passwordHash = null;
+      list.updatedAt = now();
+      await saveList(list);
+      return NextResponse.json(toPublicList(list));
+    }
   }
   if(typeof payload.name === 'string' && !payload.itemId){
     const name = payload.name.trim().slice(0, 80);
