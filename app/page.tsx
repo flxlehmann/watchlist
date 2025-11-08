@@ -2253,13 +2253,30 @@ export default function Page() {
                           disabled={adding}
                         />
                       </label>
-                      <button className={styles.buttonPrimary} type="submit" disabled={adding || detailsLoading}>
+                      <button
+                        className={styles.spotlightAddButton}
+                        type="submit"
+                        aria-label={
+                          adding
+                            ? 'Adding movie'
+                            : detailsLoading
+                              ? 'Fetching movie details'
+                              : 'Add movie'
+                        }
+                        disabled={adding || detailsLoading}
+                      >
                         {adding || detailsLoading ? (
-                          <Loader2 size={18} className="spin" />
+                          <Loader2 size={24} className="spin" />
                         ) : (
-                          <Plus size={18} />
+                          <Plus strokeWidth={2.5} />
                         )}
-                        {adding ? 'Adding…' : detailsLoading ? 'Fetching details…' : 'Add'}
+                        <span className={styles.visuallyHidden}>
+                          {adding
+                            ? 'Adding movie'
+                            : detailsLoading
+                              ? 'Fetching movie details'
+                              : 'Add movie'}
+                        </span>
                       </button>
                     </div>
                   </form>
