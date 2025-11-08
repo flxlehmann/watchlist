@@ -1157,6 +1157,16 @@ export default function Page() {
     setCountdownRemaining(RANDOM_COUNTDOWN_DURATION);
   }, [list, pushNotification]);
 
+  const confirmRandomPick = useCallback(() => {
+    if (!randomPick) return;
+    const query = encodeURIComponent(`where to watch ${randomPick.title}`);
+    if (typeof window !== 'undefined') {
+      window.open(`https://www.google.com/search?q=${query}`, '_blank', 'noopener,noreferrer');
+    }
+    setShowRandomOverlay(false);
+    setRandomPick(null);
+  }, [randomPick]);
+
   const lastUpdated = list ? formatRelative(list.updatedAt) : null;
   const lastSyncedAgo = formatRelative(lastSynced);
 
@@ -1627,13 +1637,10 @@ export default function Page() {
                       Spin up some snacks, dim the lights, and press play. This one's waiting for you!
                     </p>
                     <div className={styles.randomActions}>
-                      <button type="button" className={styles.randomPrimary} onClick={chooseRandomPick}>
-                        <RefreshCw size={18} /> Spin again
-                      </button>
                       <button
                         type="button"
-                        className={styles.randomSecondary}
-                        onClick={() => setShowRandomOverlay(false)}
+                        className={`${styles.randomButton} ${styles.randomConfirm}`}
+                        onClick={confirmRandomPick}
                       >
                         <Check size={18} /> Let's watch it
                       </button>
@@ -2259,66 +2266,11 @@ export default function Page() {
               </div>
 
               <div
-                className={styles.organizeGroup}
-                role="radiogroup"
-                aria-label="Choose layout"
-              >
-                <span className={styles.groupLabel}>Layout</span>
-                <div className={styles.layoutSwitch}>
-                  <button
-                    type="button"
-                    role="radio"
-                    className={`${styles.layoutOption} ${
-                      layoutSelection === 'grid-5' ? styles.layoutOptionActive : ''
-                    }`}
-                    aria-checked={layoutSelection === 'grid-5'}
-                    tabIndex={layoutSelection === 'grid-5' ? 0 : -1}
-                    onClick={() => selectLayout('grid-5')}
-                    aria-label="Grid layout, five titles per row"
-                    onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-5')}
-                  >
-                    <LayoutGrid size={16} aria-hidden="true" />
-                    <span className={styles.layoutBadge}>5</span>
-                  </button>
-                  <button
-                    type="button"
-                    role="radio"
-                    className={`${styles.layoutOption} ${
-                      layoutSelection === 'grid-4' ? styles.layoutOptionActive : ''
-                    }`}
-                    aria-checked={layoutSelection === 'grid-4'}
-                    tabIndex={layoutSelection === 'grid-4' ? 0 : -1}
-                    onClick={() => selectLayout('grid-4')}
-                    aria-label="Grid layout, four titles per row"
-                    onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-4')}
-                  >
-                    <LayoutGrid size={16} aria-hidden="true" />
-                    <span className={styles.layoutBadge}>4</span>
-                  </button>
-                  <button
-                    type="button"
-                    role="radio"
-                    className={`${styles.layoutOption} ${
-                      layoutSelection === 'list' ? styles.layoutOptionActive : ''
-                    }`}
-                    aria-checked={layoutSelection === 'list'}
-                    tabIndex={layoutSelection === 'list' ? 0 : -1}
-                    onClick={() => selectLayout('list')}
-                    aria-label="List layout with details"
-                    onKeyDown={(event) => handleLayoutKeyDown(event, 'list')}
-                  >
-                    <ListIcon size={16} aria-hidden="true" />
-                    <span className={styles.layoutBadge}>1</span>
-                  </button>
-                </div>
-              </div>
-
-              <div
                 className={`${styles.organizeGroup} ${styles.filterGroup}`}
                 role="group"
-                aria-label="Filter watchlist"
+                aria-label="Adjust visibility"
               >
-                <span className={styles.groupLabel}>Filter titles</span>
+                <span className={styles.groupLabel}>Visibility</span>
                 <label
                   className={`${styles.toggle} ${
                     showUnwatchedOnly ? styles.toggleActive : ''
@@ -2337,6 +2289,59 @@ export default function Page() {
                   </span>
                   <span className={styles.toggleLabel}>Show unwatched only</span>
                 </label>
+                <div className={styles.layoutSection}>
+                  <span className={styles.layoutSectionLabel}>Layout</span>
+                  <div
+                    className={styles.layoutSwitch}
+                    role="radiogroup"
+                    aria-label="Choose layout"
+                  >
+                    <button
+                      type="button"
+                      role="radio"
+                      className={`${styles.layoutOption} ${
+                        layoutSelection === 'grid-5' ? styles.layoutOptionActive : ''
+                      }`}
+                      aria-checked={layoutSelection === 'grid-5'}
+                      tabIndex={layoutSelection === 'grid-5' ? 0 : -1}
+                      onClick={() => selectLayout('grid-5')}
+                      aria-label="Grid layout, five titles per row"
+                      onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-5')}
+                    >
+                      <LayoutGrid size={16} aria-hidden="true" />
+                      <span className={styles.layoutBadge}>5</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      className={`${styles.layoutOption} ${
+                        layoutSelection === 'grid-4' ? styles.layoutOptionActive : ''
+                      }`}
+                      aria-checked={layoutSelection === 'grid-4'}
+                      tabIndex={layoutSelection === 'grid-4' ? 0 : -1}
+                      onClick={() => selectLayout('grid-4')}
+                      aria-label="Grid layout, four titles per row"
+                      onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-4')}
+                    >
+                      <LayoutGrid size={16} aria-hidden="true" />
+                      <span className={styles.layoutBadge}>4</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      className={`${styles.layoutOption} ${styles.layoutOptionSolo} ${
+                        layoutSelection === 'list' ? styles.layoutOptionActive : ''
+                      }`}
+                      aria-checked={layoutSelection === 'list'}
+                      tabIndex={layoutSelection === 'list' ? 0 : -1}
+                      onClick={() => selectLayout('list')}
+                      aria-label="List layout with details"
+                      onKeyDown={(event) => handleLayoutKeyDown(event, 'list')}
+                    >
+                      <ListIcon size={16} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
