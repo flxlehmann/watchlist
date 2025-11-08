@@ -6,8 +6,8 @@ type AnimatedListOptions = {
 };
 
 export function useAnimatedList<T extends HTMLElement>({
-  duration = 260,
-  easing = 'cubic-bezier(0.16, 1, 0.3, 1)'
+  duration = 360,
+  easing = 'cubic-bezier(0.22, 1, 0.36, 1)'
 }: AnimatedListOptions = {}) {
   const parentRef = useRef<T | null>(null);
   const positionsRef = useRef<Map<Element, DOMRect>>(new Map());
@@ -52,12 +52,22 @@ export function useAnimatedList<T extends HTMLElement>({
         const previous = positionsRef.current.get(element);
         if (!previous) {
           element.getAnimations?.().forEach((animation) => animation.cancel());
+          const targetOpacity = (() => {
+            const view = element.ownerDocument?.defaultView;
+            if (!view) return 1;
+            const parsed = Number.parseFloat(view.getComputedStyle(element).opacity);
+            return Number.isFinite(parsed) ? parsed : 1;
+          })();
+          const fromOpacity = Math.max(
+            0,
+            Number.isFinite(targetOpacity) ? Math.min(targetOpacity * 0.7, targetOpacity) : 0
+          );
           element.animate(
             [
-              { opacity: 0, transform: 'scale(0.97)' },
-              { opacity: 1, transform: 'scale(1)' }
+              { opacity: fromOpacity, transform: 'scale(0.96)' },
+              { opacity: targetOpacity, transform: 'scale(1)' }
             ],
-            { duration, easing, fill: 'both' }
+            { duration, easing, fill: 'none' }
           );
           return;
         }
@@ -72,7 +82,7 @@ export function useAnimatedList<T extends HTMLElement>({
               { transform: `translate(${deltaX}px, ${deltaY}px)` },
               { transform: 'translate(0, 0)' }
             ],
-            { duration, easing, fill: 'both' }
+            { duration, easing, fill: 'none' }
           );
         }
       });

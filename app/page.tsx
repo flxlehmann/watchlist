@@ -2278,7 +2278,6 @@ export default function Page() {
                     onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-5')}
                   >
                     <LayoutGrid size={16} aria-hidden="true" />
-                    <span className={styles.layoutLabel}>Grid</span>
                     <span className={styles.layoutBadge}>5</span>
                   </button>
                   <button
@@ -2294,7 +2293,6 @@ export default function Page() {
                     onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-4')}
                   >
                     <LayoutGrid size={16} aria-hidden="true" />
-                    <span className={styles.layoutLabel}>Grid</span>
                     <span className={styles.layoutBadge}>4</span>
                   </button>
                   <button
@@ -2310,7 +2308,7 @@ export default function Page() {
                     onKeyDown={(event) => handleLayoutKeyDown(event, 'list')}
                   >
                     <ListIcon size={16} aria-hidden="true" />
-                    <span className={styles.layoutLabel}>List</span>
+                    <span className={styles.layoutBadge}>1</span>
                   </button>
                 </div>
               </div>
