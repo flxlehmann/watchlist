@@ -162,7 +162,7 @@ export default function Page() {
   const [selectedReleaseDate, setSelectedReleaseDate] = useState<string | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [sortOption, setSortOption] = useState<SortOption>('addedRecent');
-  const [showWatched, setShowWatched] = useState(true);
+  const [showWatched, setShowWatched] = useState(false);
   const [showUnwatched, setShowUnwatched] = useState(true);
   const [randomPick, setRandomPick] = useState<Item | null>(null);
   const [showRandomOverlay, setShowRandomOverlay] = useState(false);
@@ -745,27 +745,25 @@ export default function Page() {
   const toggleVisibility = useCallback(
     (type: 'watched' | 'unwatched') => {
       if (type === 'watched') {
-        setShowWatched((current) => {
-          if (current && !showUnwatched) {
-            return current;
-          }
-          return !current;
-        });
+        if (showWatched && !showUnwatched) {
+          return;
+        }
+        setShowWatched(true);
+        setShowUnwatched(false);
         return;
       }
-      setShowUnwatched((current) => {
-        if (current && !showWatched) {
-          return current;
-        }
-        return !current;
-      });
+      if (showUnwatched && !showWatched) {
+        return;
+      }
+      setShowUnwatched(true);
+      setShowWatched(false);
     },
     [showUnwatched, showWatched]
   );
 
   useEffect(() => {
     setSortOption('addedRecent');
-    setShowWatched(true);
+    setShowWatched(false);
     setShowUnwatched(true);
   }, [list?.id]);
 
@@ -1213,9 +1211,9 @@ export default function Page() {
               <div
                 className={styles.organizeGroup}
                 role="radiogroup"
-                aria-label="Sort titles"
+                aria-label="Sort by date added"
               >
-                <span className={styles.groupLabel}>Sort titles</span>
+                <span className={styles.groupLabel}>Date added</span>
                 <div className={styles.sortButtons}>
                   <button
                     type="button"
@@ -1225,7 +1223,7 @@ export default function Page() {
                     onClick={() => setSortOption('addedRecent')}
                     aria-pressed={sortOption === 'addedRecent'}
                   >
-                    Added latest
+                    Latest
                   </button>
                   <button
                     type="button"
@@ -1235,7 +1233,27 @@ export default function Page() {
                     onClick={() => setSortOption('addedOldest')}
                     aria-pressed={sortOption === 'addedOldest'}
                   >
-                    Added earliest
+                    Earliest
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className={styles.organizeGroup}
+                role="radiogroup"
+                aria-label="Sort by release date"
+              >
+                <span className={styles.groupLabel}>Released</span>
+                <div className={styles.sortButtons}>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      sortOption === 'releaseAsc' ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => setSortOption('releaseAsc')}
+                    aria-pressed={sortOption === 'releaseAsc'}
+                  >
+                    Oldest
                   </button>
                   <button
                     type="button"
@@ -1245,18 +1263,18 @@ export default function Page() {
                     onClick={() => setSortOption('releaseDesc')}
                     aria-pressed={sortOption === 'releaseDesc'}
                   >
-                    Release newest
+                    Newest
                   </button>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'releaseAsc' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('releaseAsc')}
-                    aria-pressed={sortOption === 'releaseAsc'}
-                  >
-                    Release oldest
-                  </button>
+                </div>
+              </div>
+
+              <div
+                className={styles.organizeGroup}
+                role="radiogroup"
+                aria-label="Sort by title"
+              >
+                <span className={styles.groupLabel}>Title</span>
+                <div className={styles.sortButtons}>
                   <button
                     type="button"
                     className={`${styles.sortButton} ${
@@ -1265,7 +1283,7 @@ export default function Page() {
                     onClick={() => setSortOption('titleAsc')}
                     aria-pressed={sortOption === 'titleAsc'}
                   >
-                    Title A → Z
+                    A-Z
                   </button>
                   <button
                     type="button"
@@ -1275,7 +1293,7 @@ export default function Page() {
                     onClick={() => setSortOption('titleDesc')}
                     aria-pressed={sortOption === 'titleDesc'}
                   >
-                    Title Z → A
+                    Z-A
                   </button>
                 </div>
               </div>
@@ -1290,22 +1308,22 @@ export default function Page() {
                   <button
                     type="button"
                     className={`${styles.filterButton} ${
-                      showUnwatched ? styles.filterButtonActive : styles.filterButtonInactive
-                    }`}
-                    onClick={() => toggleVisibility('unwatched')}
-                    aria-pressed={showUnwatched}
-                  >
-                    Unwatched
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.filterButton} ${
                       showWatched ? styles.filterButtonActive : styles.filterButtonInactive
                     }`}
                     onClick={() => toggleVisibility('watched')}
                     aria-pressed={showWatched}
                   >
                     Watched
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.filterButton} ${
+                      showUnwatched ? styles.filterButtonActive : styles.filterButtonInactive
+                    }`}
+                    onClick={() => toggleVisibility('unwatched')}
+                    aria-pressed={showUnwatched}
+                  >
+                    Unwatched
                   </button>
                 </div>
               </div>
