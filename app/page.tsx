@@ -76,46 +76,55 @@ const QUICK_START_MOVIES: Array<{
   title: string;
   releaseDate: string;
   poster: string;
+  runtimeMinutes: number;
 }> = [
   {
     title: 'The Godfather (1972)',
     releaseDate: '1972-03-14',
-    poster: 'https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg'
+    poster: 'https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg',
+    runtimeMinutes: 175
   },
   {
     title: 'Casablanca (1942)',
     releaseDate: '1942-11-26',
-    poster: 'https://image.tmdb.org/t/p/w500/5K7cOHoay2mZusSLezBOY0Qxh8a.jpg'
+    poster: 'https://image.tmdb.org/t/p/w500/5K7cOHoay2mZusSLezBOY0Qxh8a.jpg',
+    runtimeMinutes: 102
   },
   {
-    title: 'Citizen Kane (1941)',
-    releaseDate: '1941-04-17',
-    poster: 'https://image.tmdb.org/t/p/w500/jKtKcOHLskBCEQL2Ib6ATWKOgUD.jpg'
+    title: 'Forrest Gump (1994)',
+    releaseDate: '1994-07-06',
+    poster: 'https://image.tmdb.org/t/p/w500/saHP97rTPS5eLmrLQEcANmKrsFl.jpg',
+    runtimeMinutes: 142
   },
   {
     title: 'The Shawshank Redemption (1994)',
     releaseDate: '1994-09-23',
-    poster: 'https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg'
+    poster: 'https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg',
+    runtimeMinutes: 142
   },
   {
-    title: 'Pulp Fiction (1994)',
-    releaseDate: '1994-09-10',
-    poster: 'https://image.tmdb.org/t/p/w500/dM2w364MScsjFf8pfMbaWUcWrR.jpg'
+    title: 'Raiders of the Lost Ark (1981)',
+    releaseDate: '1981-06-12',
+    poster: 'https://image.tmdb.org/t/p/w500/ceG9VzoRAVGwivFU403Wc3AHRys.jpg',
+    runtimeMinutes: 115
   },
   {
     title: 'The Dark Knight (2008)',
     releaseDate: '2008-07-16',
-    poster: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg'
+    poster: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
+    runtimeMinutes: 152
   },
   {
     title: 'The Lord of the Rings: The Fellowship of the Ring (2001)',
     releaseDate: '2001-12-18',
-    poster: 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg'
+    poster: 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg',
+    runtimeMinutes: 178
   },
   {
     title: 'Back to the Future (1985)',
     releaseDate: '1985-07-03',
-    poster: 'https://image.tmdb.org/t/p/w500/qvktm0BHcnmDpul4Hz01GIazWPr.jpg'
+    poster: 'https://image.tmdb.org/t/p/w500/qvktm0BHcnmDpul4Hz01GIazWPr.jpg',
+    runtimeMinutes: 116
   }
 ];
 
@@ -704,7 +713,8 @@ export default function Page() {
               body: JSON.stringify({
                 title: movie.title,
                 poster: movie.poster,
-                releaseDate: movie.releaseDate
+                releaseDate: movie.releaseDate,
+                runtimeMinutes: movie.runtimeMinutes
               })
             },
             passwordOverride
@@ -2122,7 +2132,8 @@ export default function Page() {
                     const releaseYear = item.releaseDate
                       ? item.releaseDate.slice(0, 4)
                       : displayYear;
-                    const addedByLabel = item.addedBy?.trim() || 'Unknown';
+                    const showAddedBy = gridColumns !== 4;
+                    const addedByLabel = showAddedBy ? item.addedBy?.trim() || 'Unknown' : null;
                     const initials = item.title
                       .split(' ')
                       .filter(Boolean)
@@ -2151,7 +2162,7 @@ export default function Page() {
                               <h3 className={styles.posterTitle}>{displayTitle}</h3>
                               <div className={styles.posterMeta}>
                                 {releaseYear && <span>{releaseYear}</span>}
-                                <span>Added by {addedByLabel}</span>
+                                {showAddedBy && <span>Added by {addedByLabel}</span>}
                               </div>
                             </div>
                             <div className={styles.posterActions}>
