@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useAnimatedList } from '@/lib/useAnimatedList';
 import {
+  AlertCircle,
   ArrowRight,
   Check,
   CheckCircle2,
@@ -70,6 +71,73 @@ type LayoutSelection = 'grid-4' | 'grid-5' | 'list';
 const LAYOUT_OPTIONS: LayoutSelection[] = ['grid-5', 'grid-4', 'list'];
 
 const RANDOM_COUNTDOWN_DURATION = 5;
+
+const QUICK_START_MOVIES: Array<{
+  title: string;
+  releaseDate: string;
+  poster: string;
+}> = [
+  {
+    title: 'Inside Out 2 (2024)',
+    releaseDate: '2024-06-12',
+    poster: 'https://image.tmdb.org/t/p/w500/wWba3TaojhK7NdycWbvDxZLRPub.jpg'
+  },
+  {
+    title: 'Dune: Part Two (2024)',
+    releaseDate: '2024-03-01',
+    poster: 'https://image.tmdb.org/t/p/w500/8bcoRX3hQRHufLPSDREdvr3YMXx.jpg'
+  },
+  {
+    title: 'Furiosa: A Mad Max Saga (2024)',
+    releaseDate: '2024-05-22',
+    poster: 'https://image.tmdb.org/t/p/w500/iADOJ8Zymht2JPMoy3R7xceZprc.jpg'
+  },
+  {
+    title: 'Kingdom of the Planet of the Apes (2024)',
+    releaseDate: '2024-05-08',
+    poster: 'https://image.tmdb.org/t/p/w500/gk5czY1i8LUTvbG7w5qDCaKlk4c.jpg'
+  },
+  {
+    title: 'The Fall Guy (2024)',
+    releaseDate: '2024-05-01',
+    poster: 'https://image.tmdb.org/t/p/w500/aBkqu7EddWK7qmY4grL4I6edx2h.jpg'
+  },
+  {
+    title: 'Godzilla x Kong: The New Empire (2024)',
+    releaseDate: '2024-03-27',
+    poster: 'https://image.tmdb.org/t/p/w500/jvPMJ2zM92jfXxIFZMFUdjyA1fM.jpg'
+  },
+  {
+    title: 'Civil War (2024)',
+    releaseDate: '2024-04-10',
+    poster: 'https://image.tmdb.org/t/p/w500/jFt1gS4BGHlK8xt76Y81Alp4dbt.jpg'
+  },
+  {
+    title: 'Challengers (2024)',
+    releaseDate: '2024-04-18',
+    poster: 'https://image.tmdb.org/t/p/w500/1m1dps11CfHR0VqZQ3kn7LImB0r.jpg'
+  },
+  {
+    title: 'Bad Boys: Ride or Die (2024)',
+    releaseDate: '2024-06-05',
+    poster: 'https://image.tmdb.org/t/p/w500/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg'
+  },
+  {
+    title: 'IF (2024)',
+    releaseDate: '2024-05-08',
+    poster: 'https://image.tmdb.org/t/p/w500/xbKFv4KF3sVYuWKllLlwWDmuZP7.jpg'
+  },
+  {
+    title: 'Ghostbusters: Frozen Empire (2024)',
+    releaseDate: '2024-03-20',
+    poster: 'https://image.tmdb.org/t/p/w500/e1J2oNzSBdou01sUvriVuoYp0pJ.jpg'
+  },
+  {
+    title: 'The Garfield Movie (2024)',
+    releaseDate: '2024-04-30',
+    poster: 'https://image.tmdb.org/t/p/w500/bXi6IQiQDHD00JFio5ZSZOeRSBh.jpg'
+  }
+];
 
 function normalizeTitle(value: string): string {
   return value.replace(/\s*\(\d{4}\)$/, '').trim().toLowerCase();
@@ -599,7 +667,7 @@ export default function Page() {
     [joinPassword, list, pushNotification]
   );
 
-  const createList = useCallback(async () => {
+  const createList = useCallback(async (): Promise<List | null> => {
     setCreating(true);
     setError(null);
     try {
@@ -623,10 +691,12 @@ export default function Page() {
         url.searchParams.set('list', data.id);
         window.history.replaceState({}, '', url.toString());
       }
+      return data;
     } catch (err) {
       const message = parseError(err);
       setError(message);
       pushNotification('error', message);
+      return null;
     } finally {
       setCreating(false);
     }
@@ -634,9 +704,45 @@ export default function Page() {
 
   const quickStart = useCallback(async () => {
     if (list) return;
-    if (!listName.trim()) setListName('Watchlist');
-    await createList();
-  }, [createList, list, listName]);
+    if (!listName.trim()) {
+      setListName('Watchlist');
+    }
+    const passwordOverride = createPassword.trim() || undefined;
+    const created = await createList();
+    if (!created) {
+      return;
+    }
+    setCreating(true);
+    setError(null);
+    try {
+      let current = created;
+      for (const movie of [...QUICK_START_MOVIES].reverse()) {
+        current = await api<List>(
+          `/api/lists/${created.id}`,
+          withPassword(
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                title: movie.title,
+                poster: movie.poster,
+                releaseDate: movie.releaseDate
+              })
+            },
+            passwordOverride
+          )
+        );
+        setList(current);
+      }
+      setLastSynced(Date.now());
+      pushNotification('success', 'Loaded a starter watchlist with popular movies.');
+    } catch (err) {
+      const message = parseError(err);
+      setError(message);
+      pushNotification('error', message);
+    } finally {
+      setCreating(false);
+    }
+  }, [createList, createPassword, list, listName, pushNotification, withPassword]);
 
   const addItem = useCallback(
     async (event?: React.FormEvent) => {
@@ -1305,7 +1411,7 @@ export default function Page() {
                 {notification.type === 'success' ? (
                   <CheckCircle2 size={18} />
                 ) : (
-                  <Trash2 size={18} />
+                  <AlertCircle size={18} />
                 )}
               </div>
               <span className={styles.notificationMessage}>{notification.message}</span>
@@ -2181,11 +2287,11 @@ export default function Page() {
                 <CheckCircle2 size={40} />
                 <p>Your watchlist is feeling fresh. Add something to get started!</p>
                 <div className={styles.quickLinks}>
-                  <button type="button" onClick={() => setTitle('Dune: Part Two')}>
-                    Suggest “Dune: Part Two”
+                  <button type="button" onClick={() => setTitle('Inside Out 2')}>
+                    Suggest “Inside Out 2”
                   </button>
-                  <button type="button" onClick={() => setTitle('The Bear S03E01')}>
-                    Suggest “The Bear S03E01”
+                  <button type="button" onClick={() => setTitle('Furiosa: A Mad Max Saga')}>
+                    Suggest “Furiosa: A Mad Max Saga”
                   </button>
                 </div>
               </div>
@@ -2369,7 +2475,7 @@ export default function Page() {
               <header className={styles.statsHeader}>
                 <h2>List stats</h2>
                 <span className={styles.statsTotal}>
-                  {stats.total} title{stats.total === 1 ? '' : 's'}
+                  {stats.total} movie{stats.total === 1 ? '' : 's'}
                 </span>
               </header>
               <ul className={styles.statsList}>
@@ -2461,7 +2567,7 @@ export default function Page() {
 
           {error && (
             <div className={`${styles.status} ${styles.statusError}`}>
-              <Trash2 size={18} /> {error}
+              <AlertCircle size={18} /> {error}
             </div>
           )}
 
