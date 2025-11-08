@@ -45,8 +45,13 @@ type SearchSuggestion = {
   releaseDate?: string;
 };
 
-type SortOption = 'added' | 'releaseAsc' | 'releaseDesc' | 'titleAsc' | 'titleDesc';
-type VisibilityFilter = 'all' | 'watched' | 'unwatched';
+type SortOption =
+  | 'addedRecent'
+  | 'addedOldest'
+  | 'releaseAsc'
+  | 'releaseDesc'
+  | 'titleAsc'
+  | 'titleDesc';
 
 function normalizeTitle(value: string): string {
   return value.replace(/\s*\(\d{4}\)$/, '').trim().toLowerCase();
@@ -156,8 +161,9 @@ export default function Page() {
   const [selectedRuntime, setSelectedRuntime] = useState<number | null>(null);
   const [selectedReleaseDate, setSelectedReleaseDate] = useState<string | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
-  const [sortOption, setSortOption] = useState<SortOption>('added');
-  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
+  const [sortOption, setSortOption] = useState<SortOption>('addedRecent');
+  const [showWatched, setShowWatched] = useState(true);
+  const [showUnwatched, setShowUnwatched] = useState(true);
   const [randomPick, setRandomPick] = useState<Item | null>(null);
   const [showRandomOverlay, setShowRandomOverlay] = useState(false);
   const randomTitleId = useId();
@@ -282,12 +288,15 @@ export default function Page() {
 
   const displayItems = useMemo(() => {
     if (!list) return [] as Item[];
-    let items = [...list.items];
-    if (visibilityFilter === 'watched') {
-      items = items.filter((item) => item.watched);
-    } else if (visibilityFilter === 'unwatched') {
-      items = items.filter((item) => !item.watched);
-    }
+    const items = [...list.items].filter((item) => {
+      if (item.watched && !showWatched) {
+        return false;
+      }
+      if (!item.watched && !showUnwatched) {
+        return false;
+      }
+      return true;
+    });
     switch (sortOption) {
       case 'releaseDesc': {
         return items.sort((a, b) => {
@@ -333,10 +342,14 @@ export default function Page() {
           return bTitle.localeCompare(aTitle);
         });
       }
-      default:
+      case 'addedRecent':
         return items.sort((a, b) => b.createdAt - a.createdAt);
+      case 'addedOldest':
+        return items.sort((a, b) => a.createdAt - b.createdAt);
+      default:
+        return items;
     }
-  }, [list, sortOption, visibilityFilter]);
+  }, [list, showWatched, showUnwatched, sortOption]);
 
   const joinList = useCallback(
     async (id: string) => {
@@ -729,9 +742,31 @@ export default function Page() {
   const lastUpdated = list ? formatRelative(list.updatedAt) : null;
   const lastSyncedAgo = formatRelative(lastSynced);
 
+  const toggleVisibility = useCallback(
+    (type: 'watched' | 'unwatched') => {
+      if (type === 'watched') {
+        setShowWatched((current) => {
+          if (current && !showUnwatched) {
+            return current;
+          }
+          return !current;
+        });
+        return;
+      }
+      setShowUnwatched((current) => {
+        if (current && !showWatched) {
+          return current;
+        }
+        return !current;
+      });
+    },
+    [showUnwatched, showWatched]
+  );
+
   useEffect(() => {
-    setSortOption('added');
-    setVisibilityFilter('all');
+    setSortOption('addedRecent');
+    setShowWatched(true);
+    setShowUnwatched(true);
   }, [list?.id]);
 
   useEffect(() => {
@@ -1174,99 +1209,112 @@ export default function Page() {
           </div>
 
           <aside className={styles.statsColumn} aria-label="Watchlist controls and statistics">
-            <div className={styles.sortControls} role="radiogroup" aria-label="Sort watchlist">
-              <span className={styles.sortLabel}>Sort titles</span>
-              <div className={styles.sortButtons}>
-                <button
-                  type="button"
-                  className={`${styles.sortButton} ${
-                    sortOption === 'added' ? styles.sortButtonActive : ''
-                  }`}
-                  onClick={() => setSortOption('added')}
-                  aria-pressed={sortOption === 'added'}
-                >
-                  Time added
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.sortButton} ${
-                    sortOption === 'releaseDesc' ? styles.sortButtonActive : ''
-                  }`}
-                  onClick={() => setSortOption('releaseDesc')}
-                  aria-pressed={sortOption === 'releaseDesc'}
-                >
-                  Newest first
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.sortButton} ${
-                    sortOption === 'releaseAsc' ? styles.sortButtonActive : ''
-                  }`}
-                  onClick={() => setSortOption('releaseAsc')}
-                  aria-pressed={sortOption === 'releaseAsc'}
-                >
-                  Oldest first
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.sortButton} ${
-                    sortOption === 'titleAsc' ? styles.sortButtonActive : ''
-                  }`}
-                  onClick={() => setSortOption('titleAsc')}
-                  aria-pressed={sortOption === 'titleAsc'}
-                >
-                  A → Z
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.sortButton} ${
-                    sortOption === 'titleDesc' ? styles.sortButtonActive : ''
-                  }`}
-                  onClick={() => setSortOption('titleDesc')}
-                  aria-pressed={sortOption === 'titleDesc'}
-                >
-                  Z → A
-                </button>
+            <div className={styles.sortControls} aria-label="Organize watchlist">
+              <div className={styles.organizeHeader}>
+                <span className={styles.sortLabel}>Organize</span>
+                <p className={styles.organizeDescription}>
+                  Sort titles and focus on what you want to watch next.
+                </p>
               </div>
-            </div>
 
-            <div
-              className={`${styles.sortControls} ${styles.filterControls}`}
-              role="radiogroup"
-              aria-label="Filter watchlist"
-            >
-              <span className={styles.sortLabel}>Filter</span>
-              <div className={styles.sortButtons}>
-                <button
-                  type="button"
-                  className={`${styles.sortButton} ${
-                    visibilityFilter === 'all' ? styles.sortButtonActive : ''
-                  }`}
-                  onClick={() => setVisibilityFilter('all')}
-                  aria-pressed={visibilityFilter === 'all'}
-                >
-                  All
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.sortButton} ${
-                    visibilityFilter === 'unwatched' ? styles.sortButtonActive : ''
-                  }`}
-                  onClick={() => setVisibilityFilter('unwatched')}
-                  aria-pressed={visibilityFilter === 'unwatched'}
-                >
-                  Unwatched
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.sortButton} ${
-                    visibilityFilter === 'watched' ? styles.sortButtonActive : ''
-                  }`}
-                  onClick={() => setVisibilityFilter('watched')}
-                  aria-pressed={visibilityFilter === 'watched'}
-                >
-                  Watched
-                </button>
+              <div
+                className={styles.organizeGroup}
+                role="radiogroup"
+                aria-label="Sort titles"
+              >
+                <span className={styles.groupLabel}>Sort titles</span>
+                <div className={styles.sortButtons}>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      sortOption === 'addedRecent' ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => setSortOption('addedRecent')}
+                    aria-pressed={sortOption === 'addedRecent'}
+                  >
+                    Added latest
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      sortOption === 'addedOldest' ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => setSortOption('addedOldest')}
+                    aria-pressed={sortOption === 'addedOldest'}
+                  >
+                    Added earliest
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      sortOption === 'releaseDesc' ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => setSortOption('releaseDesc')}
+                    aria-pressed={sortOption === 'releaseDesc'}
+                  >
+                    Release newest
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      sortOption === 'releaseAsc' ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => setSortOption('releaseAsc')}
+                    aria-pressed={sortOption === 'releaseAsc'}
+                  >
+                    Release oldest
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      sortOption === 'titleAsc' ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => setSortOption('titleAsc')}
+                    aria-pressed={sortOption === 'titleAsc'}
+                  >
+                    Title A → Z
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      sortOption === 'titleDesc' ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => setSortOption('titleDesc')}
+                    aria-pressed={sortOption === 'titleDesc'}
+                  >
+                    Title Z → A
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className={`${styles.organizeGroup} ${styles.organizeFilterGroup}`}
+                role="group"
+                aria-label="Filter watchlist"
+              >
+                <span className={styles.groupLabel}>Filter titles</span>
+                <div className={styles.sortButtons}>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      showUnwatched ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => toggleVisibility('unwatched')}
+                    aria-pressed={showUnwatched}
+                  >
+                    Unwatched
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.sortButton} ${
+                      showWatched ? styles.sortButtonActive : ''
+                    }`}
+                    onClick={() => toggleVisibility('watched')}
+                    aria-pressed={showWatched}
+                  >
+                    Watched
+                  </button>
+                </div>
               </div>
             </div>
 
