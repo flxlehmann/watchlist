@@ -16,6 +16,8 @@ import {
   Plus,
   RefreshCw,
   ShieldPlus,
+  Shield,
+  ShieldCheck,
   Sparkles,
   Trash2,
   X
@@ -178,12 +180,24 @@ export default function Page() {
   const [countdownRemaining, setCountdownRemaining] = useState<number | null>(null);
   const [countdownSession, setCountdownSession] = useState(0);
   const [listMenuOpen, setListMenuOpen] = useState(false);
+  const [passwordDialogType, setPasswordDialogType] = useState<'set' | 'change' | 'delete' | null>(null);
+  const [passwordDialogNew, setPasswordDialogNew] = useState('');
+  const [passwordDialogConfirm, setPasswordDialogConfirm] = useState('');
+  const [passwordDialogCurrent, setPasswordDialogCurrent] = useState('');
+  const [passwordDialogError, setPasswordDialogError] = useState<string | null>(null);
+  const [passwordDialogSubmitting, setPasswordDialogSubmitting] = useState(false);
   const randomTitleId = useId();
   const randomDescriptionId = useId();
   const filterToggleId = useId();
   const countdownGradientId = useId();
   const listMenuDropdownId = useId();
   const listMenuButtonId = useId();
+  const protectedTooltipId = useId();
+  const passwordDialogTitleId = useId();
+  const passwordDialogDescriptionId = useId();
+  const passwordDialogCurrentId = useId();
+  const passwordDialogPasswordId = useId();
+  const passwordDialogConfirmId = useId();
   const blurTimeoutRef = useRef<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const detailsRequestRef = useRef(0);
@@ -191,14 +205,18 @@ export default function Page() {
   const notificationTimeoutsRef = useRef<Map<number, number>>(new Map());
   const randomCloseRef = useRef<HTMLButtonElement | null>(null);
   const listMenuRef = useRef<HTMLDivElement | null>(null);
+  const passwordDialogFormRef = useRef<HTMLFormElement | null>(null);
+  const passwordDialogInputRef = useRef<HTMLInputElement | null>(null);
+  const passwordDialogCloseRef = useRef<HTMLButtonElement | null>(null);
 
   const withPassword = useCallback(
-    (init: RequestInit = {}) => {
-      if (!activePassword) {
+    (init: RequestInit = {}, override?: string) => {
+      const password = override ?? activePassword;
+      if (!password) {
         return init;
       }
       const headers = new Headers(init.headers ?? undefined);
-      headers.set('x-list-password', activePassword);
+      headers.set('x-list-password', password);
       return { ...init, headers } satisfies RequestInit;
     },
     [activePassword]
@@ -258,6 +276,24 @@ export default function Page() {
     [dismissNotification]
   );
 
+  const closePasswordDialog = useCallback(() => {
+    setPasswordDialogType(null);
+    setPasswordDialogNew('');
+    setPasswordDialogConfirm('');
+    setPasswordDialogCurrent('');
+    setPasswordDialogError(null);
+    setPasswordDialogSubmitting(false);
+  }, []);
+
+  const openPasswordDialog = useCallback((type: 'set' | 'change' | 'delete') => {
+    setPasswordDialogType(type);
+    setPasswordDialogNew('');
+    setPasswordDialogConfirm('');
+    setPasswordDialogCurrent('');
+    setPasswordDialogError(null);
+    setPasswordDialogSubmitting(false);
+  }, []);
+
   const ensurePasswordForChanges = useCallback(() => {
     if (list?.protected && !activePassword) {
       const message = 'Enter the list password to make changes.';
@@ -267,6 +303,47 @@ export default function Page() {
     }
     return true;
   }, [activePassword, list, pushNotification]);
+
+  useEffect(() => {
+    if (!passwordDialogType) {
+      return;
+    }
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closePasswordDialog();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [closePasswordDialog, passwordDialogType]);
+
+  useEffect(() => {
+    if (!passwordDialogType) {
+      return;
+    }
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const timeout = window.setTimeout(() => {
+      if (passwordDialogType === 'delete' && !list?.protected) {
+        passwordDialogCloseRef.current?.focus();
+      } else {
+        passwordDialogInputRef.current?.focus();
+      }
+    }, 40);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [list, passwordDialogType]);
+
+  useEffect(() => {
+    if (passwordDialogType && !list) {
+      closePasswordDialog();
+    }
+  }, [closePasswordDialog, list, passwordDialogType]);
 
   useEffect(() => {
     if (list) {
@@ -353,6 +430,10 @@ export default function Page() {
       watchedRuntimeShare
     };
   }, [list]);
+
+  const trimmedNewPassword = passwordDialogNew.trim();
+  const trimmedConfirmPassword = passwordDialogConfirm.trim();
+  const trimmedCurrentPassword = passwordDialogCurrent.trim();
 
   const displayItems = useMemo(() => {
     if (!list) return [] as Item[];
@@ -818,66 +899,112 @@ export default function Page() {
     }
   }, [activePassword, list, pushNotification]);
 
-  const setListPassword = useCallback(async () => {
-    if (!list) return;
-    if (!ensurePasswordForChanges()) {
-      return;
-    }
-    if (typeof window === 'undefined') return;
-    const value = window.prompt('Set a password to protect this watchlist:');
-    if (value === null) {
-      return;
-    }
-    const trimmed = value.trim();
-    if (!trimmed) {
-      const message = 'Enter a password to continue.';
-      setError(message);
-      pushNotification('error', message);
-      return;
-    }
-    try {
-      const data = await api<List>(
-        `/api/lists/${list.id}`,
-        withPassword({
-          method: 'PATCH',
-          body: JSON.stringify({ password: trimmed })
-        })
-      );
-      setList(data);
-      setLastSynced(Date.now());
-      setActivePassword(trimmed);
-      setError(null);
-      pushNotification('success', 'Password added to this watchlist.');
-    } catch (err) {
-      const message = parseError(err);
-      setError(message);
-      pushNotification('error', message);
-    }
-  }, [ensurePasswordForChanges, list, pushNotification, withPassword]);
+  const handlePasswordDialogSubmit = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!list || !passwordDialogType) {
+        return;
+      }
+      const trimmedNew = passwordDialogNew.trim();
+      const trimmedConfirm = passwordDialogConfirm.trim();
+      const trimmedCurrent = passwordDialogCurrent.trim();
 
-  const deleteCurrentList = useCallback(async () => {
-    if (!list) return;
-    if (!ensurePasswordForChanges()) {
-      return;
-    }
-    if (typeof window === 'undefined') return;
-    const confirmed = window.confirm(
-      'Delete this watchlist? This action cannot be undone.'
-    );
-    if (!confirmed) {
-      return;
-    }
-    try {
-      await api(`/api/lists/${list.id}`, withPassword({ method: 'DELETE' }));
-      setError(null);
-      pushNotification('success', 'Watchlist deleted.');
-      leaveList();
-    } catch (err) {
-      const message = parseError(err);
-      setError(message);
-      pushNotification('error', message);
-    }
-  }, [ensurePasswordForChanges, leaveList, list, pushNotification, withPassword]);
+      if (passwordDialogType === 'set' || passwordDialogType === 'change') {
+        if (!trimmedNew) {
+          setPasswordDialogError('Enter a password to continue.');
+          return;
+        }
+        if (trimmedConfirm !== trimmedNew) {
+          setPasswordDialogError('Passwords do not match.');
+          return;
+        }
+        const authorizationPassword =
+          passwordDialogType === 'change'
+            ? trimmedCurrent || activePassword || undefined
+            : activePassword ?? undefined;
+        if (passwordDialogType === 'change' && !authorizationPassword) {
+          setPasswordDialogError('Enter the current password to update it.');
+          return;
+        }
+        setPasswordDialogSubmitting(true);
+        setPasswordDialogError(null);
+        try {
+          const data = await api<List>(
+            `/api/lists/${list.id}`,
+            withPassword(
+              {
+                method: 'PATCH',
+                body: JSON.stringify({ password: trimmedNew })
+              },
+              authorizationPassword
+            )
+          );
+          setList(data);
+          setLastSynced(Date.now());
+          setActivePassword(trimmedNew);
+          setError(null);
+          pushNotification(
+            'success',
+            passwordDialogType === 'set'
+              ? 'Password added to this watchlist.'
+              : 'Password updated.'
+          );
+          closePasswordDialog();
+        } catch (err) {
+          const message = parseError(err);
+          setPasswordDialogError(message);
+          setError(message);
+        } finally {
+          setPasswordDialogSubmitting(false);
+        }
+        return;
+      }
+
+      if (passwordDialogType === 'delete') {
+        const authorizationPassword = list.protected
+          ? trimmedCurrent || activePassword || undefined
+          : undefined;
+        if (list.protected && !authorizationPassword) {
+          setPasswordDialogError('Enter the password to confirm deletion.');
+          return;
+        }
+        setPasswordDialogSubmitting(true);
+        setPasswordDialogError(null);
+        try {
+          const requestInit = list.protected
+            ? withPassword({ method: 'DELETE' }, authorizationPassword)
+            : ({ method: 'DELETE' } satisfies RequestInit);
+          await api(`/api/lists/${list.id}`, requestInit);
+          setError(null);
+          pushNotification('success', 'Watchlist deleted.');
+          closePasswordDialog();
+          leaveList();
+        } catch (err) {
+          const message = parseError(err);
+          setPasswordDialogError(message);
+          setError(message);
+        } finally {
+          setPasswordDialogSubmitting(false);
+        }
+      }
+    },
+    [
+      activePassword,
+      closePasswordDialog,
+      leaveList,
+      list,
+      passwordDialogConfirm,
+      passwordDialogCurrent,
+      passwordDialogNew,
+      passwordDialogType,
+      pushNotification,
+      setError,
+      setLastSynced,
+      setList,
+      setActivePassword,
+      withPassword
+    ]
+  );
 
   const saveListName = useCallback(
     async (event?: React.FormEvent) => {
@@ -1085,6 +1212,214 @@ export default function Page() {
           ))}
         </div>
       )}
+      {passwordDialogType && list && (
+        <div
+          className={styles.dialogOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={passwordDialogTitleId}
+          aria-describedby={passwordDialogDescriptionId}
+        >
+          <div
+            className={styles.dialogBackdrop}
+            aria-hidden="true"
+            onClick={closePasswordDialog}
+          />
+          <form
+            ref={passwordDialogFormRef}
+            className={`${styles.dialogContent} ${
+              passwordDialogType === 'delete' ? styles.dialogContentDanger : ''
+            }`}
+            onSubmit={handlePasswordDialogSubmit}
+          >
+            <div className={styles.dialogHeader}>
+              <span className={styles.dialogIcon} aria-hidden="true">
+                {passwordDialogType === 'delete' ? (
+                  <Trash2 size={24} />
+                ) : passwordDialogType === 'change' ? (
+                  <ShieldCheck size={24} />
+                ) : (
+                  <ShieldPlus size={24} />
+                )}
+              </span>
+              <div className={styles.dialogHeading}>
+                <h2 id={passwordDialogTitleId} className={styles.dialogTitle}>
+                  {passwordDialogType === 'delete'
+                    ? 'Delete this watchlist'
+                    : passwordDialogType === 'change'
+                    ? 'Change password'
+                    : 'Protect this watchlist'}
+                </h2>
+                <p id={passwordDialogDescriptionId} className={styles.dialogDescription}>
+                  {passwordDialogType === 'delete'
+                    ? list.protected
+                      ? 'Enter the password to confirm deletion. This cannot be undone.'
+                      : 'This will permanently delete the entire watchlist. This cannot be undone.'
+                    : passwordDialogType === 'change'
+                    ? 'Update the password that protects this watchlist.'
+                    : 'Add a password so only people you share it with can join.'}
+                </p>
+              </div>
+            </div>
+            <div className={styles.dialogBody}>
+              {passwordDialogType === 'change' && (
+                <>
+                  <label className={styles.dialogField} htmlFor={passwordDialogCurrentId}>
+                    <span className={styles.dialogLabel}>Current password</span>
+                    <input
+                      id={passwordDialogCurrentId}
+                      ref={passwordDialogInputRef}
+                      className={styles.dialogInput}
+                      type="password"
+                      autoComplete="current-password"
+                      value={passwordDialogCurrent}
+                      onChange={(event) => {
+                        setPasswordDialogCurrent(event.target.value);
+                        setPasswordDialogError(null);
+                      }}
+                      placeholder="Enter current password"
+                      required
+                    />
+                  </label>
+                  <label className={styles.dialogField} htmlFor={passwordDialogPasswordId}>
+                    <span className={styles.dialogLabel}>New password</span>
+                    <input
+                      id={passwordDialogPasswordId}
+                      className={styles.dialogInput}
+                      type="password"
+                      autoComplete="new-password"
+                      value={passwordDialogNew}
+                      onChange={(event) => {
+                        setPasswordDialogNew(event.target.value);
+                        setPasswordDialogError(null);
+                      }}
+                      placeholder="Create a new password"
+                      required
+                    />
+                  </label>
+                  <label className={styles.dialogField} htmlFor={passwordDialogConfirmId}>
+                    <span className={styles.dialogLabel}>Confirm password</span>
+                    <input
+                      id={passwordDialogConfirmId}
+                      className={styles.dialogInput}
+                      type="password"
+                      autoComplete="new-password"
+                      value={passwordDialogConfirm}
+                      onChange={(event) => {
+                        setPasswordDialogConfirm(event.target.value);
+                        setPasswordDialogError(null);
+                      }}
+                      placeholder="Re-enter password"
+                      required
+                    />
+                  </label>
+                </>
+              )}
+              {passwordDialogType === 'set' && (
+                <>
+                  <label className={styles.dialogField} htmlFor={passwordDialogPasswordId}>
+                    <span className={styles.dialogLabel}>Password</span>
+                    <input
+                      id={passwordDialogPasswordId}
+                      ref={passwordDialogInputRef}
+                      className={styles.dialogInput}
+                      type="password"
+                      autoComplete="new-password"
+                      value={passwordDialogNew}
+                      onChange={(event) => {
+                        setPasswordDialogNew(event.target.value);
+                        setPasswordDialogError(null);
+                      }}
+                      placeholder="Create a password"
+                      required
+                    />
+                  </label>
+                  <label className={styles.dialogField} htmlFor={passwordDialogConfirmId}>
+                    <span className={styles.dialogLabel}>Confirm password</span>
+                    <input
+                      id={passwordDialogConfirmId}
+                      className={styles.dialogInput}
+                      type="password"
+                      autoComplete="new-password"
+                      value={passwordDialogConfirm}
+                      onChange={(event) => {
+                        setPasswordDialogConfirm(event.target.value);
+                        setPasswordDialogError(null);
+                      }}
+                      placeholder="Re-enter password"
+                      required
+                    />
+                  </label>
+                </>
+              )}
+              {passwordDialogType === 'delete' && list.protected && (
+                <label className={styles.dialogField} htmlFor={passwordDialogCurrentId}>
+                  <span className={styles.dialogLabel}>Password</span>
+                  <input
+                    id={passwordDialogCurrentId}
+                    ref={passwordDialogInputRef}
+                    className={styles.dialogInput}
+                    type="password"
+                    autoComplete="current-password"
+                    value={passwordDialogCurrent}
+                    onChange={(event) => {
+                      setPasswordDialogCurrent(event.target.value);
+                      setPasswordDialogError(null);
+                    }}
+                    placeholder="Enter password to delete"
+                    required
+                  />
+                </label>
+              )}
+              {passwordDialogError && (
+                <p className={styles.dialogError} role="alert">
+                  {passwordDialogError}
+                </p>
+              )}
+            </div>
+            <div className={styles.dialogActions}>
+              <button
+                type="button"
+                className={styles.dialogSecondary}
+                onClick={closePasswordDialog}
+                ref={passwordDialogCloseRef}
+                disabled={passwordDialogSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={`${styles.dialogPrimary} ${
+                  passwordDialogType === 'delete' ? styles.dialogPrimaryDanger : ''
+                }`}
+                disabled={
+                  passwordDialogSubmitting ||
+                  (passwordDialogType === 'delete'
+                    ? list.protected && !trimmedCurrentPassword
+                    : passwordDialogType === 'change'
+                    ? !trimmedCurrentPassword ||
+                      !trimmedNewPassword ||
+                      trimmedConfirmPassword !== trimmedNewPassword
+                    : !trimmedNewPassword || trimmedConfirmPassword !== trimmedNewPassword)
+                }
+              >
+                {passwordDialogSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="spin" />
+                    <span className={styles.dialogSubmitLabel}>Processing…</span>
+                  </>
+                ) : passwordDialogType === 'delete' ? (
+                  'Delete watchlist'
+                ) : passwordDialogType === 'change' ? (
+                  'Change password'
+                ) : (
+                  'Add password'
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
       {list ? (
         <div className={styles.workspace}>
           {showRandomOverlay && randomPick && (
@@ -1195,11 +1530,14 @@ export default function Page() {
                   {list.protected && (
                     <span
                       className={styles.protectedIndicator}
-                      title="Password protected"
-                      role="img"
+                      tabIndex={0}
+                      aria-describedby={protectedTooltipId}
                       aria-label="Password protected list"
                     >
-                      <span className={styles.visuallyHidden}>Password protected list</span>
+                      <Shield size={16} aria-hidden="true" />
+                      <span className={styles.protectedTooltip} id={protectedTooltipId} role="tooltip">
+                        Password protected
+                      </span>
                     </span>
                   )}
                   {renaming ? (
@@ -1320,17 +1658,30 @@ export default function Page() {
                         {refreshing ? <Loader2 size={16} className="spin" /> : <RefreshCw size={16} />} Refresh list
                       </button>
                       {list.protected ? (
-                        <button
-                          type="button"
-                          className={styles.listMenuItem}
-                          role="menuitem"
-                          onClick={() => {
-                            setListMenuOpen(false);
-                            void copyPassword();
-                          }}
-                        >
-                          <KeyRound size={16} /> Copy password
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            className={styles.listMenuItem}
+                            role="menuitem"
+                            onClick={() => {
+                              setListMenuOpen(false);
+                              void copyPassword();
+                            }}
+                          >
+                            <KeyRound size={16} /> Copy password
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.listMenuItem}
+                            role="menuitem"
+                            onClick={() => {
+                              setListMenuOpen(false);
+                              openPasswordDialog('change');
+                            }}
+                          >
+                            <ShieldCheck size={16} /> Change password
+                          </button>
+                        </>
                       ) : (
                         <button
                           type="button"
@@ -1338,7 +1689,7 @@ export default function Page() {
                           role="menuitem"
                           onClick={() => {
                             setListMenuOpen(false);
-                            void setListPassword();
+                            openPasswordDialog('set');
                           }}
                         >
                           <ShieldPlus size={16} /> Set password
@@ -1362,7 +1713,7 @@ export default function Page() {
                         role="menuitem"
                         onClick={() => {
                           setListMenuOpen(false);
-                          void deleteCurrentList();
+                          openPasswordDialog('delete');
                         }}
                       >
                         <Trash2 size={16} /> Delete list
