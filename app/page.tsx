@@ -10,6 +10,7 @@ import {
   Clock,
   Copy,
   KeyRound,
+  Binoculars,
   LayoutGrid,
   Link,
   Loader2,
@@ -189,6 +190,7 @@ export default function Page() {
   const [showRandomOverlay, setShowRandomOverlay] = useState(false);
   const [countdownRemaining, setCountdownRemaining] = useState<number | null>(null);
   const [countdownSession, setCountdownSession] = useState(0);
+  const [celebrationKey, setCelebrationKey] = useState(0);
   const [listMenuOpen, setListMenuOpen] = useState(false);
   const [initialListLoading, setInitialListLoading] = useState(false);
   const [passwordDialogType, setPasswordDialogType] = useState<
@@ -1221,6 +1223,12 @@ export default function Page() {
   }, [countdownRemaining]);
 
   useEffect(() => {
+    if (showRandomOverlay && countdownRemaining === null && randomPick) {
+      setCelebrationKey((value) => value + 1);
+    }
+  }, [countdownRemaining, randomPick, showRandomOverlay]);
+
+  useEffect(() => {
     if (!title.trim()) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -1575,6 +1583,18 @@ export default function Page() {
                 >
                   <X size={20} />
                 </button>
+                {countdownRemaining === null && (
+                  <div
+                    key={celebrationKey}
+                    className={styles.randomCelebration}
+                    aria-hidden="true"
+                  >
+                    <span className={`${styles.firework} ${styles.fireworkOne}`} />
+                    <span className={`${styles.firework} ${styles.fireworkTwo}`} />
+                    <span className={`${styles.firework} ${styles.fireworkThree}`} />
+                    <span className={`${styles.firework} ${styles.fireworkFour}`} />
+                  </div>
+                )}
                 <div className={styles.randomHeading}>
                   <Sparkles size={28} aria-hidden="true" />
                   <span className={styles.randomBadge}>
@@ -1642,7 +1662,7 @@ export default function Page() {
                         className={`${styles.randomButton} ${styles.randomConfirm}`}
                         onClick={confirmRandomPick}
                       >
-                        <Check size={18} /> Let's watch it
+                        <Binoculars size={18} /> Let's watch it
                       </button>
                     </div>
                   </>
