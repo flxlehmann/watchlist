@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useAnimatedList } from '@/lib/useAnimatedList';
 import {
   ArrowRight,
   Check,
@@ -61,6 +63,10 @@ type SortOption =
   | 'releaseDesc'
   | 'titleAsc'
   | 'titleDesc';
+
+type LayoutSelection = 'grid-4' | 'grid-5' | 'list';
+
+const LAYOUT_OPTIONS: LayoutSelection[] = ['grid-5', 'grid-4', 'list'];
 
 const RANDOM_COUNTDOWN_DURATION = 5;
 
@@ -215,6 +221,42 @@ export default function Page() {
   const passwordDialogFormRef = useRef<HTMLFormElement | null>(null);
   const passwordDialogInputRef = useRef<HTMLInputElement | null>(null);
   const passwordDialogCloseRef = useRef<HTMLButtonElement | null>(null);
+  const itemsParent = useAnimatedList<HTMLElement>({
+    duration: 260,
+    easing: 'cubic-bezier(0.16, 1, 0.3, 1)'
+  });
+  const layoutSelection: LayoutSelection = viewMode === 'list' ? 'list' : gridColumns === 4 ? 'grid-4' : 'grid-5';
+  const selectLayout = useCallback(
+    (selection: LayoutSelection) => {
+      if (selection === 'list') {
+        setViewMode('list');
+        return;
+      }
+      setViewMode('grid');
+      setGridColumns(selection === 'grid-4' ? 4 : 5);
+    },
+    [setGridColumns, setViewMode]
+  );
+  const handleLayoutKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLButtonElement>, current: LayoutSelection) => {
+      if (event.key !== 'ArrowRight' && event.key !== 'ArrowDown' && event.key !== 'ArrowLeft' && event.key !== 'ArrowUp') {
+        return;
+      }
+      event.preventDefault();
+      const index = LAYOUT_OPTIONS.indexOf(current);
+      if (index === -1) {
+        return;
+      }
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        const next = LAYOUT_OPTIONS[(index + 1) % LAYOUT_OPTIONS.length];
+        selectLayout(next);
+      } else {
+        const nextIndex = (index - 1 + LAYOUT_OPTIONS.length) % LAYOUT_OPTIONS.length;
+        selectLayout(LAYOUT_OPTIONS[nextIndex]);
+      }
+    },
+    [selectLayout]
+  );
 
   const withPassword = useCallback(
     (init: RequestInit = {}, override?: string) => {
@@ -1952,6 +1994,7 @@ export default function Page() {
             {displayItems.length > 0 ? (
               viewMode === 'grid' ? (
                 <section
+                  ref={itemsParent}
                   className={`${styles.posterGrid} ${
                     gridColumns === 4 ? styles.posterGridColumns4 : styles.posterGridColumns5
                   }`}
@@ -2028,7 +2071,7 @@ export default function Page() {
                   })}
                 </section>
               ) : (
-                <section className={styles.listView}>
+                <section ref={itemsParent} className={styles.listView}>
                   {displayItems.map((item) => {
                     const yearMatch = item.title.match(/\((\d{4})\)$/);
                     const displayTitle = yearMatch
@@ -2215,65 +2258,62 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className={styles.organizeGroup} role="group" aria-label="Choose layout">
+              <div
+                className={styles.organizeGroup}
+                role="radiogroup"
+                aria-label="Choose layout"
+              >
                 <span className={styles.groupLabel}>Layout</span>
-                <div className={styles.sortButtons}>
+                <div className={styles.layoutSwitch}>
                   <button
                     type="button"
-                    className={`${styles.sortButton} ${
-                      viewMode === 'grid' ? styles.sortButtonActive : ''
+                    role="radio"
+                    className={`${styles.layoutOption} ${
+                      layoutSelection === 'grid-5' ? styles.layoutOptionActive : ''
                     }`}
-                    onClick={() => setViewMode('grid')}
-                    aria-pressed={viewMode === 'grid'}
+                    aria-checked={layoutSelection === 'grid-5'}
+                    tabIndex={layoutSelection === 'grid-5' ? 0 : -1}
+                    onClick={() => selectLayout('grid-5')}
+                    aria-label="Grid layout, five titles per row"
+                    onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-5')}
                   >
                     <LayoutGrid size={16} aria-hidden="true" />
-                    <span>Grid</span>
+                    <span className={styles.layoutLabel}>Grid</span>
+                    <span className={styles.layoutBadge}>5</span>
                   </button>
                   <button
                     type="button"
-                    className={`${styles.sortButton} ${
-                      viewMode === 'list' ? styles.sortButtonActive : ''
+                    role="radio"
+                    className={`${styles.layoutOption} ${
+                      layoutSelection === 'grid-4' ? styles.layoutOptionActive : ''
                     }`}
-                    onClick={() => setViewMode('list')}
-                    aria-pressed={viewMode === 'list'}
+                    aria-checked={layoutSelection === 'grid-4'}
+                    tabIndex={layoutSelection === 'grid-4' ? 0 : -1}
+                    onClick={() => selectLayout('grid-4')}
+                    aria-label="Grid layout, four titles per row"
+                    onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-4')}
+                  >
+                    <LayoutGrid size={16} aria-hidden="true" />
+                    <span className={styles.layoutLabel}>Grid</span>
+                    <span className={styles.layoutBadge}>4</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    className={`${styles.layoutOption} ${
+                      layoutSelection === 'list' ? styles.layoutOptionActive : ''
+                    }`}
+                    aria-checked={layoutSelection === 'list'}
+                    tabIndex={layoutSelection === 'list' ? 0 : -1}
+                    onClick={() => selectLayout('list')}
+                    aria-label="List layout with details"
+                    onKeyDown={(event) => handleLayoutKeyDown(event, 'list')}
                   >
                     <ListIcon size={16} aria-hidden="true" />
-                    <span>List</span>
+                    <span className={styles.layoutLabel}>List</span>
                   </button>
                 </div>
               </div>
-
-              {viewMode === 'grid' && (
-                <div
-                  className={styles.organizeGroup}
-                  role="radiogroup"
-                  aria-label="Grid density"
-                >
-                  <span className={styles.groupLabel}>Columns</span>
-                  <div className={styles.sortButtons}>
-                    <button
-                      type="button"
-                      className={`${styles.sortButton} ${
-                        gridColumns === 4 ? styles.sortButtonActive : ''
-                      }`}
-                      onClick={() => setGridColumns(4)}
-                      aria-pressed={gridColumns === 4}
-                    >
-                      4 per row
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.sortButton} ${
-                        gridColumns === 5 ? styles.sortButtonActive : ''
-                      }`}
-                      onClick={() => setGridColumns(5)}
-                      aria-pressed={gridColumns === 5}
-                    >
-                      5 per row
-                    </button>
-                  </div>
-                </div>
-              )}
 
               <div
                 className={`${styles.organizeGroup} ${styles.filterGroup}`}
