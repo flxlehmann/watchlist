@@ -1385,6 +1385,27 @@ export default function Page() {
   }, [showSpotlight]);
 
   useEffect(() => {
+    if (!showSpotlight || typeof document === 'undefined') {
+      return undefined;
+    }
+    const { body, documentElement } = document;
+    if (!body) {
+      return undefined;
+    }
+    const previousOverflow = body.style.overflow;
+    const previousPaddingRight = body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - (documentElement?.clientWidth ?? window.innerWidth);
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    body.style.overflow = 'hidden';
+    return () => {
+      body.style.overflow = previousOverflow;
+      body.style.paddingRight = previousPaddingRight;
+    };
+  }, [showSpotlight]);
+
+  useEffect(() => {
     if (!showSpotlight) {
       return undefined;
     }
@@ -2148,81 +2169,81 @@ export default function Page() {
                     Search for a movie to add to your watchlist and optionally credit who added it.
                   </p>
                   <form className={`${styles.form} ${styles.spotlightForm}`} onSubmit={addItem}>
-                    <div className={`${styles.autocomplete} ${styles.spotlightAutocomplete}`}>
-                      <label className={styles.visuallyHidden} htmlFor="title">
-                        Title
-                      </label>
-                      <input
-                        id="title"
-                        ref={titleInputRef}
-                        className={`${styles.inputField} ${styles.titleField} ${styles.spotlightInput}`}
-                        placeholder="Movie name e.g. Dune: Part Two"
-                        value={title}
-                        onChange={handleTitleChange}
-                        onKeyDown={handleTitleKeyDown}
-                        onFocus={handleTitleFocus}
-                        onBlur={() => {
-                          blurTimeoutRef.current = window.setTimeout(() => {
-                            setShowSuggestions(false);
-                          }, 120);
-                        }}
-                        autoComplete="off"
-                        aria-autocomplete="list"
-                        aria-expanded={showSuggestions && suggestions.length > 0}
-                        aria-controls="title-suggestions"
-                        disabled={adding}
-                        required
-                      />
-                      {showSuggestions && suggestions.length > 0 && (
-                        <ul
-                          id="title-suggestions"
-                          className={`${styles.autocompleteList} ${styles.spotlightSuggestions}`}
-                          role="listbox"
-                          aria-label="Suggested titles"
-                        >
-                          {suggestions.map((suggestion, index) => {
-                            const key = `${suggestion.id}-${suggestion.year ?? 'unknown'}-${index}`;
-                            return (
-                              <li
-                                key={key}
-                                role="option"
-                                aria-selected={index === highlightedIndex}
-                                className={`${styles.autocompleteItem} ${
-                                  index === highlightedIndex ? styles.autocompleteItemActive : ''
-                                }`}
-                                onMouseDown={(event) => {
-                                  event.preventDefault();
-                                  handleSelectSuggestion(suggestion);
-                                }}
-                                onMouseEnter={() => setHighlightedIndex(index)}
-                              >
-                                {suggestion.poster ? (
-                                  <img
-                                    src={suggestion.poster}
-                                    alt=""
-                                    className={styles.autocompletePoster}
-                                    aria-hidden="true"
-                                  />
-                                ) : (
-                                  <div className={styles.autocompletePosterPlaceholder} aria-hidden="true">
-                                    🎬
-                                  </div>
-                                )}
-                                <div className={styles.autocompleteCopy}>
-                                  <span className={styles.autocompleteTitle}>{suggestion.title}</span>
-                                  {suggestion.year && (
-                                    <span className={styles.autocompleteMeta}>{suggestion.year}</span>
+                    <div className={styles.spotlightRow}>
+                      <div className={`${styles.autocomplete} ${styles.spotlightAutocomplete}`}>
+                        <label className={styles.visuallyHidden} htmlFor="title">
+                          Title
+                        </label>
+                        <input
+                          id="title"
+                          ref={titleInputRef}
+                          className={`${styles.inputField} ${styles.titleField} ${styles.spotlightInput}`}
+                          placeholder="Movie name e.g. Dune: Part Two"
+                          value={title}
+                          onChange={handleTitleChange}
+                          onKeyDown={handleTitleKeyDown}
+                          onFocus={handleTitleFocus}
+                          onBlur={() => {
+                            blurTimeoutRef.current = window.setTimeout(() => {
+                              setShowSuggestions(false);
+                            }, 120);
+                          }}
+                          autoComplete="off"
+                          aria-autocomplete="list"
+                          aria-expanded={showSuggestions && suggestions.length > 0}
+                          aria-controls="title-suggestions"
+                          disabled={adding}
+                          required
+                        />
+                        {showSuggestions && suggestions.length > 0 && (
+                          <ul
+                            id="title-suggestions"
+                            className={`${styles.autocompleteList} ${styles.spotlightSuggestions}`}
+                            role="listbox"
+                            aria-label="Suggested titles"
+                          >
+                            {suggestions.map((suggestion, index) => {
+                              const key = `${suggestion.id}-${suggestion.year ?? 'unknown'}-${index}`;
+                              return (
+                                <li
+                                  key={key}
+                                  role="option"
+                                  aria-selected={index === highlightedIndex}
+                                  className={`${styles.autocompleteItem} ${
+                                    index === highlightedIndex ? styles.autocompleteItemActive : ''
+                                  }`}
+                                  onMouseDown={(event) => {
+                                    event.preventDefault();
+                                    handleSelectSuggestion(suggestion);
+                                  }}
+                                  onMouseEnter={() => setHighlightedIndex(index)}
+                                >
+                                  {suggestion.poster ? (
+                                    <img
+                                      src={suggestion.poster}
+                                      alt=""
+                                      className={styles.autocompletePoster}
+                                      aria-hidden="true"
+                                    />
+                                  ) : (
+                                    <div className={styles.autocompletePosterPlaceholder} aria-hidden="true">
+                                      🎬
+                                    </div>
                                   )}
-                                </div>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
-                    </div>
-                    <div className={styles.spotlightActions}>
+                                  <div className={styles.autocompleteCopy}>
+                                    <span className={styles.autocompleteTitle}>{suggestion.title}</span>
+                                    {suggestion.year && (
+                                      <span className={styles.autocompleteMeta}>{suggestion.year}</span>
+                                    )}
+                                  </div>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
                       <label className={styles.spotlightUserField} htmlFor="added-by">
-                        <span className={styles.spotlightLabel}>Added by (optional)</span>
+                        <span className={styles.visuallyHidden}>Added by (optional)</span>
                         <input
                           id="added-by"
                           className={`${styles.inputField} ${styles.spotlightUserInput}`}
