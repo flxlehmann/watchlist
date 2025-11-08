@@ -167,12 +167,12 @@ export default function Page() {
   const [activePassword, setActivePassword] = useState<string | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [sortOption, setSortOption] = useState<SortOption>('addedRecent');
-  const [showWatched, setShowWatched] = useState(false);
-  const [showUnwatched, setShowUnwatched] = useState(true);
+  const [showUnwatchedOnly, setShowUnwatchedOnly] = useState(false);
   const [randomPick, setRandomPick] = useState<Item | null>(null);
   const [showRandomOverlay, setShowRandomOverlay] = useState(false);
   const randomTitleId = useId();
   const randomDescriptionId = useId();
+  const filterToggleId = useId();
   const blurTimeoutRef = useRef<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const detailsRequestRef = useRef(0);
@@ -317,10 +317,7 @@ export default function Page() {
   const displayItems = useMemo(() => {
     if (!list) return [] as Item[];
     const items = [...list.items].filter((item) => {
-      if (item.watched && !showWatched) {
-        return false;
-      }
-      if (!item.watched && !showUnwatched) {
+      if (showUnwatchedOnly && item.watched) {
         return false;
       }
       return true;
@@ -377,7 +374,7 @@ export default function Page() {
       default:
         return items;
     }
-  }, [list, showWatched, showUnwatched, sortOption]);
+  }, [list, showUnwatchedOnly, sortOption]);
 
   const joinList = useCallback(
     async (id: string, passwordInput?: string) => {
@@ -805,29 +802,13 @@ export default function Page() {
   const lastUpdated = list ? formatRelative(list.updatedAt) : null;
   const lastSyncedAgo = formatRelative(lastSynced);
 
-  const toggleVisibility = useCallback(
-    (type: 'watched' | 'unwatched') => {
-      if (type === 'watched') {
-        const nextWatched = !showWatched;
-        if (!nextWatched && !showUnwatched) {
-          setShowUnwatched(true);
-        }
-        setShowWatched(nextWatched);
-        return;
-      }
-      const nextUnwatched = !showUnwatched;
-      if (!nextUnwatched && !showWatched) {
-        setShowWatched(true);
-      }
-      setShowUnwatched(nextUnwatched);
-    },
-    [showUnwatched, showWatched]
-  );
+  const toggleUnwatchedOnly = useCallback(() => {
+    setShowUnwatchedOnly((value) => !value);
+  }, []);
 
   useEffect(() => {
     setSortOption('addedRecent');
-    setShowWatched(false);
-    setShowUnwatched(true);
+    setShowUnwatchedOnly(false);
   }, [list?.id]);
 
   useEffect(() => {
@@ -1377,28 +1358,24 @@ export default function Page() {
                 aria-label="Filter watchlist"
               >
                 <span className={styles.groupLabel}>Filter titles</span>
-                <div className={styles.sortButtons}>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      showWatched ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => toggleVisibility('watched')}
-                    aria-pressed={showWatched}
-                  >
-                    Watched
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      showUnwatched ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => toggleVisibility('unwatched')}
-                    aria-pressed={showUnwatched}
-                  >
-                    Unwatched
-                  </button>
-                </div>
+                <label
+                  className={`${styles.toggle} ${
+                    showUnwatchedOnly ? styles.toggleActive : ''
+                  }`}
+                  htmlFor={filterToggleId}
+                >
+                  <input
+                    id={filterToggleId}
+                    type="checkbox"
+                    className={styles.toggleInput}
+                    checked={showUnwatchedOnly}
+                    onChange={toggleUnwatchedOnly}
+                  />
+                  <span className={styles.toggleTrack} aria-hidden="true">
+                    <span className={styles.toggleThumb} />
+                  </span>
+                  <span className={styles.toggleLabel}>Show unwatched only</span>
+                </label>
               </div>
             </div>
 
