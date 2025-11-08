@@ -78,64 +78,44 @@ const QUICK_START_MOVIES: Array<{
   poster: string;
 }> = [
   {
-    title: 'Inside Out 2 (2024)',
-    releaseDate: '2024-06-12',
-    poster: 'https://image.tmdb.org/t/p/w500/wWba3TaojhK7NdycWbvDxZLRPub.jpg'
+    title: 'The Godfather (1972)',
+    releaseDate: '1972-03-14',
+    poster: 'https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg'
   },
   {
-    title: 'Dune: Part Two (2024)',
-    releaseDate: '2024-03-01',
-    poster: 'https://image.tmdb.org/t/p/w500/8bcoRX3hQRHufLPSDREdvr3YMXx.jpg'
+    title: 'Casablanca (1942)',
+    releaseDate: '1942-11-26',
+    poster: 'https://image.tmdb.org/t/p/w500/5K7cOHoay2mZusSLezBOY0Qxh8a.jpg'
   },
   {
-    title: 'Furiosa: A Mad Max Saga (2024)',
-    releaseDate: '2024-05-22',
-    poster: 'https://image.tmdb.org/t/p/w500/iADOJ8Zymht2JPMoy3R7xceZprc.jpg'
+    title: 'Citizen Kane (1941)',
+    releaseDate: '1941-04-17',
+    poster: 'https://image.tmdb.org/t/p/w500/jKtKcOHLskBCEQL2Ib6ATWKOgUD.jpg'
   },
   {
-    title: 'Kingdom of the Planet of the Apes (2024)',
-    releaseDate: '2024-05-08',
-    poster: 'https://image.tmdb.org/t/p/w500/gk5czY1i8LUTvbG7w5qDCaKlk4c.jpg'
+    title: 'The Shawshank Redemption (1994)',
+    releaseDate: '1994-09-23',
+    poster: 'https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg'
   },
   {
-    title: 'The Fall Guy (2024)',
-    releaseDate: '2024-05-01',
-    poster: 'https://image.tmdb.org/t/p/w500/aBkqu7EddWK7qmY4grL4I6edx2h.jpg'
+    title: 'Pulp Fiction (1994)',
+    releaseDate: '1994-09-10',
+    poster: 'https://image.tmdb.org/t/p/w500/dM2w364MScsjFf8pfMbaWUcWrR.jpg'
   },
   {
-    title: 'Godzilla x Kong: The New Empire (2024)',
-    releaseDate: '2024-03-27',
-    poster: 'https://image.tmdb.org/t/p/w500/jvPMJ2zM92jfXxIFZMFUdjyA1fM.jpg'
+    title: 'The Dark Knight (2008)',
+    releaseDate: '2008-07-16',
+    poster: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg'
   },
   {
-    title: 'Civil War (2024)',
-    releaseDate: '2024-04-10',
-    poster: 'https://image.tmdb.org/t/p/w500/jFt1gS4BGHlK8xt76Y81Alp4dbt.jpg'
+    title: 'The Lord of the Rings: The Fellowship of the Ring (2001)',
+    releaseDate: '2001-12-18',
+    poster: 'https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg'
   },
   {
-    title: 'Challengers (2024)',
-    releaseDate: '2024-04-18',
-    poster: 'https://image.tmdb.org/t/p/w500/1m1dps11CfHR0VqZQ3kn7LImB0r.jpg'
-  },
-  {
-    title: 'Bad Boys: Ride or Die (2024)',
-    releaseDate: '2024-06-05',
-    poster: 'https://image.tmdb.org/t/p/w500/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg'
-  },
-  {
-    title: 'IF (2024)',
-    releaseDate: '2024-05-08',
-    poster: 'https://image.tmdb.org/t/p/w500/xbKFv4KF3sVYuWKllLlwWDmuZP7.jpg'
-  },
-  {
-    title: 'Ghostbusters: Frozen Empire (2024)',
-    releaseDate: '2024-03-20',
-    poster: 'https://image.tmdb.org/t/p/w500/e1J2oNzSBdou01sUvriVuoYp0pJ.jpg'
-  },
-  {
-    title: 'The Garfield Movie (2024)',
-    releaseDate: '2024-04-30',
-    poster: 'https://image.tmdb.org/t/p/w500/bXi6IQiQDHD00JFio5ZSZOeRSBh.jpg'
+    title: 'Back to the Future (1985)',
+    releaseDate: '1985-07-03',
+    poster: 'https://image.tmdb.org/t/p/w500/qvktm0BHcnmDpul4Hz01GIazWPr.jpg'
   }
 ];
 
