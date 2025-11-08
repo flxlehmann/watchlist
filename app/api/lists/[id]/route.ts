@@ -1,7 +1,7 @@
 export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
-import { getList, saveList, now, toPublicList, type Item, type List } from '@/lib/db';
-import { verifyPassword } from '@/lib/password';
+import { deleteList, getList, saveList, now, toPublicList, type Item, type List } from '@/lib/db';
+import { hashPassword, verifyPassword } from '@/lib/password';
 
 function normalizeTitle(value: string): string {
   return value.replace(/\s*\(\d{4}\)$/u, '').trim().toLowerCase();
@@ -80,6 +80,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const authError = await authorize(req, list);
   if (authError) return authError;
   const payload = await req.json();
+  if(typeof payload.password === 'string' && !payload.itemId){
+    const password = payload.password.trim();
+    if(!password){
+      return NextResponse.json({ error: 'Password required' }, { status: 422 });
+    }
+    list.passwordHash = await hashPassword(password);
+    list.updatedAt = now();
+    await saveList(list);
+    return NextResponse.json(toPublicList(list));
+  }
   if(typeof payload.name === 'string' && !payload.itemId){
     const name = payload.name.trim().slice(0, 80);
     if(!name){
@@ -120,7 +130,23 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const authError = await authorize(req, list);
   if (authError) return authError;
-  const { itemId } = await req.json();
+  let body: unknown = null;
+  try {
+    body = await req.json();
+  } catch {
+    body = null;
+  }
+  let itemId: string | undefined;
+  if (body && typeof body === 'object' && body !== null && 'itemId' in body) {
+    const value = (body as { itemId?: unknown }).itemId;
+    if (typeof value === 'string') {
+      itemId = value;
+    }
+  }
+  if(!itemId){
+    await deleteList(list.id);
+    return NextResponse.json({ success: true });
+  }
   const before = list.items.length;
   list.items = list.items.filter(i => i.id !== itemId);
   if(list.items.length === before) return NextResponse.json({ error: 'Item not found' }, { status: 404 });

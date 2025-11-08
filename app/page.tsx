@@ -7,12 +7,15 @@ import {
   CheckCircle2,
   Clock,
   Copy,
-  Lock,
+  KeyRound,
+  Link,
   Loader2,
   LogOut,
+  Menu,
   Pencil,
   Plus,
   RefreshCw,
+  ShieldPlus,
   Sparkles,
   Trash2,
   X
@@ -174,16 +177,20 @@ export default function Page() {
   const [showRandomOverlay, setShowRandomOverlay] = useState(false);
   const [countdownRemaining, setCountdownRemaining] = useState<number | null>(null);
   const [countdownSession, setCountdownSession] = useState(0);
+  const [listMenuOpen, setListMenuOpen] = useState(false);
   const randomTitleId = useId();
   const randomDescriptionId = useId();
   const filterToggleId = useId();
   const countdownGradientId = useId();
+  const listMenuDropdownId = useId();
+  const listMenuButtonId = useId();
   const blurTimeoutRef = useRef<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const detailsRequestRef = useRef(0);
   const notificationIdRef = useRef(0);
   const notificationTimeoutsRef = useRef<Map<number, number>>(new Map());
   const randomCloseRef = useRef<HTMLButtonElement | null>(null);
+  const listMenuRef = useRef<HTMLDivElement | null>(null);
 
   const withPassword = useCallback(
     (init: RequestInit = {}) => {
@@ -196,6 +203,33 @@ export default function Page() {
     },
     [activePassword]
   );
+
+  useEffect(() => {
+    if (!listMenuOpen) {
+      return;
+    }
+    const handlePointer = (event: MouseEvent | TouchEvent) => {
+      if (!listMenuRef.current) {
+        return;
+      }
+      if (!listMenuRef.current.contains(event.target as Node)) {
+        setListMenuOpen(false);
+      }
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setListMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('touchstart', handlePointer);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('touchstart', handlePointer);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [listMenuOpen]);
 
   const dismissNotification = useCallback((id: number) => {
     setNotifications((current) => current.filter((note) => note.id !== id));
@@ -243,6 +277,7 @@ export default function Page() {
       setRandomPick(null);
       setActivePassword(null);
     }
+    setListMenuOpen(false);
   }, [list]);
 
   useEffect(() => {
@@ -716,6 +751,7 @@ export default function Page() {
   );
 
   const leaveList = useCallback(() => {
+    setListMenuOpen(false);
     const previousId = list?.id ?? null;
     setList(null);
     setTitle('');
@@ -746,6 +782,102 @@ export default function Page() {
       pushNotification('error', message);
     }
   }, [list, pushNotification]);
+
+  const copyLink = useCallback(async () => {
+    if (!list) return;
+    if (typeof window === 'undefined') return;
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('list', list.id);
+      await navigator.clipboard.writeText(url.toString());
+      setError(null);
+      pushNotification('success', 'Shareable link copied.');
+    } catch (err) {
+      const message = 'Unable to copy. Copy it manually instead.';
+      setError(message);
+      pushNotification('error', message);
+    }
+  }, [list, pushNotification]);
+
+  const copyPassword = useCallback(async () => {
+    if (!list?.protected) return;
+    if (!activePassword) {
+      const message = 'Enter the list password to copy it.';
+      setError(message);
+      pushNotification('error', message);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(activePassword);
+      setError(null);
+      pushNotification('success', 'Password copied to clipboard.');
+    } catch (err) {
+      const message = 'Unable to copy. Copy it manually instead.';
+      setError(message);
+      pushNotification('error', message);
+    }
+  }, [activePassword, list, pushNotification]);
+
+  const setListPassword = useCallback(async () => {
+    if (!list) return;
+    if (!ensurePasswordForChanges()) {
+      return;
+    }
+    if (typeof window === 'undefined') return;
+    const value = window.prompt('Set a password to protect this watchlist:');
+    if (value === null) {
+      return;
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      const message = 'Enter a password to continue.';
+      setError(message);
+      pushNotification('error', message);
+      return;
+    }
+    try {
+      const data = await api<List>(
+        `/api/lists/${list.id}`,
+        withPassword({
+          method: 'PATCH',
+          body: JSON.stringify({ password: trimmed })
+        })
+      );
+      setList(data);
+      setLastSynced(Date.now());
+      setActivePassword(trimmed);
+      setError(null);
+      pushNotification('success', 'Password added to this watchlist.');
+    } catch (err) {
+      const message = parseError(err);
+      setError(message);
+      pushNotification('error', message);
+    }
+  }, [ensurePasswordForChanges, list, pushNotification, withPassword]);
+
+  const deleteCurrentList = useCallback(async () => {
+    if (!list) return;
+    if (!ensurePasswordForChanges()) {
+      return;
+    }
+    if (typeof window === 'undefined') return;
+    const confirmed = window.confirm(
+      'Delete this watchlist? This action cannot be undone.'
+    );
+    if (!confirmed) {
+      return;
+    }
+    try {
+      await api(`/api/lists/${list.id}`, withPassword({ method: 'DELETE' }));
+      setError(null);
+      pushNotification('success', 'Watchlist deleted.');
+      leaveList();
+    } catch (err) {
+      const message = parseError(err);
+      setError(message);
+      pushNotification('error', message);
+    }
+  }, [ensurePasswordForChanges, leaveList, list, pushNotification, withPassword]);
 
   const saveListName = useCallback(
     async (event?: React.FormEvent) => {
@@ -1059,87 +1191,185 @@ export default function Page() {
           <section className={styles.listHeader}>
             <div className={styles.listTitleRow}>
               <div className={styles.listTitleGroup}>
-                {renaming ? (
-                  <form className={styles.renameForm} onSubmit={saveListName}>
-                    <label className={styles.visuallyHidden} htmlFor="list-rename">
-                      List name
-                    </label>
-                    <input
-                      id="list-rename"
-                      className={styles.renameInput}
-                      value={nameDraft}
-                      onChange={(event) => setNameDraft(event.target.value)}
-                      disabled={savingName}
-                      autoFocus
-                      onKeyDown={(event) => {
-                        if (event.key === 'Escape') {
-                          event.preventDefault();
-                          setRenaming(false);
-                          setNameDraft(list.name);
-                        }
-                      }}
-                    />
-                    <div className={styles.renameActions}>
+                <div className={styles.listTitleDisplay}>
+                  {list.protected && (
+                    <span
+                      className={styles.protectedIndicator}
+                      title="Password protected"
+                      role="img"
+                      aria-label="Password protected list"
+                    >
+                      <span className={styles.visuallyHidden}>Password protected list</span>
+                    </span>
+                  )}
+                  {renaming ? (
+                    <form className={styles.renameForm} onSubmit={saveListName}>
+                      <label className={styles.visuallyHidden} htmlFor="list-rename">
+                        List name
+                      </label>
+                      <input
+                        id="list-rename"
+                        className={styles.renameInput}
+                        value={nameDraft}
+                        onChange={(event) => setNameDraft(event.target.value)}
+                        disabled={savingName}
+                        autoFocus
+                        onKeyDown={(event) => {
+                          if (event.key === 'Escape') {
+                            event.preventDefault();
+                            setRenaming(false);
+                            setNameDraft(list.name);
+                          }
+                        }}
+                      />
+                      <div className={styles.renameActions}>
+                        <button
+                          type="submit"
+                          className={styles.renameSave}
+                          disabled={savingName || !nameDraft.trim()}
+                          aria-label="Save new list name"
+                        >
+                          {savingName ? <Loader2 size={16} className="spin" /> : <Check size={16} />}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.renameCancel}
+                          onClick={() => {
+                            setRenaming(false);
+                            setNameDraft(list.name);
+                          }}
+                          disabled={savingName}
+                          aria-label="Cancel renaming"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <h1 className={styles.listTitle}>{list.name}</h1>
                       <button
-                        type="submit"
-                        className={styles.renameSave}
-                        disabled={savingName || !nameDraft.trim()}
-                        aria-label="Save new list name"
+                        type="button"
+                        className={styles.renameTrigger}
+                        onClick={() => {
+                          setRenaming(true);
+                          setNameDraft(list.name);
+                        }}
+                        aria-label="Edit list name"
+                        title="Edit list name"
                       >
-                        {savingName ? <Loader2 size={16} className="spin" /> : <Check size={16} />}
+                        <Pencil size={18} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className={styles.listActions}>
+                <div className={styles.listMenu} ref={listMenuRef}>
+                  <button
+                    type="button"
+                    id={listMenuButtonId}
+                    className={styles.listMenuTrigger}
+                    onClick={() => setListMenuOpen((open) => !open)}
+                    aria-haspopup="menu"
+                    aria-expanded={listMenuOpen}
+                    aria-controls={listMenuOpen ? listMenuDropdownId : undefined}
+                    aria-label="List actions"
+                  >
+                    <Menu size={20} />
+                  </button>
+                  {listMenuOpen && (
+                    <div
+                      className={styles.listMenuDropdown}
+                      id={listMenuDropdownId}
+                      role="menu"
+                      aria-labelledby={listMenuButtonId}
+                    >
+                      <button
+                        type="button"
+                        className={styles.listMenuItem}
+                        role="menuitem"
+                        onClick={() => {
+                          setListMenuOpen(false);
+                          void copyLink();
+                        }}
+                      >
+                        <Link size={16} /> Copy link
                       </button>
                       <button
                         type="button"
-                        className={styles.renameCancel}
+                        className={styles.listMenuItem}
+                        role="menuitem"
                         onClick={() => {
-                          setRenaming(false);
-                          setNameDraft(list.name);
+                          setListMenuOpen(false);
+                          void copyId();
                         }}
-                        disabled={savingName}
-                        aria-label="Cancel renaming"
                       >
-                        <X size={16} />
+                        <Copy size={16} /> Copy ID
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.listMenuItem}
+                        role="menuitem"
+                        onClick={() => {
+                          setListMenuOpen(false);
+                          void refreshList(undefined, true);
+                        }}
+                        disabled={refreshing}
+                      >
+                        {refreshing ? <Loader2 size={16} className="spin" /> : <RefreshCw size={16} />} Refresh list
+                      </button>
+                      {list.protected ? (
+                        <button
+                          type="button"
+                          className={styles.listMenuItem}
+                          role="menuitem"
+                          onClick={() => {
+                            setListMenuOpen(false);
+                            void copyPassword();
+                          }}
+                        >
+                          <KeyRound size={16} /> Copy password
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.listMenuItem}
+                          role="menuitem"
+                          onClick={() => {
+                            setListMenuOpen(false);
+                            void setListPassword();
+                          }}
+                        >
+                          <ShieldPlus size={16} /> Set password
+                        </button>
+                      )}
+                      <div className={styles.listMenuSeparator} role="none" />
+                      <button
+                        type="button"
+                        className={styles.listMenuItem}
+                        role="menuitem"
+                        onClick={() => {
+                          setListMenuOpen(false);
+                          leaveList();
+                        }}
+                      >
+                        <LogOut size={16} /> Leave list
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.listMenuItem} ${styles.listMenuItemDanger}`}
+                        role="menuitem"
+                        onClick={() => {
+                          setListMenuOpen(false);
+                          void deleteCurrentList();
+                        }}
+                      >
+                        <Trash2 size={16} /> Delete list
                       </button>
                     </div>
-                  </form>
-                ) : (
-                  <div className={styles.listTitleDisplay}>
-                    <h1 className={styles.listTitle}>{list.name}</h1>
-                    <button
-                      type="button"
-                      className={styles.renameTrigger}
-                      onClick={() => {
-                        setRenaming(true);
-                        setNameDraft(list.name);
-                      }}
-                      aria-label="Edit list name"
-                      title="Edit list name"
-                    >
-                      <Pencil size={18} />
-                    </button>
-                  </div>
-                )}
-                {list.protected && (
-                  <span className={styles.protectedBadge}>
-                    <Lock size={16} aria-hidden="true" /> Password protected
-                  </span>
-                )}
-              </div>
-              <div className={styles.listActions}>
-                <button className={styles.buttonSurface} onClick={copyId}>
-                  <Copy size={18} /> Copy ID
-                </button>
-                <button
-                  className={styles.buttonSurface}
-                  onClick={() => refreshList(undefined, true)}
-                  disabled={refreshing}
-                >
-                  {refreshing ? <Loader2 size={18} className="spin" /> : <RefreshCw size={18} />}
-                  {refreshing ? 'Refreshing…' : 'Refresh'}
-                </button>
-                <button className={styles.buttonGhost} onClick={leaveList}>
-                  <LogOut size={18} /> Leave list
-                </button>
+                  )}
+                </div>
               </div>
             </div>
           </section>

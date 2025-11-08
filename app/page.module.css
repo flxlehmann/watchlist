@@ -740,19 +740,16 @@
   min-width: 0;
 }
 
-.protectedBadge {
+.protectedIndicator {
+  width: 0.78rem;
+  height: 0.78rem;
+  border-radius: 999px;
+  background: linear-gradient(140deg, rgba(122, 148, 255, 0.9), rgba(92, 206, 255, 0.95));
+  box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.22), 0 0 12px rgba(118, 137, 255, 0.4);
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  align-self: flex-start;
-  padding: 0.35rem 0.6rem;
-  border-radius: var(--radius-md);
-  background: rgba(122, 148, 255, 0.15);
-  border: 1px solid rgba(122, 148, 255, 0.35);
-  color: rgba(211, 219, 255, 0.9);
-  font-size: 0.82rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .listTitleDisplay {
@@ -760,6 +757,7 @@
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .renameTrigger {
@@ -874,9 +872,112 @@
 
 .listActions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
   align-items: center;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.listMenu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.listMenuTrigger {
+  border: 1px solid rgba(122, 148, 228, 0.45);
+  background: rgba(15, 19, 34, 0.6);
+  color: rgba(214, 224, 255, 0.9);
+  border-radius: 999px;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.listMenuTrigger:hover {
+  transform: translateY(-1px);
+  background: rgba(122, 148, 255, 0.22);
+  border-color: rgba(122, 148, 255, 0.6);
+  color: #f4f6ff;
+}
+
+.listMenuTrigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(118, 137, 255, 0.45);
+}
+
+.listMenuDropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.6rem);
+  min-width: 220px;
+  background: rgba(12, 16, 31, 0.95);
+  border: 1px solid rgba(122, 148, 255, 0.35);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 22px 55px rgba(6, 10, 24, 0.65);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 30;
+  backdrop-filter: blur(18px);
+}
+
+.listMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: rgba(223, 230, 255, 0.92);
+  font-size: 0.95rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--radius-md);
+  text-align: left;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.listMenuItem svg {
+  flex-shrink: 0;
+}
+
+.listMenuItem:hover,
+.listMenuItem:focus-visible {
+  background: rgba(122, 148, 255, 0.16);
+  color: #f7f8ff;
+  outline: none;
+}
+
+.listMenuItem:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.listMenuItem:disabled:hover,
+.listMenuItem:disabled:focus-visible {
+  background: transparent;
+  color: rgba(223, 230, 255, 0.6);
+}
+
+.listMenuSeparator {
+  height: 1px;
+  margin: 0.3rem 0;
+  background: linear-gradient(90deg, transparent, rgba(122, 148, 255, 0.4), transparent);
+}
+
+.listMenuItemDanger {
+  color: rgba(255, 138, 146, 0.92);
+}
+
+.listMenuItemDanger:hover,
+.listMenuItemDanger:focus-visible {
+  background: rgba(255, 138, 146, 0.16);
+  color: #ffeff2;
 }
 
 .formCard {

@@ -31,6 +31,10 @@ export async function saveList(list: List): Promise<void> {
   await redis.set(key(list.id), list);
 }
 
+export async function deleteList(id: string): Promise<void> {
+  await redis.del(key(id));
+}
+
 export type PublicList = Omit<List, 'passwordHash'> & { protected: boolean };
 
 export function toPublicList(list: List): PublicList {
