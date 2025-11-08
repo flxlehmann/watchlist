@@ -1091,7 +1091,7 @@
   padding: 1.4rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.35rem;
+  gap: 1.1rem;
   overflow: hidden;
 }
 
@@ -1108,25 +1108,6 @@
 .sortControls > * {
   position: relative;
   z-index: 1;
-}
-
-.sortLabel {
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(204, 215, 255, 0.72);
-}
-
-.organizeHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.organizeDescription {
-  color: rgba(204, 215, 255, 0.6);
-  font-size: 0.82rem;
-  line-height: 1.5;
 }
 
 .organizeGroup {
@@ -1185,8 +1166,63 @@
   box-shadow: 0 12px 28px rgba(9, 13, 26, 0.45);
 }
 
-.organizeFilterGroup .sortButtons {
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+.filterGroup {
+  gap: 0.5rem;
+}
+
+.filterButtons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.filterButton {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(122, 148, 228, 0.25);
+  background: rgba(14, 18, 34, 0.55);
+  padding: 0.55rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: rgba(204, 215, 255, 0.62);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.filterButtonInactive {
+  opacity: 0.78;
+}
+
+.filterButton:hover,
+.filterButton:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.filterButton:hover {
+  background: rgba(122, 148, 255, 0.18);
+  border-color: rgba(122, 148, 255, 0.42);
+  color: rgba(240, 243, 255, 0.9);
+}
+
+.filterButton:focus-visible {
+  background: rgba(122, 148, 255, 0.22);
+  border-color: rgba(122, 148, 255, 0.6);
+  color: #f5f7ff;
+  box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.32);
+}
+
+.filterButtonActive {
+  background: rgba(122, 148, 255, 0.28);
+  border-color: rgba(146, 168, 255, 0.78);
+  color: #f6f8ff;
+  box-shadow: 0 12px 26px rgba(9, 13, 26, 0.42);
+  opacity: 1;
 }
 
 .statsHeader {

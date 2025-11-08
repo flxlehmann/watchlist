@@ -1210,13 +1210,6 @@ export default function Page() {
 
           <aside className={styles.statsColumn} aria-label="Watchlist controls and statistics">
             <div className={styles.sortControls} aria-label="Organize watchlist">
-              <div className={styles.organizeHeader}>
-                <span className={styles.sortLabel}>Organize</span>
-                <p className={styles.organizeDescription}>
-                  Sort titles and focus on what you want to watch next.
-                </p>
-              </div>
-
               <div
                 className={styles.organizeGroup}
                 role="radiogroup"
@@ -1288,16 +1281,16 @@ export default function Page() {
               </div>
 
               <div
-                className={`${styles.organizeGroup} ${styles.organizeFilterGroup}`}
+                className={`${styles.organizeGroup} ${styles.filterGroup}`}
                 role="group"
                 aria-label="Filter watchlist"
               >
                 <span className={styles.groupLabel}>Filter titles</span>
-                <div className={styles.sortButtons}>
+                <div className={styles.filterButtons}>
                   <button
                     type="button"
-                    className={`${styles.sortButton} ${
-                      showUnwatched ? styles.sortButtonActive : ''
+                    className={`${styles.filterButton} ${
+                      showUnwatched ? styles.filterButtonActive : styles.filterButtonInactive
                     }`}
                     onClick={() => toggleVisibility('unwatched')}
                     aria-pressed={showUnwatched}
@@ -1306,8 +1299,8 @@ export default function Page() {
                   </button>
                   <button
                     type="button"
-                    className={`${styles.sortButton} ${
-                      showWatched ? styles.sortButtonActive : ''
+                    className={`${styles.filterButton} ${
+                      showWatched ? styles.filterButtonActive : styles.filterButtonInactive
                     }`}
                     onClick={() => toggleVisibility('watched')}
                     aria-pressed={showWatched}
