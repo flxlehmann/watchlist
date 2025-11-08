@@ -55,6 +55,8 @@ type SortOption =
   | 'titleAsc'
   | 'titleDesc';
 
+const RANDOM_COUNTDOWN_DURATION = 5;
+
 function normalizeTitle(value: string): string {
   return value.replace(/\s*\(\d{4}\)$/, '').trim().toLowerCase();
 }
@@ -170,9 +172,12 @@ export default function Page() {
   const [showUnwatchedOnly, setShowUnwatchedOnly] = useState(false);
   const [randomPick, setRandomPick] = useState<Item | null>(null);
   const [showRandomOverlay, setShowRandomOverlay] = useState(false);
+  const [countdownRemaining, setCountdownRemaining] = useState<number | null>(null);
+  const [countdownSession, setCountdownSession] = useState(0);
   const randomTitleId = useId();
   const randomDescriptionId = useId();
   const filterToggleId = useId();
+  const countdownGradientId = useId();
   const blurTimeoutRef = useRef<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const detailsRequestRef = useRef(0);
@@ -792,11 +797,14 @@ export default function Page() {
       pushNotification('error', message);
       setShowRandomOverlay(false);
       setRandomPick(null);
+      setCountdownRemaining(null);
       return;
     }
     const pick = unwatched[Math.floor(Math.random() * unwatched.length)];
     setRandomPick(pick);
     setShowRandomOverlay(true);
+    setCountdownSession((value) => value + 1);
+    setCountdownRemaining(RANDOM_COUNTDOWN_DURATION);
   }, [list, pushNotification]);
 
   const lastUpdated = list ? formatRelative(list.updatedAt) : null;
@@ -817,6 +825,7 @@ export default function Page() {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setShowRandomOverlay(false);
+        setCountdownRemaining(null);
       }
     };
     window.addEventListener('keydown', handleKey);
@@ -824,6 +833,32 @@ export default function Page() {
       window.removeEventListener('keydown', handleKey);
     };
   }, [showRandomOverlay]);
+
+  useEffect(() => {
+    if (!showRandomOverlay && countdownRemaining !== null) {
+      setCountdownRemaining(null);
+    }
+  }, [countdownRemaining, showRandomOverlay]);
+
+  useEffect(() => {
+    if (countdownRemaining === null) {
+      return undefined;
+    }
+    if (countdownRemaining <= 1) {
+      const timer = window.setTimeout(() => {
+        setCountdownRemaining(null);
+      }, 1000);
+      return () => {
+        window.clearTimeout(timer);
+      };
+    }
+    const timer = window.setTimeout(() => {
+      setCountdownRemaining((value) => (value ? value - 1 : null));
+    }, 1000);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [countdownRemaining]);
 
   useEffect(() => {
     if (!title.trim()) {
@@ -884,9 +919,8 @@ export default function Page() {
   return (
     <main className={styles.viewport}>
       <div className={styles.background} aria-hidden="true">
-        <div className={`${styles.backgroundOrb} ${styles.backgroundOrbPrimary}`} />
-        <div className={`${styles.backgroundOrb} ${styles.backgroundOrbSecondary}`} />
         <div className={styles.backgroundGradient} />
+        <div className={styles.backgroundMesh} />
       </div>
       {notifications.length > 0 && (
         <div className={styles.notificationStack} role="status" aria-live="polite">
@@ -930,7 +964,11 @@ export default function Page() {
               aria-describedby={randomDescriptionId}
             >
               <div className={styles.randomBackdrop} aria-hidden="true" />
-              <div className={styles.randomContent}>
+              <div
+                className={`${styles.randomContent} ${
+                  countdownRemaining !== null ? styles.randomContentCountdown : ''
+                }`}
+              >
                 <button
                   type="button"
                   className={styles.randomClose}
@@ -942,38 +980,79 @@ export default function Page() {
                 </button>
                 <div className={styles.randomHeading}>
                   <Sparkles size={28} aria-hidden="true" />
-                  <span className={styles.randomBadge}>Tonight's challenge</span>
+                  <span className={styles.randomBadge}>
+                    {countdownRemaining !== null ? "Get ready" : "Tonight's challenge"}
+                  </span>
                 </div>
                 <h2 id={randomTitleId} className={styles.randomTitle}>
-                  {randomPick.title}
+                  {countdownRemaining !== null ? 'Your surprise is loading…' : randomPick.title}
                 </h2>
-                {randomPick.poster ? (
-                  <img
-                    src={randomPick.poster}
-                    alt=""
-                    className={styles.randomPoster}
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <div className={styles.randomPosterPlaceholder} aria-hidden="true">
-                    🎬
+                {countdownRemaining !== null ? (
+                  <div className={styles.countdownWrapper}>
+                    <div className={styles.countdownTimer}>
+                      <svg
+                        className={styles.countdownSvg}
+                        viewBox="0 0 120 120"
+                        role="presentation"
+                        aria-hidden="true"
+                      >
+                        <defs>
+                          <linearGradient id={countdownGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#78b0ff" />
+                            <stop offset="50%" stopColor="#b95cff" />
+                            <stop offset="100%" stopColor="#64f4c4" />
+                          </linearGradient>
+                        </defs>
+                        <circle className={styles.countdownTrack} cx="60" cy="60" r="52" />
+                        <circle
+                          className={styles.countdownProgress}
+                          cx="60"
+                          cy="60"
+                          r="52"
+                          stroke={`url(#${countdownGradientId})`}
+                          style={{ animationDuration: `${RANDOM_COUNTDOWN_DURATION}s` }}
+                          key={countdownSession}
+                        />
+                      </svg>
+                      <span className={styles.countdownNumber} key={countdownRemaining}>
+                        {countdownRemaining}
+                      </span>
+                    </div>
+                    <p className={styles.countdownCaption} id={randomDescriptionId}>
+                      Picking a movie for you…
+                    </p>
                   </div>
+                ) : (
+                  <>
+                    {randomPick.poster ? (
+                      <img
+                        src={randomPick.poster}
+                        alt=""
+                        className={styles.randomPoster}
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <div className={styles.randomPosterPlaceholder} aria-hidden="true">
+                        🎬
+                      </div>
+                    )}
+                    <p id={randomDescriptionId} className={styles.randomCopy}>
+                      Spin up some snacks, dim the lights, and press play. This one's waiting for you!
+                    </p>
+                    <div className={styles.randomActions}>
+                      <button type="button" className={styles.randomPrimary} onClick={chooseRandomPick}>
+                        <RefreshCw size={18} /> Spin again
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.randomSecondary}
+                        onClick={() => setShowRandomOverlay(false)}
+                      >
+                        <Check size={18} /> Let's watch it
+                      </button>
+                    </div>
+                  </>
                 )}
-                <p id={randomDescriptionId} className={styles.randomCopy}>
-                  Spin up some snacks, dim the lights, and press play. This one's waiting for you!
-                </p>
-                <div className={styles.randomActions}>
-                  <button type="button" className={styles.randomPrimary} onClick={chooseRandomPick}>
-                    <RefreshCw size={18} /> Spin again
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.randomSecondary}
-                    onClick={() => setShowRandomOverlay(false)}
-                  >
-                    <Check size={18} /> Let's watch it
-                  </button>
-                </div>
               </div>
             </div>
           )}

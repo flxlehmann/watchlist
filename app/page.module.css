@@ -7,9 +7,10 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: radial-gradient(circle at 20% 10%, rgba(24, 35, 84, 0.4), transparent 65%),
-    radial-gradient(circle at 80% 0%, rgba(55, 28, 92, 0.45), transparent 60%),
-    #030513;
+  background:
+    radial-gradient(60% 80% at 18% 14%, rgba(18, 34, 88, 0.38), transparent 70%),
+    radial-gradient(55% 70% at 82% 12%, rgba(48, 20, 82, 0.45), transparent 68%),
+    linear-gradient(180deg, #01010c, #020015 58%, #000009);
 }
 
 .background {
@@ -22,48 +23,29 @@
 
 .backgroundGradient {
   position: absolute;
-  inset: -45% -35% -60%;
+  inset: -48% -32% -58%;
   background:
-    radial-gradient(55% 65% at 12% 18%, rgba(45, 72, 176, 0.8), transparent 70%),
-    radial-gradient(60% 70% at 85% 22%, rgba(100, 48, 156, 0.78), transparent 75%),
-    radial-gradient(70% 80% at 58% 82%, rgba(18, 104, 96, 0.72), transparent 70%),
-    radial-gradient(65% 75% at 10% 90%, rgba(155, 58, 84, 0.65), transparent 75%),
-    linear-gradient(180deg, rgba(3, 5, 18, 0.95), rgba(2, 3, 12, 0.98));
-  filter: blur(95px);
-  opacity: 0.9;
-  transform: translate3d(0, 0, 0);
+    radial-gradient(62% 82% at 18% 22%, rgba(30, 58, 152, 0.82), transparent 75%),
+    radial-gradient(68% 88% at 78% 20%, rgba(86, 30, 142, 0.8), transparent 78%),
+    radial-gradient(65% 85% at 60% 78%, rgba(20, 96, 118, 0.74), transparent 72%),
+    radial-gradient(70% 90% at 8% 88%, rgba(152, 38, 74, 0.62), transparent 78%),
+    linear-gradient(180deg, rgba(5, 8, 24, 0.96), rgba(1, 2, 12, 0.98));
+  filter: blur(120px);
+  opacity: 0.92;
+  transform: translateZ(0);
 }
 
-.backgroundOrb {
+.backgroundMesh {
   position: absolute;
-  width: clamp(420px, 52vw, 680px);
-  height: clamp(420px, 52vw, 680px);
-  border-radius: 45% 55% 60% 40%;
-  filter: blur(140px);
-  opacity: 0.7;
+  inset: -12% -8%;
+  background:
+    radial-gradient(18% 24% at 24% 22%, rgba(88, 134, 255, 0.22), transparent 72%),
+    radial-gradient(22% 28% at 74% 24%, rgba(190, 76, 255, 0.24), transparent 70%),
+    radial-gradient(20% 26% at 58% 78%, rgba(68, 184, 196, 0.24), transparent 72%),
+    radial-gradient(16% 22% at 16% 78%, rgba(214, 68, 118, 0.2), transparent 70%);
+  opacity: 0.85;
+  filter: blur(48px);
   mix-blend-mode: screen;
-  animation-duration: 32s;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  animation-name: floatOrb;
-}
-
-.backgroundOrbPrimary {
-  top: -28%;
-  left: -22%;
-  background:
-    radial-gradient(circle at 30% 25%, rgba(90, 127, 255, 0.55), transparent 65%),
-    radial-gradient(circle at 70% 70%, rgba(64, 215, 255, 0.4), transparent 75%);
-  animation-duration: 30s;
-}
-
-.backgroundOrbSecondary {
-  bottom: -35%;
-  right: -24%;
-  background:
-    radial-gradient(circle at 65% 35%, rgba(212, 84, 142, 0.52), transparent 70%),
-    radial-gradient(circle at 30% 70%, rgba(92, 226, 174, 0.42), transparent 75%);
-  animation-name: floatOrbReverse;
 }
 
 .content {
@@ -407,6 +389,30 @@
   }
 }
 
+@keyframes countdownStroke {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 326;
+  }
+}
+
+@keyframes countdownPulse {
+  0% {
+    transform: scale(0.88);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.65;
+  }
+}
+
 .randomOverlay {
   position: fixed;
   inset: 0;
@@ -446,6 +452,10 @@
   animation: randomContentPop 0.6s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
+.randomContentCountdown {
+  gap: 2rem;
+}
+
 .randomContent::before,
 .randomContent::after {
   content: '';
@@ -469,10 +479,71 @@
   right: -40px;
 }
 
+.countdownWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  text-align: center;
+}
+
+.countdownTimer {
+  position: relative;
+  width: clamp(140px, 28vw, 200px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.countdownSvg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.countdownTrack {
+  fill: none;
+  stroke: rgba(245, 247, 255, 0.12);
+  stroke-width: 6;
+}
+
+.countdownProgress {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 326;
+  stroke-dashoffset: 0;
+  animation: countdownStroke 5s linear forwards;
+  animation-fill-mode: forwards;
+}
+
+.countdownNumber {
+  position: relative;
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #f5f7ff;
+  animation: countdownPulse 1s ease-in-out;
+}
+
+.countdownCaption {
+  font-size: 0.95rem;
+  color: rgba(214, 224, 255, 0.82);
+  letter-spacing: 0.01em;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .backgroundOrb,
   .randomOverlay,
   .randomContent {
+    animation: none;
+  }
+
+  .countdownProgress {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .countdownNumber {
     animation: none;
   }
 }
@@ -1269,6 +1340,7 @@
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   position: relative;
+  width: 100%;
 }
 
 .toggleActive {
@@ -1300,6 +1372,8 @@
   border: 1px solid rgba(122, 148, 228, 0.35);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  order: 1;
+  margin-left: auto;
 }
 
 .toggleThumb {
@@ -1317,6 +1391,7 @@
   font-weight: 600;
   letter-spacing: 0.01em;
   color: rgba(214, 224, 255, 0.78);
+  order: 0;
 }
 
 .toggleInput:checked + .toggleTrack {
@@ -1546,25 +1621,6 @@
   }
 }
 
-@keyframes floatOrb {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(8%, -6%, 0) scale(1.05);
-  }
-}
-
-@keyframes floatOrbReverse {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(-6%, 8%, 0) scale(1.04);
-  }
-}
 
 @media (max-width: 900px) {
   .workspace {
