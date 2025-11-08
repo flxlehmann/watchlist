@@ -1,18 +1,40 @@
 export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
-import { getList, saveList, now, type Item } from '@/lib/db';
+import { getList, saveList, now, toPublicList, type Item, type List } from '@/lib/db';
+import { verifyPassword } from '@/lib/password';
 
 function normalizeTitle(value: string): string {
   return value.replace(/\s*\(\d{4}\)$/u, '').trim().toLowerCase();
 }
-export async function GET(_req: NextRequest, { params }: { params: { id: string }}){
+async function authorize(req: NextRequest, list: List): Promise<NextResponse | null> {
+  if (!list.passwordHash) {
+    return null;
+  }
+  const provided = req.headers.get('x-list-password') ?? '';
+  if (!provided) {
+    return NextResponse.json(
+      { error: 'This watchlist is password protected.' },
+      { status: 401 }
+    );
+  }
+  const valid = await verifyPassword(provided, list.passwordHash);
+  if (!valid) {
+    return NextResponse.json({ error: 'Incorrect password.' }, { status: 401 });
+  }
+  return null;
+}
+export async function GET(req: NextRequest, { params }: { params: { id: string }}){
   const list = await getList(params.id);
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(list);
+  const authError = await authorize(req, list);
+  if (authError) return authError;
+  return NextResponse.json(toPublicList(list));
 }
 export async function POST(req: NextRequest, { params }: { params: { id: string }}){
   const list = await getList(params.id);
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const authError = await authorize(req, list);
+  if (authError) return authError;
   const { title, addedBy, poster, runtimeMinutes, releaseDate } = await req.json();
   const runtimeValue =
     typeof runtimeMinutes === 'number' && Number.isFinite(runtimeMinutes)
@@ -50,11 +72,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   list.items.unshift(item);
   list.updatedAt = now();
   await saveList(list);
-  return NextResponse.json(list);
+  return NextResponse.json(toPublicList(list));
 }
 export async function PATCH(req: NextRequest, { params }: { params: { id: string }}){
   const list = await getList(params.id);
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const authError = await authorize(req, list);
+  if (authError) return authError;
   const payload = await req.json();
   if(typeof payload.name === 'string' && !payload.itemId){
     const name = payload.name.trim().slice(0, 80);
@@ -64,7 +88,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     list.name = name;
     list.updatedAt = now();
     await saveList(list);
-    return NextResponse.json(list);
+    return NextResponse.json(toPublicList(list));
   }
   const { itemId, title, watched, poster, runtimeMinutes, releaseDate } = payload;
   const idx = list.items.findIndex(i => i.id === itemId);
@@ -89,16 +113,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   list.items[idx] = item;
   list.updatedAt = now();
   await saveList(list);
-  return NextResponse.json(list);
+  return NextResponse.json(toPublicList(list));
 }
 export async function DELETE(req: NextRequest, { params }: { params: { id: string }}){
   const list = await getList(params.id);
   if(!list) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const authError = await authorize(req, list);
+  if (authError) return authError;
   const { itemId } = await req.json();
   const before = list.items.length;
   list.items = list.items.filter(i => i.id !== itemId);
   if(list.items.length === before) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
   list.updatedAt = now();
   await saveList(list);
-  return NextResponse.json(list);
+  return NextResponse.json(toPublicList(list));
 }

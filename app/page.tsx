@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock,
   Copy,
+  Lock,
   Loader2,
   LogOut,
   Pencil,
@@ -35,6 +36,7 @@ type List = {
   name: string;
   items: Item[];
   updatedAt: number;
+  protected: boolean;
 };
 
 type SearchSuggestion = {
@@ -160,6 +162,9 @@ export default function Page() {
   const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
   const [selectedRuntime, setSelectedRuntime] = useState<number | null>(null);
   const [selectedReleaseDate, setSelectedReleaseDate] = useState<string | null>(null);
+  const [createPassword, setCreatePassword] = useState('');
+  const [joinPassword, setJoinPassword] = useState('');
+  const [activePassword, setActivePassword] = useState<string | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [sortOption, setSortOption] = useState<SortOption>('addedRecent');
   const [showWatched, setShowWatched] = useState(false);
@@ -174,6 +179,18 @@ export default function Page() {
   const notificationIdRef = useRef(0);
   const notificationTimeoutsRef = useRef<Map<number, number>>(new Map());
   const randomCloseRef = useRef<HTMLButtonElement | null>(null);
+
+  const withPassword = useCallback(
+    (init: RequestInit = {}) => {
+      if (!activePassword) {
+        return init;
+      }
+      const headers = new Headers(init.headers ?? undefined);
+      headers.set('x-list-password', activePassword);
+      return { ...init, headers } satisfies RequestInit;
+    },
+    [activePassword]
+  );
 
   const dismissNotification = useCallback((id: number) => {
     setNotifications((current) => current.filter((note) => note.id !== id));
@@ -202,6 +219,16 @@ export default function Page() {
     [dismissNotification]
   );
 
+  const ensurePasswordForChanges = useCallback(() => {
+    if (list?.protected && !activePassword) {
+      const message = 'Enter the list password to make changes.';
+      setError(message);
+      pushNotification('error', message);
+      return false;
+    }
+    return true;
+  }, [activePassword, list, pushNotification]);
+
   useEffect(() => {
     if (list) {
       setNameDraft(list.name);
@@ -209,6 +236,7 @@ export default function Page() {
       setRenaming(false);
       setShowRandomOverlay(false);
       setRandomPick(null);
+      setActivePassword(null);
     }
   }, [list]);
 
@@ -352,8 +380,9 @@ export default function Page() {
   }, [list, showWatched, showUnwatched, sortOption]);
 
   const joinList = useCallback(
-    async (id: string) => {
+    async (id: string, passwordInput?: string) => {
       const cleanId = id.trim();
+      const providedPassword = (passwordInput ?? joinPassword).trim();
       if (!cleanId) {
         const message = 'Enter a list ID to continue.';
         setError(message);
@@ -365,12 +394,17 @@ export default function Page() {
       setJoining(true);
       setError(null);
       try {
-        const data = await api<List>(`/api/lists/${cleanId}`);
+        const headers = providedPassword
+          ? { 'x-list-password': providedPassword }
+          : undefined;
+        const data = await api<List>(`/api/lists/${cleanId}`, { headers });
         setList(data);
         setListName(data.name);
         setLastSynced(Date.now());
         setLastListId(data.id);
         setListIdInput('');
+        setActivePassword(providedPassword ? providedPassword : null);
+        setJoinPassword('');
         if (typeof window !== 'undefined') {
           window.localStorage.setItem('listId', data.id);
           const url = new URL(window.location.href);
@@ -383,25 +417,34 @@ export default function Page() {
         if (list) {
           pushNotification('error', message);
         }
+        if (!list || list.id === cleanId) {
+          setActivePassword(null);
+        }
       } finally {
         setJoining(false);
       }
     },
-    [list, pushNotification]
+    [joinPassword, list, pushNotification]
   );
 
   const createList = useCallback(async () => {
     setCreating(true);
     setError(null);
     try {
+      const trimmedPassword = createPassword.trim();
       const data = await api<List>(`/api/lists`, {
         method: 'POST',
-        body: JSON.stringify({ name: listName.trim() || 'Watchlist' })
+        body: JSON.stringify({
+          name: listName.trim() || 'Watchlist',
+          password: trimmedPassword || undefined
+        })
       });
       setList(data);
       setListName(data.name);
       setLastSynced(Date.now());
       setLastListId(data.id);
+      setActivePassword(trimmedPassword ? trimmedPassword : null);
+      setCreatePassword('');
       if (typeof window !== 'undefined') {
         window.localStorage.setItem('listId', data.id);
         const url = new URL(window.location.href);
@@ -415,7 +458,7 @@ export default function Page() {
     } finally {
       setCreating(false);
     }
-  }, [listName, pushNotification]);
+  }, [createPassword, listName, pushNotification]);
 
   const quickStart = useCallback(async () => {
     if (list) return;
@@ -449,10 +492,13 @@ export default function Page() {
         pushNotification('error', message);
         return;
       }
+      if (!ensurePasswordForChanges()) {
+        return;
+      }
       setAdding(true);
       setError(null);
       try {
-        const data = await api<List>(`/api/lists/${list.id}`, {
+        const data = await api<List>(`/api/lists/${list.id}`, withPassword({
           method: 'POST',
           body: JSON.stringify({
             title: title.trim(),
@@ -461,7 +507,7 @@ export default function Page() {
             runtimeMinutes: selectedRuntime ?? undefined,
             releaseDate: selectedReleaseDate ?? undefined
           })
-        });
+        }));
         setList(data);
         setTitle('');
         setAddedBy('');
@@ -478,7 +524,7 @@ export default function Page() {
         setAdding(false);
       }
     },
-    [addedBy, list, pushNotification, selectedPoster, selectedReleaseDate, selectedRuntime, title]
+    [addedBy, ensurePasswordForChanges, list, pushNotification, selectedPoster, selectedReleaseDate, selectedRuntime, title, withPassword]
   );
 
   const fetchSuggestionDetails = useCallback(async (id: number) => {
@@ -587,10 +633,21 @@ export default function Page() {
     async (id?: string, showStatus = true) => {
       const target = id ?? list?.id;
       if (!target) return;
+      if (list?.protected && !activePassword) {
+        const message = 'Enter the list password to refresh this list.';
+        setError(message);
+        if (showStatus) {
+          pushNotification('error', message);
+        }
+        return;
+      }
       setRefreshing(true);
       try {
-        const data = await api<List>(`/api/lists/${target}`);
+        const data = await api<List>(`/api/lists/${target}`, withPassword());
         setList(data);
+        if (!data.protected) {
+          setActivePassword(null);
+        }
         setLastSynced(Date.now());
       } catch (err) {
         const message = parseError(err);
@@ -602,12 +659,13 @@ export default function Page() {
         setRefreshing(false);
       }
     },
-    [list?.id, pushNotification]
+    [activePassword, list, pushNotification, withPassword]
   );
 
   const toggleWatched = useCallback(
     async (item: Item) => {
       if (!list) return;
+      if (!ensurePasswordForChanges()) return;
       const optimistic = {
         ...list,
         items: list.items.map((i) =>
@@ -618,10 +676,10 @@ export default function Page() {
       };
       setList(optimistic);
       try {
-        const data = await api<List>(`/api/lists/${list.id}`, {
+        const data = await api<List>(`/api/lists/${list.id}`, withPassword({
           method: 'PATCH',
           body: JSON.stringify({ itemId: item.id, watched: !item.watched })
-        });
+        }));
         setList(data);
         setLastSynced(Date.now());
       } catch (err) {
@@ -631,17 +689,18 @@ export default function Page() {
         await refreshList(list.id, false);
       }
     },
-    [list, pushNotification, refreshList]
+    [ensurePasswordForChanges, list, pushNotification, refreshList, withPassword]
   );
 
   const removeItem = useCallback(
     async (item: Item) => {
       if (!list) return;
+      if (!ensurePasswordForChanges()) return;
       try {
-        const data = await api<List>(`/api/lists/${list.id}`, {
+        const data = await api<List>(`/api/lists/${list.id}`, withPassword({
           method: 'DELETE',
           body: JSON.stringify({ itemId: item.id })
-        });
+        }));
         setList(data);
         setLastSynced(Date.now());
         pushNotification('success', 'Item removed.');
@@ -652,7 +711,7 @@ export default function Page() {
         await refreshList(list.id, false);
       }
     },
-    [list, pushNotification, refreshList]
+    [ensurePasswordForChanges, list, pushNotification, refreshList, withPassword]
   );
 
   const leaveList = useCallback(() => {
@@ -664,6 +723,8 @@ export default function Page() {
     setLastSynced(null);
     setListIdInput(previousId ?? '');
     setLastListId(previousId);
+    setActivePassword(null);
+    setJoinPassword('');
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem('listId');
       const url = new URL(window.location.href);
@@ -700,13 +761,16 @@ export default function Page() {
         setRenaming(false);
         return;
       }
+      if (!ensurePasswordForChanges()) {
+        return;
+      }
       setSavingName(true);
       setError(null);
       try {
-        const data = await api<List>(`/api/lists/${list.id}`, {
+        const data = await api<List>(`/api/lists/${list.id}`, withPassword({
           method: 'PATCH',
           body: JSON.stringify({ name: trimmed })
-        });
+        }));
         setList(data);
         setListName(data.name);
         setRenaming(false);
@@ -720,7 +784,7 @@ export default function Page() {
         setSavingName(false);
       }
     },
-    [list, nameDraft, pushNotification]
+    [ensurePasswordForChanges, list, nameDraft, pushNotification, withPassword]
   );
 
   const chooseRandomPick = useCallback(() => {
@@ -990,6 +1054,11 @@ export default function Page() {
                       <Pencil size={18} />
                     </button>
                   </div>
+                )}
+                {list.protected && (
+                  <span className={styles.protectedBadge}>
+                    <Lock size={16} aria-hidden="true" /> Password protected
+                  </span>
                 )}
               </div>
               <div className={styles.listActions}>
@@ -1459,6 +1528,23 @@ export default function Page() {
                     disabled={creating}
                   />
                 </div>
+                <div className={styles.inputGroup}>
+                  <label className={styles.inputLabel} htmlFor="list-password">
+                    Password (optional)
+                  </label>
+                  <input
+                    id="list-password"
+                    className={styles.inputField}
+                    type="password"
+                    placeholder="Leave blank to keep it open"
+                    value={createPassword}
+                    onChange={(event) => setCreatePassword(event.target.value)}
+                    disabled={creating}
+                  />
+                  <p className={styles.inputHint}>
+                    Share this password with collaborators to limit access.
+                  </p>
+                </div>
                 <div className={styles.buttonRow}>
                   <button
                     className={styles.buttonPrimary}
@@ -1501,11 +1587,26 @@ export default function Page() {
                     disabled={joining}
                   />
                 </div>
+                <div className={styles.inputGroup}>
+                  <label className={styles.inputLabel} htmlFor="list-password-open">
+                    Password
+                  </label>
+                  <input
+                    id="list-password-open"
+                    className={styles.inputField}
+                    type="password"
+                    placeholder="Only if the list is protected"
+                    value={joinPassword}
+                    onChange={(event) => setJoinPassword(event.target.value)}
+                    disabled={joining}
+                  />
+                  <p className={styles.inputHint}>Leave blank for public watchlists.</p>
+                </div>
                 <div className={styles.buttonRow}>
                   <button
                     className={styles.buttonSurface}
                     type="button"
-                    onClick={() => joinList(listIdInput)}
+                    onClick={() => joinList(listIdInput, joinPassword)}
                     disabled={joining}
                   >
                     {joining ? <Loader2 size={18} className="spin" /> : <ArrowRight size={18} />}
@@ -1515,7 +1616,7 @@ export default function Page() {
                     <button
                       className={styles.buttonGhost}
                       type="button"
-                      onClick={() => joinList(lastListId)}
+                      onClick={() => joinList(lastListId, joinPassword)}
                       disabled={joining}
                     >
                       Continue last list

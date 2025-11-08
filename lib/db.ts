@@ -17,6 +17,7 @@ export type List = {
   name: string;
   items: Item[];
   updatedAt: number;
+  passwordHash?: string | null;
 };
 
 const redis = Redis.fromEnv();
@@ -28,6 +29,13 @@ export async function getList(id: string): Promise<List | null> {
 
 export async function saveList(list: List): Promise<void> {
   await redis.set(key(list.id), list);
+}
+
+export type PublicList = Omit<List, 'passwordHash'> & { protected: boolean };
+
+export function toPublicList(list: List): PublicList {
+  const { passwordHash, ...rest } = list;
+  return { ...rest, protected: Boolean(passwordHash) };
 }
 
 export function newId(len = 8) {

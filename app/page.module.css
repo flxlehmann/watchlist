@@ -104,6 +104,13 @@
   gap: 0.4rem;
 }
 
+.inputHint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .inputLabel {
   font-size: 0.82rem;
   letter-spacing: 0.08em;
@@ -595,6 +602,21 @@
   flex-direction: column;
   gap: 0.45rem;
   min-width: 0;
+}
+
+.protectedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-md);
+  background: rgba(122, 148, 255, 0.15);
+  border: 1px solid rgba(122, 148, 255, 0.35);
+  color: rgba(211, 219, 255, 0.9);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .listTitleDisplay {
