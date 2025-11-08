@@ -139,6 +139,8 @@ const QUICK_START_MOVIES: Array<{
   }
 ];
 
+const QUICK_START_DELAY_MS = 500;
+
 function normalizeTitle(value: string): string {
   return value.replace(/\s*\(\d{4}\)$/, '').trim().toLowerCase();
 }
@@ -704,9 +706,6 @@ export default function Page() {
 
   const quickStart = useCallback(async () => {
     if (list) return;
-    if (!listName.trim()) {
-      setListName('Watchlist');
-    }
     const passwordOverride = createPassword.trim() || undefined;
     const created = await createList();
     if (!created) {
@@ -732,6 +731,7 @@ export default function Page() {
           )
         );
         setList(current);
+        await new Promise((resolve) => setTimeout(resolve, QUICK_START_DELAY_MS));
       }
       setLastSynced(Date.now());
       pushNotification('success', 'Loaded a starter watchlist with popular movies.');
@@ -742,7 +742,7 @@ export default function Page() {
     } finally {
       setCreating(false);
     }
-  }, [createList, createPassword, list, listName, pushNotification, withPassword]);
+  }, [createList, createPassword, list, pushNotification, withPassword]);
 
   const addItem = useCallback(
     async (event?: React.FormEvent) => {
@@ -995,6 +995,7 @@ export default function Page() {
     setListMenuOpen(false);
     const previousId = list?.id ?? null;
     setList(null);
+    setListName('');
     setTitle('');
     setAddedBy('');
     setError(null);
