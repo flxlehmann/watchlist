@@ -1,6 +1,7 @@
 .viewport {
   min-height: 100vh;
-  padding: 4.5rem 1.5rem 5.5rem;
+  min-height: 100dvh;
+  padding: clamp(3.5rem, 8vw, 4.5rem) clamp(1rem, 4vw, 1.5rem) clamp(4rem, 10vw, 5.5rem);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -2014,6 +2015,7 @@
       'header'
       'primary'
       'stats';
+    gap: 1.25rem;
   }
 
   .statsPanel {
@@ -2035,7 +2037,37 @@
 
 @media (max-width: 680px) {
   .viewport {
-    padding: 3.5rem 1.15rem 4rem;
+    padding: 3.25rem 1rem 3.75rem;
+  }
+
+  .content {
+    gap: 2.25rem;
+  }
+
+  .hero {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .heroSubtitle {
+    font-size: 0.98rem;
+  }
+
+  .panels {
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+  }
+
+  .panel {
+    padding: 1.85rem 1.6rem;
+  }
+
+  .panelTitle {
+    font-size: 1.32rem;
+  }
+
+  .panelSubtitle {
+    font-size: 0.95rem;
   }
 
   .notificationStack {
@@ -2049,6 +2081,12 @@
     min-width: 0;
   }
 
+  .buttonPrimary,
+  .buttonSurface,
+  .buttonGhost {
+    width: 100%;
+  }
+
   .buttonRow {
     flex-direction: column;
     align-items: stretch;
@@ -2058,14 +2096,45 @@
     grid-template-columns: 1fr;
   }
 
+  .inputField {
+    padding: 0.9rem 1rem;
+  }
+
+  .listHeader {
+    padding: 1.4rem 1.35rem;
+  }
+
+  .listTitle {
+    font-size: clamp(1.65rem, 5.5vw, 2rem);
+  }
+
+  .listTitleRow {
+    align-items: flex-start;
+  }
+
   .listActions {
     width: 100%;
+    justify-content: flex-start;
   }
 
   .listMeta {
     width: 100%;
     margin-right: 0;
-    justify-content: flex-end;
+    justify-content: flex-start;
+  }
+
+  .statsPanel,
+  .sortControls {
+    padding: 1.35rem 1.25rem;
+    border-radius: calc(var(--radius-lg) * 1.05);
+  }
+
+  .sortButtons {
+    grid-template-columns: 1fr;
+  }
+
+  .randomButton {
+    width: 100%;
   }
 
   .randomOverlay {
@@ -2084,5 +2153,50 @@
 
   .randomActions {
     flex-direction: column;
+    width: 100%;
+    gap: 0.65rem;
+  }
+
+  .randomPrimary,
+  .randomSecondary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .viewport {
+    padding: 3rem 0.85rem 3.5rem;
+  }
+
+  .heroTitle {
+    font-size: clamp(1.9rem, 7vw, 2.35rem);
+  }
+
+  .panel {
+    padding: 1.6rem 1.4rem;
+  }
+
+  .panelSubtitle {
+    font-size: 0.92rem;
+  }
+
+  .notificationStack {
+    left: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .statsPanel,
+  .sortControls {
+    padding: 1.2rem 1.1rem;
+    border-radius: calc(var(--radius-lg) * 0.95);
+  }
+
+  .listMeta {
+    gap: 0.45rem;
+  }
+
+  .randomContent {
+    padding: 1.75rem 1.4rem 1.5rem;
   }
 }

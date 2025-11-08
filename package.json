@@ -1,5 +1,7 @@
 {
   "name": "watchlists",
+  "version": "1.0.0",
+  "description": "Collaborative movie watchlists with real-time syncing and password protection.",
   "private": true,
   "scripts": {
     "dev": "next dev",
