@@ -745,18 +745,18 @@ export default function Page() {
   const toggleVisibility = useCallback(
     (type: 'watched' | 'unwatched') => {
       if (type === 'watched') {
-        if (showWatched && !showUnwatched) {
-          return;
+        const nextWatched = !showWatched;
+        if (!nextWatched && !showUnwatched) {
+          setShowUnwatched(true);
         }
+        setShowWatched(nextWatched);
+        return;
+      }
+      const nextUnwatched = !showUnwatched;
+      if (!nextUnwatched && !showWatched) {
         setShowWatched(true);
-        setShowUnwatched(false);
-        return;
       }
-      if (showUnwatched && !showWatched) {
-        return;
-      }
-      setShowUnwatched(true);
-      setShowWatched(false);
+      setShowUnwatched(nextUnwatched);
     },
     [showUnwatched, showWatched]
   );
