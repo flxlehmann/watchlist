@@ -233,6 +233,7 @@ export default function Page() {
   const [lastSynced, setLastSynced] = useState<number | null>(null);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSpotlight, setShowSpotlight] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
   const [selectedRuntime, setSelectedRuntime] = useState<number | null>(null);
@@ -272,6 +273,8 @@ export default function Page() {
   const passwordDialogCurrentId = useId();
   const passwordDialogPasswordId = useId();
   const passwordDialogConfirmId = useId();
+  const spotlightDialogTitleId = useId();
+  const spotlightDialogDescriptionId = useId();
   const blurTimeoutRef = useRef<number | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const detailsRequestRef = useRef(0);
@@ -781,6 +784,10 @@ export default function Page() {
         setSelectedPoster(null);
         setSelectedRuntime(null);
         setSelectedReleaseDate(null);
+        setAddedBy('');
+        setShowSpotlight(false);
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
         setLastSynced(Date.now());
         pushNotification('success', 'Item added to your watchlist.');
       } catch (err) {
@@ -865,8 +872,36 @@ export default function Page() {
     []
   );
 
+  const closeSpotlight = useCallback(() => {
+    setShowSpotlight(false);
+    setShowSuggestions(false);
+    setHighlightedIndex(-1);
+    if (blurTimeoutRef.current && typeof window !== 'undefined') {
+      window.clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        titleInputRef.current?.blur();
+      });
+    }
+  }, []);
+
   const handleTitleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Escape') {
+        if (showSuggestions) {
+          event.preventDefault();
+          setShowSuggestions(false);
+          setHighlightedIndex(-1);
+          return;
+        }
+        if (showSpotlight) {
+          event.preventDefault();
+          closeSpotlight();
+        }
+        return;
+      }
       if (!showSuggestions || suggestions.length === 0) return;
       if (event.key === 'ArrowDown') {
         event.preventDefault();
@@ -885,16 +920,21 @@ export default function Page() {
           event.preventDefault();
           handleSelectSuggestion(suggestions[highlightedIndex]);
         }
-        return;
-      }
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setShowSuggestions(false);
-        setHighlightedIndex(-1);
       }
     },
-    [handleSelectSuggestion, highlightedIndex, showSuggestions, suggestions]
+    [closeSpotlight, handleSelectSuggestion, highlightedIndex, showSpotlight, showSuggestions, suggestions]
   );
+
+  const handleTitleFocus = useCallback(() => {
+    if (blurTimeoutRef.current) {
+      window.clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
+    if (suggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+    setShowSpotlight(true);
+  }, [suggestions.length]);
 
   const refreshList = useCallback(
     async (id?: string, showStatus = true) => {
@@ -1324,6 +1364,62 @@ export default function Page() {
       setCelebrationKey((value) => value + 1);
     }
   }, [countdownRemaining, randomPick, showRandomOverlay]);
+
+  useEffect(() => {
+    if (!showSpotlight) {
+      return undefined;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      const input = titleInputRef.current;
+      if (input) {
+        input.focus();
+        if (typeof input.setSelectionRange === 'function') {
+          const length = input.value.length;
+          input.setSelectionRange(length, length);
+        }
+      }
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [showSpotlight]);
+
+  useEffect(() => {
+    if (!showSpotlight || typeof document === 'undefined') {
+      return undefined;
+    }
+    const { body, documentElement } = document;
+    if (!body) {
+      return undefined;
+    }
+    const previousOverflow = body.style.overflow;
+    const previousPaddingRight = body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - (documentElement?.clientWidth ?? window.innerWidth);
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    body.style.overflow = 'hidden';
+    return () => {
+      body.style.overflow = previousOverflow;
+      body.style.paddingRight = previousPaddingRight;
+    };
+  }, [showSpotlight]);
+
+  useEffect(() => {
+    if (!showSpotlight) {
+      return undefined;
+    }
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeSpotlight();
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [closeSpotlight, showSpotlight]);
 
   useEffect(() => {
     if (!title.trim()) {
@@ -2012,108 +2108,181 @@ export default function Page() {
 
           <div className={styles.primaryColumn}>
             <section className={styles.formCard}>
-              <form className={`${styles.form} ${styles.formInline}`} onSubmit={addItem}>
-                <div className={styles.autocomplete}>
-                  <label className={styles.visuallyHidden} htmlFor="title">
-                    Title
-                  </label>
-                  <input
-                    id="title"
-                    ref={titleInputRef}
-                    className={`${styles.inputField} ${styles.inputCompact} ${styles.titleField}`}
-                    placeholder="e.g. Dune: Part Two"
-                    value={title}
-                    onChange={handleTitleChange}
-                    onKeyDown={handleTitleKeyDown}
-                    onFocus={() => {
-                      if (blurTimeoutRef.current) {
-                        window.clearTimeout(blurTimeoutRef.current);
-                        blurTimeoutRef.current = null;
-                      }
-                      if (suggestions.length > 0) {
-                        setShowSuggestions(true);
-                      }
-                    }}
-                    onBlur={() => {
-                      blurTimeoutRef.current = window.setTimeout(() => {
-                        setShowSuggestions(false);
-                      }, 120);
-                    }}
-                    autoComplete="off"
-                    aria-autocomplete="list"
-                    aria-expanded={showSuggestions && suggestions.length > 0}
-                    aria-controls="title-suggestions"
-                    disabled={adding}
-                    required
-                  />
-                  {showSuggestions && suggestions.length > 0 && (
-                    <ul
-                      id="title-suggestions"
-                      className={styles.autocompleteList}
-                      role="listbox"
-                      aria-label="Suggested titles"
-                    >
-                      {suggestions.map((suggestion, index) => {
-                        const key = `${suggestion.id}-${suggestion.year ?? 'unknown'}-${index}`;
-                        return (
-                          <li
-                            key={key}
-                            role="option"
-                            aria-selected={index === highlightedIndex}
-                            className={`${styles.autocompleteItem} ${
-                              index === highlightedIndex ? styles.autocompleteItemActive : ''
-                            }`}
-                            onMouseDown={(event) => {
-                              event.preventDefault();
-                              handleSelectSuggestion(suggestion);
-                            }}
-                            onMouseEnter={() => setHighlightedIndex(index)}
-                          >
-                            {suggestion.poster ? (
-                              <img
-                                src={suggestion.poster}
-                                alt=""
-                                className={styles.autocompletePoster}
-                                aria-hidden="true"
-                              />
-                            ) : (
-                              <div className={styles.autocompletePosterPlaceholder} aria-hidden="true">
-                                🎬
-                              </div>
-                            )}
-                            <div className={styles.autocompleteCopy}>
-                              <span className={styles.autocompleteTitle}>{suggestion.title}</span>
-                              {suggestion.year && (
-                                <span className={styles.autocompleteMeta}>{suggestion.year}</span>
-                              )}
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-                <label className={styles.visuallyHidden} htmlFor="added-by">
-                  Added by (optional)
-                </label>
-                <input
-                  id="added-by"
-                  className={`${styles.inputField} ${styles.inputCompact} ${styles.nameField}`}
-                  placeholder="Name (optional)"
-                  value={addedBy}
-                  onChange={(event) => setAddedBy(event.target.value)}
-                  disabled={adding}
-                />
-                <button className={styles.buttonPrimary} type="submit" disabled={adding || detailsLoading}>
-                  {adding || detailsLoading ? (
-                    <Loader2 size={18} className="spin" />
-                  ) : (
-                    <Plus size={18} />
-                  )}
-                  {adding ? 'Adding…' : detailsLoading ? 'Fetching details…' : 'Add'}
-                </button>
-              </form>
+              {!showSpotlight && (
+                <form
+                  className={`${styles.form} ${styles.spotlightIdleForm}`}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    setShowSpotlight(true);
+                  }}
+                >
+                  <div className={styles.autocomplete}>
+                    <label className={styles.visuallyHidden} htmlFor="title">
+                      Title
+                    </label>
+                    <input
+                      id="title"
+                      ref={titleInputRef}
+                      className={`${styles.inputField} ${styles.titleField} ${styles.spotlightTrigger}`}
+                      placeholder="Movie name e.g. Dune: Part Two"
+                      value={title}
+                      onChange={handleTitleChange}
+                      onKeyDown={handleTitleKeyDown}
+                      onFocus={handleTitleFocus}
+                      onBlur={() => {
+                        blurTimeoutRef.current = window.setTimeout(() => {
+                          setShowSuggestions(false);
+                        }, 120);
+                      }}
+                      autoComplete="off"
+                      aria-autocomplete="list"
+                      aria-expanded={false}
+                      aria-controls="title-suggestions"
+                      disabled={adding}
+                      required
+                    />
+                  </div>
+                </form>
+              )}
             </section>
+
+            {showSpotlight && (
+              <>
+                <button
+                  type="button"
+                  className={styles.spotlightScrim}
+                  aria-label="Close movie search"
+                  tabIndex={-1}
+                  onClick={closeSpotlight}
+                />
+                <div
+                  className={styles.spotlightDialog}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby={spotlightDialogTitleId}
+                  aria-describedby={spotlightDialogDescriptionId}
+                >
+                  <h2 id={spotlightDialogTitleId} className={styles.visuallyHidden}>
+                    Add a movie
+                  </h2>
+                  <p id={spotlightDialogDescriptionId} className={styles.visuallyHidden}>
+                    Search for a movie to add to your watchlist and optionally credit who added it.
+                  </p>
+                  <form className={`${styles.form} ${styles.spotlightForm}`} onSubmit={addItem}>
+                    <div className={styles.spotlightRow}>
+                      <div className={`${styles.autocomplete} ${styles.spotlightAutocomplete}`}>
+                        <label className={styles.visuallyHidden} htmlFor="title">
+                          Title
+                        </label>
+                        <input
+                          id="title"
+                          ref={titleInputRef}
+                          className={`${styles.inputField} ${styles.titleField} ${styles.spotlightInput}`}
+                          placeholder="Movie name e.g. Dune: Part Two"
+                          value={title}
+                          onChange={handleTitleChange}
+                          onKeyDown={handleTitleKeyDown}
+                          onFocus={handleTitleFocus}
+                          onBlur={() => {
+                            blurTimeoutRef.current = window.setTimeout(() => {
+                              setShowSuggestions(false);
+                            }, 120);
+                          }}
+                          autoComplete="off"
+                          aria-autocomplete="list"
+                          aria-expanded={showSuggestions && suggestions.length > 0}
+                          aria-controls="title-suggestions"
+                          disabled={adding}
+                          required
+                        />
+                        {showSuggestions && suggestions.length > 0 && (
+                          <ul
+                            id="title-suggestions"
+                            className={`${styles.autocompleteList} ${styles.spotlightSuggestions}`}
+                            role="listbox"
+                            aria-label="Suggested titles"
+                          >
+                            {suggestions.map((suggestion, index) => {
+                              const key = `${suggestion.id}-${suggestion.year ?? 'unknown'}-${index}`;
+                              return (
+                                <li
+                                  key={key}
+                                  role="option"
+                                  aria-selected={index === highlightedIndex}
+                                  className={`${styles.autocompleteItem} ${
+                                    index === highlightedIndex ? styles.autocompleteItemActive : ''
+                                  }`}
+                                  onMouseDown={(event) => {
+                                    event.preventDefault();
+                                    handleSelectSuggestion(suggestion);
+                                  }}
+                                  onMouseEnter={() => setHighlightedIndex(index)}
+                                >
+                                  {suggestion.poster ? (
+                                    <img
+                                      src={suggestion.poster}
+                                      alt=""
+                                      className={styles.autocompletePoster}
+                                      aria-hidden="true"
+                                    />
+                                  ) : (
+                                    <div className={styles.autocompletePosterPlaceholder} aria-hidden="true">
+                                      🎬
+                                    </div>
+                                  )}
+                                  <div className={styles.autocompleteCopy}>
+                                    <span className={styles.autocompleteTitle}>{suggestion.title}</span>
+                                    {suggestion.year && (
+                                      <span className={styles.autocompleteMeta}>{suggestion.year}</span>
+                                    )}
+                                  </div>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                      <label className={styles.spotlightUserField} htmlFor="added-by">
+                        <span className={styles.visuallyHidden}>Added by (optional)</span>
+                        <input
+                          id="added-by"
+                          className={`${styles.inputField} ${styles.spotlightUserInput}`}
+                          placeholder="Name (optional)"
+                          value={addedBy}
+                          onChange={(event) => setAddedBy(event.target.value)}
+                          disabled={adding}
+                        />
+                      </label>
+                      <button
+                        className={styles.spotlightAddButton}
+                        type="submit"
+                        aria-label={
+                          adding
+                            ? 'Adding movie'
+                            : detailsLoading
+                              ? 'Fetching movie details'
+                              : 'Add movie'
+                        }
+                        disabled={adding || detailsLoading}
+                      >
+                        {adding || detailsLoading ? (
+                          <Loader2 size={24} className="spin" />
+                        ) : (
+                          <Plus strokeWidth={2.5} />
+                        )}
+                        <span className={styles.visuallyHidden}>
+                          {adding
+                            ? 'Adding movie'
+                            : detailsLoading
+                              ? 'Fetching movie details'
+                              : 'Add movie'}
+                        </span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </>
+            )}
 
             {displayItems.length > 0 ? (
               viewMode === 'grid' ? (
