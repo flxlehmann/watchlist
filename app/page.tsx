@@ -2132,8 +2132,8 @@ export default function Page() {
                     const releaseYear = item.releaseDate
                       ? item.releaseDate.slice(0, 4)
                       : displayYear;
-                    const showAddedBy = gridColumns !== 4;
-                    const addedByLabel = showAddedBy ? item.addedBy?.trim() || 'Unknown' : null;
+                    const addedByLabel = item.addedBy?.trim();
+                    const showAddedBy = gridColumns === 4 && !!addedByLabel;
                     const initials = item.title
                       .split(' ')
                       .filter(Boolean)
@@ -2210,7 +2210,7 @@ export default function Page() {
                       typeof item.runtimeMinutes === 'number' && item.runtimeMinutes > 0
                         ? formatRuntime(item.runtimeMinutes)
                         : null;
-                    const addedByLabel = item.addedBy?.trim() || 'Unknown';
+                    const addedByLabel = item.addedBy?.trim();
                     const initials = item.title
                       .split(' ')
                       .filter(Boolean)
@@ -2242,7 +2242,7 @@ export default function Page() {
                           </div>
                           <div className={styles.listRowMeta}>
                             {runtimeLabel && <span>{runtimeLabel}</span>}
-                            <span>Added by {addedByLabel}</span>
+                            {addedByLabel && <span>Added by {addedByLabel}</span>}
                           </div>
                         </div>
                         <div className={styles.listRowActions}>
@@ -2464,17 +2464,13 @@ export default function Page() {
             </div>
 
             <div className={styles.statsPanel} aria-label="Watchlist statistics">
-              <header className={styles.statsHeader}>
-                <h2>List stats</h2>
-                <span className={styles.statsTotal}>
-                  {stats.total} movie{stats.total === 1 ? '' : 's'}
-                </span>
-              </header>
               <ul className={styles.statsList}>
                 <li className={styles.statsRow}>
                   <div className={styles.statsMetric}>
                     <span className={styles.metricLabel}>Watched</span>
-                    <span className={styles.metricValue}>{stats.watched}</span>
+                    <span className={styles.metricValue}>
+                      {stats.watched} / {stats.total}
+                    </span>
                   </div>
                   <div className={styles.metricBar}>
                     <div
