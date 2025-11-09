@@ -1838,8 +1838,7 @@
   box-shadow: 0 0 0 3px rgba(255, 127, 162, 0.45), 0 18px 48px rgba(116, 65, 185, 0.48);
 }
 
-.mobileToolbar,
-.mobileSheet {
+.mobileConsole {
   display: none;
 }
 
@@ -2342,10 +2341,9 @@
     grid-template-columns: 1fr;
     grid-template-areas:
       'header'
-      'primary'
-      'stats';
-    gap: 1.25rem;
-    padding-bottom: 6.75rem;
+      'primary';
+    gap: 1.35rem;
+    padding-bottom: 0;
   }
 
   .statsPanel {
@@ -2365,222 +2363,220 @@
     padding: 1.5rem 1.6rem;
   }
 
-  .mobileToolbar {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 0.75rem;
-    position: fixed;
-    left: max(0.85rem, env(safe-area-inset-left));
-    right: max(0.85rem, env(safe-area-inset-right));
-    bottom: calc(1.1rem + env(safe-area-inset-bottom));
-    padding: 0.75rem 0.95rem;
-    border-radius: 18px;
-    background: rgba(8, 12, 26, 0.86);
-    border: 1px solid rgba(122, 148, 228, 0.42);
-    box-shadow: 0 20px 60px rgba(4, 6, 18, 0.55);
-    backdrop-filter: blur(18px) saturate(1.2);
-    -webkit-backdrop-filter: blur(18px) saturate(1.2);
-    z-index: 180;
-  }
-
-  .mobileToolbarButton {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    border-radius: 999px;
-    border: none;
-    padding: 0.7rem 1.05rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    background: rgba(122, 148, 255, 0.16);
-    color: rgba(230, 236, 255, 0.9);
-    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-    min-width: 0;
-  }
-
-  .mobileToolbarButton svg {
-    flex-shrink: 0;
-  }
-
-  .mobileToolbarButton:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.35);
-  }
-
-  .mobileToolbarButton:hover {
-    transform: translateY(-1px);
-    background: rgba(122, 148, 255, 0.24);
-  }
-
-  .mobileToolbarAccent {
-    background: linear-gradient(135deg, #ff7fa2, #8e5dff 55%, #4ac6ff);
-    color: #050610;
-    box-shadow: 0 18px 44px rgba(116, 65, 185, 0.45);
-  }
-
-  .mobileToolbarAccent:hover {
-    background: linear-gradient(135deg, #ff8fb1, #9c6aff 55%, #5cd3ff);
-    box-shadow: 0 22px 56px rgba(116, 65, 185, 0.6);
-  }
-
-  .mobileToolbarSummary {
+  .mobileConsole {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.2rem;
-    min-width: 0;
+    gap: 0.9rem;
+    margin-top: 1.5rem;
+    padding: 1.15rem 1.2rem 1.3rem;
+    background: linear-gradient(165deg, rgba(24, 28, 56, 0.94), rgba(6, 8, 20, 0.98));
+    border: 1px solid rgba(122, 148, 228, 0.45);
+    border-radius: calc(var(--radius-lg) * 1.05);
+    box-shadow: 0 24px 70px rgba(4, 6, 18, 0.55);
   }
 
-  .mobileToolbarCount {
-    font-size: 0.96rem;
-    font-weight: 700;
-    color: rgba(244, 246, 255, 0.95);
-  }
-
-  .mobileToolbarDetails {
-    font-size: 0.78rem;
-    color: rgba(214, 224, 255, 0.72);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: min(220px, 60vw);
-  }
-
-  .mobileSheet {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 220;
-    pointer-events: none;
-  }
-
-  .mobileSheetOpen {
-    pointer-events: auto;
-  }
-
-  .mobileSheetBackdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(2, 4, 12, 0.55);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    opacity: 0;
-    transition: opacity 0.28s ease;
-    z-index: 0;
-  }
-
-  .mobileSheetContent {
-    position: absolute;
-    left: max(0.65rem, env(safe-area-inset-left));
-    right: max(0.65rem, env(safe-area-inset-right));
-    bottom: max(0.5rem, env(safe-area-inset-bottom));
-    border-radius: 28px;
-    background: linear-gradient(180deg, rgba(18, 22, 44, 0.97), rgba(6, 8, 20, 0.98));
-    border: 1px solid rgba(122, 148, 228, 0.5);
-    box-shadow: 0 -22px 70px rgba(2, 4, 12, 0.7);
-    padding: 1.45rem 1.35rem 1.85rem;
-    transform: translateY(8%);
-    opacity: 0;
-    transition: transform 0.32s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.32s ease;
-    pointer-events: auto;
-    max-height: calc(100dvh - 4.5rem);
-    overflow-y: auto;
-    z-index: 1;
-  }
-
-  .mobileSheetOpen .mobileSheetBackdrop {
-    opacity: 1;
-  }
-
-  .mobileSheetOpen .mobileSheetContent {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  .mobileSheetHandle {
-    width: 56px;
-    height: 6px;
-    border-radius: 999px;
-    background: rgba(214, 224, 255, 0.35);
-    margin: 0 auto 1rem;
-  }
-
-  .mobileSheetHeader {
+  .mobileConsoleHeader {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1.2rem;
   }
 
-  .mobileSheetHeading {
+  .mobileConsoleSummary {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.3rem;
+    min-width: 0;
   }
 
-  .mobileSheetEyebrow {
+  .mobileConsoleEyebrow {
     margin: 0;
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: rgba(214, 224, 255, 0.58);
   }
 
-  .mobileSheetTitle {
-    margin: 0;
-    font-size: 1.32rem;
+  .mobileConsoleCount {
+    font-size: 1.18rem;
     font-weight: 700;
-    letter-spacing: -0.01em;
     color: rgba(244, 246, 255, 0.95);
   }
 
-  .mobileSheetDescription {
-    margin: 0;
-    font-size: 0.88rem;
-    line-height: 1.5;
+  .mobileConsoleMeta {
+    font-size: 0.85rem;
     color: rgba(214, 224, 255, 0.78);
   }
 
-  .mobileSheetClose {
-    border: none;
-    background: rgba(18, 24, 44, 0.85);
-    color: rgba(226, 232, 255, 0.9);
+  .mobileConsoleToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     border-radius: 999px;
-    padding: 0.45rem;
+    border: 1px solid rgba(122, 148, 228, 0.4);
+    padding: 0.45rem 0.9rem;
+    background: rgba(20, 26, 54, 0.6);
+    color: rgba(226, 232, 255, 0.88);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .mobileConsoleToggle svg {
+    flex-shrink: 0;
+  }
+
+  .mobileConsoleToggle:hover {
+    background: rgba(28, 36, 66, 0.75);
+    border-color: rgba(122, 148, 228, 0.6);
+    transform: translateY(-1px);
+  }
+
+  .mobileConsoleToggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.45);
+  }
+
+  .mobileConsoleToggleActive {
+    background: rgba(122, 148, 255, 0.2);
+    border-color: rgba(142, 162, 255, 0.65);
+    color: rgba(244, 246, 255, 0.95);
+    box-shadow: 0 16px 36px rgba(12, 16, 34, 0.45);
+  }
+
+  .mobileConsoleActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  .mobileConsoleChip {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: calc(var(--radius-md) * 1.4);
+    border: 1px solid rgba(122, 148, 228, 0.35);
+    background: rgba(18, 22, 44, 0.82);
+    color: rgba(226, 232, 255, 0.92);
+    padding: 0.75rem 0.85rem;
+    text-align: left;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .mobileConsoleChip:hover {
+    transform: translateY(-1px);
+    border-color: rgba(122, 148, 228, 0.55);
+    background: rgba(24, 30, 58, 0.92);
+  }
+
+  .mobileConsoleChip:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.45);
+  }
+
+  .mobileConsoleChipActive {
+    border-color: rgba(142, 162, 255, 0.7);
+    background: rgba(122, 148, 255, 0.2);
+    box-shadow: 0 18px 44px rgba(4, 6, 16, 0.45);
+  }
+
+  .mobileConsoleIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: rgba(122, 148, 255, 0.18);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease, background 0.2s ease;
+    flex-shrink: 0;
+    color: rgba(226, 232, 255, 0.9);
   }
 
-  .mobileSheetClose:hover,
-  .mobileSheetClose:focus-visible {
-    transform: scale(1.05);
-    background: rgba(122, 148, 255, 0.2);
-    outline: none;
+  .mobileConsoleChipActive .mobileConsoleIcon {
+    background: rgba(122, 148, 255, 0.3);
   }
 
-  .mobileSheetBody {
+  .mobileConsoleChipAccent {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #ff7fa2, #8e5dff 55%, #4ac6ff);
+    border-color: transparent;
+    color: #050610;
+    box-shadow: 0 22px 56px rgba(116, 65, 185, 0.55);
+  }
+
+  .mobileConsoleChipAccent:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 28px 68px rgba(116, 65, 185, 0.65);
+  }
+
+  .mobileConsoleChipAccent .mobileConsoleIcon {
+    background: rgba(255, 255, 255, 0.18);
+    color: #050610;
+  }
+
+  .mobileConsoleText {
     display: flex;
     flex-direction: column;
-    gap: 1.1rem;
+    gap: 0.22rem;
+    min-width: 0;
+    flex: 1;
   }
 
-  .mobileSheetBody .sortControls {
-    padding: 1.2rem 1.15rem;
+  .mobileConsoleLabel {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(214, 224, 255, 0.66);
+  }
+
+  .mobileConsoleValue {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: rgba(244, 246, 255, 0.95);
+    line-height: 1.3;
+  }
+
+  .mobileConsoleMetaValue {
+    font-size: 0.78rem;
+    color: rgba(214, 224, 255, 0.76);
+    line-height: 1.3;
+  }
+
+  .mobileConsoleCaret {
+    color: rgba(214, 224, 255, 0.6);
+    flex-shrink: 0;
+  }
+
+  .mobileConsolePanels {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .mobileConsolePanel {
+    display: none;
+  }
+
+  .mobileConsolePanelActive {
+    display: block;
+  }
+
+  .mobileConsolePanelActive .sortControls {
+    padding: 1.05rem 1.05rem;
     gap: 1rem;
   }
 
-  .mobileSheetBody .statsPanel {
-    padding: 1.2rem 1.15rem;
+  .mobileConsolePanelActive .statsPanel {
+    padding: 1.05rem 1.05rem 1.2rem;
     border-radius: calc(var(--radius-lg) * 1.05);
   }
 
-  .mobileSheetBody .randomButton {
+  .mobileConsoleRandom {
+    margin-top: 0.5rem;
+  }
+
+  .mobileConsoleRandom .randomButton {
     width: 100%;
   }
 }
@@ -2720,23 +2716,27 @@
 }
 
 @media (max-width: 560px) {
-  .mobileToolbar {
+  .mobileConsole {
+    padding: 1.05rem 1rem 1.2rem;
+    gap: 0.8rem;
+  }
+
+  .mobileConsoleHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .mobileConsoleToggle {
+    justify-content: center;
+  }
+
+  .mobileConsoleActions {
     grid-template-columns: 1fr;
-    row-gap: 0.65rem;
-    padding: 0.85rem;
   }
 
-  .mobileToolbarButton {
-    width: 100%;
-  }
-
-  .mobileToolbarSummary {
-    align-items: flex-start;
-    text-align: left;
-  }
-
-  .mobileToolbarDetails {
-    max-width: 100%;
+  .mobileConsoleChip {
+    padding: 0.7rem 0.8rem;
   }
 }
 
@@ -2781,5 +2781,23 @@
 
   .randomContent {
     padding: 1.75rem 1.4rem 1.5rem;
+  }
+
+  .mobileConsole {
+    margin-top: 1.1rem;
+    padding: 0.95rem 0.85rem 1.1rem;
+  }
+
+  .mobileConsoleIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .mobileConsoleValue {
+    font-size: 0.88rem;
+  }
+
+  .mobileConsoleMetaValue {
+    font-size: 0.74rem;
   }
 }
