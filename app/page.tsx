@@ -6,6 +6,7 @@ import { useAnimatedList } from '@/lib/useAnimatedList';
 import {
   AlertCircle,
   ArrowRight,
+  BarChart3,
   Check,
   CheckCircle2,
   Clock,
@@ -26,6 +27,7 @@ import {
   ShieldX,
   Sparkles,
   Trash2,
+  SlidersHorizontal,
   X
 } from 'lucide-react';
 import styles from './page.module.css';
@@ -247,6 +249,7 @@ export default function Page() {
   const [gridColumns, setGridColumns] = useState<4 | 5>(5);
   const [randomPick, setRandomPick] = useState<Item | null>(null);
   const [showRandomOverlay, setShowRandomOverlay] = useState(false);
+  const [mobileConsoleSection, setMobileConsoleSection] = useState<'organize' | 'stats' | null>(null);
   const [countdownRemaining, setCountdownRemaining] = useState<number | null>(null);
   const [countdownSession, setCountdownSession] = useState(0);
   const [celebrationKey, setCelebrationKey] = useState(0);
@@ -263,6 +266,9 @@ export default function Page() {
   const randomTitleId = useId();
   const randomDescriptionId = useId();
   const filterToggleId = useId();
+  const mobileFilterToggleId = useId();
+  const mobileOrganizePanelId = useId();
+  const mobileStatsPanelId = useId();
   const countdownGradientId = useId();
   const listMenuDropdownId = useId();
   const listMenuButtonId = useId();
@@ -318,6 +324,9 @@ export default function Page() {
     },
     [selectLayout]
   );
+  const toggleMobileConsoleSection = useCallback((section: 'organize' | 'stats') => {
+    setMobileConsoleSection((current) => (current === section ? null : section));
+  }, []);
 
   const withPassword = useCallback(
     (init: RequestInit = {}, override?: string) => {
@@ -358,6 +367,21 @@ export default function Page() {
       document.removeEventListener('keydown', handleKey);
     };
   }, [listMenuOpen]);
+
+  useEffect(() => {
+    if (!mobileConsoleSection) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileConsoleSection(null);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileConsoleSection]);
 
   const dismissNotification = useCallback((id: number) => {
     setNotifications((current) => current.filter((note) => note.id !== id));
@@ -1268,6 +1292,34 @@ export default function Page() {
 
   const lastUpdated = list ? formatRelative(list.updatedAt) : null;
   const lastSyncedAgo = formatRelative(lastSynced);
+  const sortSummary = useMemo(() => {
+    switch (sortOption) {
+      case 'addedOldest':
+        return 'Earliest first';
+      case 'releaseAsc':
+        return 'Oldest releases';
+      case 'releaseDesc':
+        return 'Newest releases';
+      case 'titleAsc':
+        return 'A to Z';
+      case 'titleDesc':
+        return 'Z to A';
+      default:
+        return 'Latest first';
+    }
+  }, [sortOption]);
+  const layoutSummary =
+    layoutSelection === 'list'
+      ? 'List view'
+      : layoutSelection === 'grid-4'
+        ? 'Grid · 4'
+        : 'Grid · 5';
+  const filterSummary = showUnwatchedOnly ? 'Unwatched only' : 'All titles';
+  const totalLabel = stats.total === 1 ? 'title' : 'titles';
+  const statsSummary =
+    stats.total === 0
+      ? 'No titles yet'
+      : `${stats.watchedPercent}% watched · ${stats.pending} on deck`;
 
   const toggleUnwatchedOnly = useCallback(() => {
     setShowUnwatchedOnly((value) => !value);
@@ -1277,6 +1329,327 @@ export default function Page() {
     setSortOption('addedRecent');
     setShowUnwatchedOnly(false);
   }, [list?.id]);
+
+  const renderOrganizeControls = (toggleId: string) => (
+    <div className={styles.sortControls} aria-label="Organize watchlist">
+      <div className={styles.organizeGroup} role="radiogroup" aria-label="Sort by date added">
+        <span className={styles.groupLabel}>Date added</span>
+        <div className={styles.sortButtons}>
+          <button
+            type="button"
+            className={`${styles.sortButton} ${sortOption === 'addedRecent' ? styles.sortButtonActive : ''}`}
+            onClick={() => setSortOption('addedRecent')}
+            aria-pressed={sortOption === 'addedRecent'}
+          >
+            Latest
+          </button>
+          <button
+            type="button"
+            className={`${styles.sortButton} ${sortOption === 'addedOldest' ? styles.sortButtonActive : ''}`}
+            onClick={() => setSortOption('addedOldest')}
+            aria-pressed={sortOption === 'addedOldest'}
+          >
+            Earliest
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.organizeGroup} role="radiogroup" aria-label="Sort by release date">
+        <span className={styles.groupLabel}>Released</span>
+        <div className={styles.sortButtons}>
+          <button
+            type="button"
+            className={`${styles.sortButton} ${sortOption === 'releaseAsc' ? styles.sortButtonActive : ''}`}
+            onClick={() => setSortOption('releaseAsc')}
+            aria-pressed={sortOption === 'releaseAsc'}
+          >
+            Oldest
+          </button>
+          <button
+            type="button"
+            className={`${styles.sortButton} ${sortOption === 'releaseDesc' ? styles.sortButtonActive : ''}`}
+            onClick={() => setSortOption('releaseDesc')}
+            aria-pressed={sortOption === 'releaseDesc'}
+          >
+            Newest
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.organizeGroup} role="radiogroup" aria-label="Sort by title">
+        <span className={styles.groupLabel}>Title</span>
+        <div className={styles.sortButtons}>
+          <button
+            type="button"
+            className={`${styles.sortButton} ${sortOption === 'titleAsc' ? styles.sortButtonActive : ''}`}
+            onClick={() => setSortOption('titleAsc')}
+            aria-pressed={sortOption === 'titleAsc'}
+          >
+            A-Z
+          </button>
+          <button
+            type="button"
+            className={`${styles.sortButton} ${sortOption === 'titleDesc' ? styles.sortButtonActive : ''}`}
+            onClick={() => setSortOption('titleDesc')}
+            aria-pressed={sortOption === 'titleDesc'}
+          >
+            Z-A
+          </button>
+        </div>
+      </div>
+
+      <div className={`${styles.organizeGroup} ${styles.filterGroup}`} role="group" aria-label="Adjust visibility">
+        <span className={styles.groupLabel}>Visibility</span>
+        <label className={`${styles.toggle} ${showUnwatchedOnly ? styles.toggleActive : ''}`} htmlFor={toggleId}>
+          <input
+            id={toggleId}
+            type="checkbox"
+            className={styles.toggleInput}
+            checked={showUnwatchedOnly}
+            onChange={toggleUnwatchedOnly}
+          />
+          <span className={styles.toggleTrack} aria-hidden="true">
+            <span className={styles.toggleThumb} />
+          </span>
+          <span className={styles.toggleLabel}>Show unwatched only</span>
+        </label>
+        <div className={styles.layoutSection}>
+          <span className={styles.layoutSectionLabel}>Layout</span>
+          <div className={styles.layoutSwitch} role="radiogroup" aria-label="Choose layout">
+            <button
+              type="button"
+              role="radio"
+              className={`${styles.layoutOption} ${layoutSelection === 'grid-5' ? styles.layoutOptionActive : ''}`}
+              aria-checked={layoutSelection === 'grid-5'}
+              tabIndex={layoutSelection === 'grid-5' ? 0 : -1}
+              onClick={() => selectLayout('grid-5')}
+              aria-label="Grid layout, five titles per row"
+              onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-5')}
+            >
+              <LayoutGrid size={16} aria-hidden="true" />
+              <span className={styles.layoutBadge}>5</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              className={`${styles.layoutOption} ${layoutSelection === 'grid-4' ? styles.layoutOptionActive : ''}`}
+              aria-checked={layoutSelection === 'grid-4'}
+              tabIndex={layoutSelection === 'grid-4' ? 0 : -1}
+              onClick={() => selectLayout('grid-4')}
+              aria-label="Grid layout, four titles per row"
+              onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-4')}
+            >
+              <LayoutGrid size={16} aria-hidden="true" />
+              <span className={styles.layoutBadge}>4</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              className={`${styles.layoutOption} ${styles.layoutOptionSolo} ${layoutSelection === 'list' ? styles.layoutOptionActive : ''}`}
+              aria-checked={layoutSelection === 'list'}
+              tabIndex={layoutSelection === 'list' ? 0 : -1}
+              onClick={() => selectLayout('list')}
+              aria-label="List layout with details"
+              onKeyDown={(event) => handleLayoutKeyDown(event, 'list')}
+            >
+              <ListIcon size={16} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStatsPanel = () => (
+    <div className={styles.statsPanel} aria-label="Watchlist statistics">
+      <ul className={styles.statsList}>
+        <li className={styles.statsRow}>
+          <div className={styles.statsMetric}>
+            <span className={styles.metricLabel}>Watched</span>
+            <span className={styles.metricValue}>
+              {stats.watched} / {stats.total}
+            </span>
+          </div>
+          <div className={styles.metricBar}>
+            <div
+              className={styles.metricFill}
+              style={{ width: `${stats.total ? stats.watchedPercent : 0}%` }}
+            />
+          </div>
+        </li>
+        <li className={styles.statsRow}>
+          <div className={styles.statsMetric}>
+            <span className={styles.metricLabel}>On deck</span>
+            <span className={styles.metricValue}>{stats.pending}</span>
+          </div>
+          <div className={styles.metricBar}>
+            <div
+              className={styles.metricFillPending}
+              style={{ width: `${stats.total ? stats.pendingPercent : 0}%` }}
+            />
+          </div>
+        </li>
+      </ul>
+      {stats.totalRuntime > 0 ? (
+        <div className={styles.runtimeSection}>
+          <div className={styles.runtimeHeader}>
+            <span className={styles.metricLabel}>Runtime</span>
+            <span className={styles.runtimePercent}>
+              <span className={styles.runtimePercentValue} aria-hidden="true">
+                {stats.watchedRuntimePercent}%
+              </span>
+              <span className={styles.visuallyHidden}>
+                {`Watched ${stats.watchedRuntimePercent}% of total runtime`}
+              </span>
+            </span>
+          </div>
+          <div
+            className={styles.runtimeBar}
+            role="img"
+            aria-label={`Watched ${stats.watchedRuntimePercent}% of total runtime`}
+          >
+            <div className={styles.runtimeBarFill} style={{ width: `${stats.watchedRuntimeShare}%` }} />
+          </div>
+          <div className={styles.runtimeSummary}>
+            <span>Watched {formatRuntime(stats.watchedRuntime)}</span>
+            <span>Total {formatRuntime(stats.totalRuntime)}</span>
+          </div>
+        </div>
+      ) : (
+        <div className={styles.runtimeEmpty}>
+          Runtime insights will appear when titles include runtime data.
+        </div>
+      )}
+    </div>
+  );
+
+  const renderRandomButton = (className?: string) => (
+    <button
+      type="button"
+      className={`${styles.randomButton} ${className ?? ''}`.trim()}
+      onClick={chooseRandomPick}
+    >
+      <Sparkles size={18} /> Surprise me
+    </button>
+  );
+
+  const renderControls = (toggleId: string) => (
+    <>
+      {renderOrganizeControls(toggleId)}
+      {renderStatsPanel()}
+      {renderRandomButton()}
+    </>
+  );
+
+  const renderMobileConsole = (toggleId: string) => (
+    <section className={styles.mobileConsole} aria-label="Mobile watchlist controls">
+      <div className={styles.mobileConsoleHeader}>
+        <div className={styles.mobileConsoleSummary}>
+          <span className={styles.mobileConsoleEyebrow}>Your watchlist</span>
+          <span className={styles.mobileConsoleCount}>
+            {stats.total} {totalLabel}
+          </span>
+          <span className={styles.mobileConsoleMeta}>
+            {sortSummary} · {filterSummary}
+          </span>
+        </div>
+        <button
+          type="button"
+          className={`${styles.mobileConsoleToggle} ${
+            showUnwatchedOnly ? styles.mobileConsoleToggleActive : ''
+          }`.trim()}
+          onClick={toggleUnwatchedOnly}
+          aria-pressed={showUnwatchedOnly}
+        >
+          <Check size={16} aria-hidden="true" />
+          <span>Unwatched only</span>
+        </button>
+      </div>
+      <div className={styles.mobileConsoleActions}>
+        <button
+          type="button"
+          className={`${styles.mobileConsoleChip} ${
+            mobileConsoleSection === 'organize' ? styles.mobileConsoleChipActive : ''
+          }`.trim()}
+          onClick={() => toggleMobileConsoleSection('organize')}
+          aria-expanded={mobileConsoleSection === 'organize'}
+          aria-controls={mobileOrganizePanelId}
+        >
+          <span className={styles.mobileConsoleIcon} aria-hidden="true">
+            <SlidersHorizontal size={18} />
+          </span>
+          <span className={styles.mobileConsoleText}>
+            <span className={styles.mobileConsoleLabel}>Sort & layout</span>
+            <span className={styles.mobileConsoleValue}>{sortSummary}</span>
+            <span className={styles.mobileConsoleMetaValue}>{layoutSummary}</span>
+          </span>
+          <ArrowRight size={16} className={styles.mobileConsoleCaret} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className={`${styles.mobileConsoleChip} ${
+            mobileConsoleSection === 'stats' ? styles.mobileConsoleChipActive : ''
+          }`.trim()}
+          onClick={() => toggleMobileConsoleSection('stats')}
+          aria-expanded={mobileConsoleSection === 'stats'}
+          aria-controls={mobileStatsPanelId}
+        >
+          <span className={styles.mobileConsoleIcon} aria-hidden="true">
+            <BarChart3 size={18} />
+          </span>
+          <span className={styles.mobileConsoleText}>
+            <span className={styles.mobileConsoleLabel}>Progress</span>
+            <span className={styles.mobileConsoleValue}>{statsSummary}</span>
+            <span className={styles.mobileConsoleMetaValue}>
+              {stats.totalRuntime > 0
+                ? `Watched ${formatRuntime(stats.watchedRuntime)}`
+                : 'Runtime insights pending'}
+            </span>
+          </span>
+          <ArrowRight size={16} className={styles.mobileConsoleCaret} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className={`${styles.mobileConsoleChip} ${styles.mobileConsoleChipAccent}`.trim()}
+          onClick={chooseRandomPick}
+        >
+          <span className={styles.mobileConsoleIcon} aria-hidden="true">
+            <Sparkles size={18} />
+          </span>
+          <span className={styles.mobileConsoleText}>
+            <span className={styles.mobileConsoleLabel}>Need inspiration?</span>
+            <span className={styles.mobileConsoleValue}>Surprise me</span>
+            <span className={styles.mobileConsoleMetaValue}>We'll find something to watch</span>
+          </span>
+        </button>
+      </div>
+      <div className={styles.mobileConsolePanels}>
+        <div
+          id={mobileOrganizePanelId}
+          className={`${styles.mobileConsolePanel} ${
+            mobileConsoleSection === 'organize' ? styles.mobileConsolePanelActive : ''
+          }`.trim()}
+          aria-hidden={mobileConsoleSection === 'organize' ? undefined : true}
+        >
+          {mobileConsoleSection === 'organize' ? renderOrganizeControls(toggleId) : null}
+        </div>
+        <div
+          id={mobileStatsPanelId}
+          className={`${styles.mobileConsolePanel} ${
+            mobileConsoleSection === 'stats' ? styles.mobileConsolePanelActive : ''
+          }`.trim()}
+          aria-hidden={mobileConsoleSection === 'stats' ? undefined : true}
+        >
+          {mobileConsoleSection === 'stats' ? (
+            <>
+              {renderStatsPanel()}
+              <div className={styles.mobileConsoleRandom}>{renderRandomButton()}</div>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
 
   useEffect(() => {
     if (!showRandomOverlay) return undefined;
@@ -1656,7 +2029,8 @@ export default function Page() {
         </div>
       )}
       {list ? (
-        <div className={styles.workspace}>
+        <>
+          <div className={styles.workspace}>
           {showRandomOverlay && randomPick && (
             <div
               className={styles.randomOverlay}
@@ -2292,246 +2666,11 @@ export default function Page() {
           </div>
 
           <aside className={styles.statsColumn} aria-label="Watchlist controls and statistics">
-            <div className={styles.sortControls} aria-label="Organize watchlist">
-              <div
-                className={styles.organizeGroup}
-                role="radiogroup"
-                aria-label="Sort by date added"
-              >
-                <span className={styles.groupLabel}>Date added</span>
-                <div className={styles.sortButtons}>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'addedRecent' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('addedRecent')}
-                    aria-pressed={sortOption === 'addedRecent'}
-                  >
-                    Latest
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'addedOldest' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('addedOldest')}
-                    aria-pressed={sortOption === 'addedOldest'}
-                  >
-                    Earliest
-                  </button>
-                </div>
-              </div>
-
-              <div
-                className={styles.organizeGroup}
-                role="radiogroup"
-                aria-label="Sort by release date"
-              >
-                <span className={styles.groupLabel}>Released</span>
-                <div className={styles.sortButtons}>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'releaseAsc' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('releaseAsc')}
-                    aria-pressed={sortOption === 'releaseAsc'}
-                  >
-                    Oldest
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'releaseDesc' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('releaseDesc')}
-                    aria-pressed={sortOption === 'releaseDesc'}
-                  >
-                    Newest
-                  </button>
-                </div>
-              </div>
-
-              <div
-                className={styles.organizeGroup}
-                role="radiogroup"
-                aria-label="Sort by title"
-              >
-                <span className={styles.groupLabel}>Title</span>
-                <div className={styles.sortButtons}>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'titleAsc' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('titleAsc')}
-                    aria-pressed={sortOption === 'titleAsc'}
-                  >
-                    A-Z
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'titleDesc' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('titleDesc')}
-                    aria-pressed={sortOption === 'titleDesc'}
-                  >
-                    Z-A
-                  </button>
-                </div>
-              </div>
-
-              <div
-                className={`${styles.organizeGroup} ${styles.filterGroup}`}
-                role="group"
-                aria-label="Adjust visibility"
-              >
-                <span className={styles.groupLabel}>Visibility</span>
-                <label
-                  className={`${styles.toggle} ${
-                    showUnwatchedOnly ? styles.toggleActive : ''
-                  }`}
-                  htmlFor={filterToggleId}
-                >
-                  <input
-                    id={filterToggleId}
-                    type="checkbox"
-                    className={styles.toggleInput}
-                    checked={showUnwatchedOnly}
-                    onChange={toggleUnwatchedOnly}
-                  />
-                  <span className={styles.toggleTrack} aria-hidden="true">
-                    <span className={styles.toggleThumb} />
-                  </span>
-                  <span className={styles.toggleLabel}>Show unwatched only</span>
-                </label>
-                <div className={styles.layoutSection}>
-                  <span className={styles.layoutSectionLabel}>Layout</span>
-                  <div
-                    className={styles.layoutSwitch}
-                    role="radiogroup"
-                    aria-label="Choose layout"
-                  >
-                    <button
-                      type="button"
-                      role="radio"
-                      className={`${styles.layoutOption} ${
-                        layoutSelection === 'grid-5' ? styles.layoutOptionActive : ''
-                      }`}
-                      aria-checked={layoutSelection === 'grid-5'}
-                      tabIndex={layoutSelection === 'grid-5' ? 0 : -1}
-                      onClick={() => selectLayout('grid-5')}
-                      aria-label="Grid layout, five titles per row"
-                      onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-5')}
-                    >
-                      <LayoutGrid size={16} aria-hidden="true" />
-                      <span className={styles.layoutBadge}>5</span>
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      className={`${styles.layoutOption} ${
-                        layoutSelection === 'grid-4' ? styles.layoutOptionActive : ''
-                      }`}
-                      aria-checked={layoutSelection === 'grid-4'}
-                      tabIndex={layoutSelection === 'grid-4' ? 0 : -1}
-                      onClick={() => selectLayout('grid-4')}
-                      aria-label="Grid layout, four titles per row"
-                      onKeyDown={(event) => handleLayoutKeyDown(event, 'grid-4')}
-                    >
-                      <LayoutGrid size={16} aria-hidden="true" />
-                      <span className={styles.layoutBadge}>4</span>
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      className={`${styles.layoutOption} ${styles.layoutOptionSolo} ${
-                        layoutSelection === 'list' ? styles.layoutOptionActive : ''
-                      }`}
-                      aria-checked={layoutSelection === 'list'}
-                      tabIndex={layoutSelection === 'list' ? 0 : -1}
-                      onClick={() => selectLayout('list')}
-                      aria-label="List layout with details"
-                      onKeyDown={(event) => handleLayoutKeyDown(event, 'list')}
-                    >
-                      <ListIcon size={16} aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.statsPanel} aria-label="Watchlist statistics">
-              <ul className={styles.statsList}>
-                <li className={styles.statsRow}>
-                  <div className={styles.statsMetric}>
-                    <span className={styles.metricLabel}>Watched</span>
-                    <span className={styles.metricValue}>
-                      {stats.watched} / {stats.total}
-                    </span>
-                  </div>
-                  <div className={styles.metricBar}>
-                    <div
-                      className={styles.metricFill}
-                      style={{ width: `${stats.total ? stats.watchedPercent : 0}%` }}
-                    />
-                  </div>
-                </li>
-                <li className={styles.statsRow}>
-                  <div className={styles.statsMetric}>
-                    <span className={styles.metricLabel}>On deck</span>
-                    <span className={styles.metricValue}>{stats.pending}</span>
-                  </div>
-                  <div className={styles.metricBar}>
-                    <div
-                      className={styles.metricFillPending}
-                      style={{ width: `${stats.total ? stats.pendingPercent : 0}%` }}
-                    />
-                  </div>
-                </li>
-              </ul>
-              {stats.totalRuntime > 0 ? (
-                <div className={styles.runtimeSection}>
-                  <div className={styles.runtimeHeader}>
-                    <span className={styles.metricLabel}>Runtime</span>
-                    <span className={styles.runtimePercent}>
-                      <span className={styles.runtimePercentValue} aria-hidden="true">
-                        {stats.watchedRuntimePercent}%
-                      </span>
-                      <span className={styles.visuallyHidden}>
-                        {`Watched ${stats.watchedRuntimePercent}% of total runtime`}
-                      </span>
-                    </span>
-                  </div>
-                  <div
-                    className={styles.runtimeBar}
-                    role="img"
-                    aria-label={`Watched ${stats.watchedRuntimePercent}% of total runtime`}
-                  >
-                    <div
-                      className={styles.runtimeBarFill}
-                      style={{ width: `${stats.watchedRuntimeShare}%` }}
-                    />
-                  </div>
-                  <div className={styles.runtimeSummary}>
-                    <span>Watched {formatRuntime(stats.watchedRuntime)}</span>
-                    <span>Total {formatRuntime(stats.totalRuntime)}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.runtimeEmpty}>
-                  Runtime insights will appear when titles include runtime data.
-                </div>
-              )}
-            </div>
-
-            <button type="button" className={styles.randomButton} onClick={chooseRandomPick}>
-              <Sparkles size={18} /> Surprise me
-            </button>
+            {renderControls(filterToggleId)}
           </aside>
         </div>
+        {renderMobileConsole(mobileFilterToggleId)}
+        </>
       ) : initialListLoading ? (
         <div className={styles.loadingState} role="status" aria-live="polite">
           <div className={styles.loadingBackdrop} aria-hidden="true" />
