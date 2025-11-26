@@ -2,24 +2,47 @@
 
 :root {
   color-scheme: dark;
-  --bg: #05060f;
-  --bg-accent: #0b1020;
-  --surface: rgba(15, 19, 34, 0.82);
-  --surface-raised: rgba(25, 31, 51, 0.88);
-  --surface-strong: rgba(33, 40, 66, 0.92);
-  --border: rgba(99, 119, 186, 0.28);
-  --border-strong: rgba(122, 148, 228, 0.46);
-  --text: #f5f7ff;
-  --muted: rgba(199, 211, 255, 0.68);
-  --accent: #6a7dff;
-  --accent-glow: rgba(122, 148, 255, 0.35);
-  --accent-soft: rgba(135, 242, 255, 0.18);
-  --danger: #ff6f9d;
-  --success: #64f4c4;
-  --shadow: 0 28px 120px rgba(5, 8, 20, 0.55);
-  --radius-lg: 28px;
-  --radius-md: 18px;
-  --radius-sm: 12px;
+  --ds-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ds-color-canvas: #05060f;
+  --ds-color-canvas-accent: #0b1020;
+  --ds-color-surface: rgba(12, 16, 30, 0.9);
+  --ds-color-surface-strong: rgba(20, 26, 44, 0.92);
+  --ds-color-surface-raise: rgba(26, 34, 60, 0.94);
+  --ds-color-stroke: rgba(116, 136, 196, 0.3);
+  --ds-color-stroke-strong: rgba(130, 156, 228, 0.55);
+  --ds-color-text: #f6f8ff;
+  --ds-color-text-muted: rgba(209, 219, 255, 0.76);
+  --ds-color-accent: #7b89ff;
+  --ds-color-accent-strong: #6ee7ff;
+  --ds-color-accent-soft: rgba(110, 231, 255, 0.2);
+  --ds-color-danger: #ff6f9d;
+  --ds-color-success: #64f4c4;
+  --ds-color-warning: #f3c76f;
+  --ds-shadow-soft: 0 14px 70px rgba(5, 8, 20, 0.45);
+  --ds-shadow-strong: 0 28px 120px rgba(5, 8, 20, 0.55);
+  --ds-radius-xl: 28px;
+  --ds-radius-lg: 18px;
+  --ds-radius-md: 14px;
+  --ds-radius-sm: 10px;
+  --ds-control-height: 3.25rem;
+  --bg: var(--ds-color-canvas);
+  --bg-accent: var(--ds-color-canvas-accent);
+  --surface: var(--ds-color-surface);
+  --surface-raised: var(--ds-color-surface-raise);
+  --surface-strong: var(--ds-color-surface-strong);
+  --border: var(--ds-color-stroke);
+  --border-strong: var(--ds-color-stroke-strong);
+  --text: var(--ds-color-text);
+  --muted: var(--ds-color-text-muted);
+  --accent: var(--ds-color-accent);
+  --accent-glow: var(--ds-color-accent-soft);
+  --accent-soft: var(--ds-color-accent-soft);
+  --danger: var(--ds-color-danger);
+  --success: var(--ds-color-success);
+  --shadow: var(--ds-shadow-strong);
+  --radius-lg: var(--ds-radius-xl);
+  --radius-md: var(--ds-radius-lg);
+  --radius-sm: var(--ds-radius-md);
 }
 
 *, *::before, *::after {
@@ -30,10 +53,11 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: var(--ds-font-sans);
   background:
-    radial-gradient(circle at top, rgba(106, 125, 255, 0.2), transparent 55%),
-    radial-gradient(circle at 18% 20%, rgba(100, 244, 196, 0.12), transparent 35%),
+    radial-gradient(circle at top, rgba(123, 137, 255, 0.22), transparent 55%),
+    radial-gradient(circle at 18% 20%, rgba(110, 231, 255, 0.14), transparent 35%),
+    radial-gradient(circle at 78% 8%, rgba(243, 199, 111, 0.12), transparent 45%),
     linear-gradient(180deg, var(--bg), #04040a 70%);
   color: var(--text);
   line-height: 1.55;
