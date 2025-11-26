@@ -512,32 +512,46 @@ export default function Page() {
         watchedRuntimeShare: 0
       };
     }
+
+    const aggregate = list.items.reduce(
+      (
+        acc,
+        item
+      ): {
+        totalRuntime: number;
+        watchedRuntime: number;
+        watchedCount: number;
+      } => {
+        const runtime = item.runtimeMinutes ? Math.max(item.runtimeMinutes, 0) : 0;
+        acc.totalRuntime += runtime;
+        if (item.watched) {
+          acc.watchedRuntime += runtime;
+          acc.watchedCount += 1;
+        }
+        return acc;
+      },
+      { totalRuntime: 0, watchedRuntime: 0, watchedCount: 0 }
+    );
+
     const total = list.items.length;
-    const watched = list.items.filter((item) => item.watched).length;
+    const watched = aggregate.watchedCount;
     const pending = total - watched;
     const watchedPercent = total ? Math.round((watched / total) * 100) : 0;
     const pendingPercent = total ? Math.round((pending / total) * 100) : 0;
-    const totalRuntime = list.items.reduce(
-      (sum, item) => sum + (item.runtimeMinutes ? Math.max(item.runtimeMinutes, 0) : 0),
-      0
-    );
-    const watchedRuntime = list.items.reduce((sum, item) => {
-      if (!item.watched) return sum;
-      return sum + (item.runtimeMinutes ? Math.max(item.runtimeMinutes, 0) : 0);
-    }, 0);
-    const pendingRuntime = Math.max(totalRuntime - watchedRuntime, 0);
-    const watchedRuntimeShare = totalRuntime
-      ? Math.min(100, Math.max((watchedRuntime / totalRuntime) * 100, 0))
+    const pendingRuntime = Math.max(aggregate.totalRuntime - aggregate.watchedRuntime, 0);
+    const watchedRuntimeShare = aggregate.totalRuntime
+      ? Math.min(100, Math.max((aggregate.watchedRuntime / aggregate.totalRuntime) * 100, 0))
       : 0;
     const watchedRuntimePercent = Math.round(watchedRuntimeShare);
+
     return {
       total,
       watched,
       pending,
       watchedPercent,
       pendingPercent,
-      totalRuntime,
-      watchedRuntime,
+      totalRuntime: aggregate.totalRuntime,
+      watchedRuntime: aggregate.watchedRuntime,
       pendingRuntime,
       watchedRuntimePercent,
       watchedRuntimeShare
@@ -548,6 +562,15 @@ export default function Page() {
   const trimmedConfirmPassword = passwordDialogConfirm.trim();
   const trimmedCurrentPassword = passwordDialogCurrent.trim();
 
+  const releaseTimestampCache = useMemo(() => {
+    const cache = new Map<string, number | null>();
+    if (!list) return cache;
+    for (const item of list.items) {
+      cache.set(item.id, getReleaseTimestamp(item));
+    }
+    return cache;
+  }, [list]);
+
   const displayItems = useMemo(() => {
     if (!list) return [] as Item[];
     const items = [...list.items].filter((item) => {
@@ -556,11 +579,14 @@ export default function Page() {
       }
       return true;
     });
+
+    const getReleaseTime = (item: Item) => releaseTimestampCache.get(item.id) ?? null;
+
     switch (sortOption) {
       case 'releaseDesc': {
         return items.sort((a, b) => {
-          const aTime = getReleaseTimestamp(a);
-          const bTime = getReleaseTimestamp(b);
+          const aTime = getReleaseTime(a);
+          const bTime = getReleaseTime(b);
           if (aTime === null && bTime === null) {
             return b.createdAt - a.createdAt;
           }
@@ -571,8 +597,8 @@ export default function Page() {
       }
       case 'releaseAsc': {
         return items.sort((a, b) => {
-          const aTime = getReleaseTimestamp(a);
-          const bTime = getReleaseTimestamp(b);
+          const aTime = getReleaseTime(a);
+          const bTime = getReleaseTime(b);
           if (aTime === null && bTime === null) {
             return b.createdAt - a.createdAt;
           }
@@ -608,7 +634,7 @@ export default function Page() {
       default:
         return items;
     }
-  }, [list, showUnwatchedOnly, sortOption]);
+  }, [list, releaseTimestampCache, showUnwatchedOnly, sortOption]);
 
   const joinList = useCallback(
     async (id: string, passwordInput?: string) => {
