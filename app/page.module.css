@@ -162,6 +162,7 @@
   color: var(--muted);
   font-weight: 600;
   padding: 0.65rem 0.9rem;
+  min-height: 44px;
   border-radius: 999px;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
