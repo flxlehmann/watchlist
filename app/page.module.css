@@ -8,15 +8,11 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: radial-gradient(120% 160% at 0% 0%, #020206, #010104 58%, #000002);
+  background: linear-gradient(180deg, #05050a 0%, #020205 55%, #000002 100%);
 }
 
 .background {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
+  display: none;
 }
 
 .backgroundGradient {

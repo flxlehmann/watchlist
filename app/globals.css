@@ -31,10 +31,7 @@ html, body {
   padding: 0;
   min-height: 100%;
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  background:
-    radial-gradient(circle at top, rgba(93, 107, 255, 0.12), transparent 55%),
-    radial-gradient(circle at 18% 20%, rgba(90, 180, 190, 0.08), transparent 35%),
-    linear-gradient(180deg, var(--bg), #010104 70%);
+  background: linear-gradient(180deg, #05050a 0%, #020205 55%, #000002 100%);
   color: var(--text);
   line-height: 1.55;
 }
