@@ -2129,6 +2129,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  position: relative;
 }
 
 .groupLabel {
@@ -2138,13 +2139,7 @@
   color: rgba(204, 215, 255, 0.58);
 }
 
-.sortButtons {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.sortSelect {
+.sortTrigger {
   width: 100%;
   border-radius: var(--radius-md);
   border: 1px solid rgba(122, 148, 228, 0.28);
@@ -2155,26 +2150,123 @@
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-.sortSelect:focus-visible {
+.sortTriggerIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(204, 215, 255, 0.72);
+}
+
+.sortTriggerValue {
+  flex: 1;
+  text-align: left;
+}
+
+.sortTriggerChevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(204, 215, 255, 0.62);
+  transition: transform 0.2s ease;
+}
+
+.sortTrigger[aria-expanded="true"] .sortTriggerChevron {
+  transform: rotate(180deg);
+}
+
+.sortTrigger:focus-visible {
   outline: none;
   border-color: rgba(122, 148, 255, 0.55);
   box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.35);
   color: #f5f7ff;
 }
 
-.sortSelect:hover {
+.sortTrigger:hover {
   border-color: rgba(122, 148, 228, 0.45);
   background: rgba(16, 22, 40, 0.82);
 }
 
-.sortSelect option,
-.sortSelect optgroup {
+.sortMenu {
+  margin-top: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border-radius: calc(var(--radius-lg) * 0.9);
+  border: 1px solid rgba(122, 148, 228, 0.32);
   background: rgba(9, 13, 26, 0.98);
+  box-shadow: 0 20px 40px rgba(6, 10, 24, 0.55);
+}
+
+.sortMenuGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sortMenuGroupLabel {
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(204, 215, 255, 0.5);
+}
+
+.sortMenuOptions {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sortMenuOption {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(122, 148, 228, 0.2);
+  background: rgba(12, 16, 30, 0.75);
+  padding: 0.55rem 0.7rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: left;
+  color: rgba(214, 224, 255, 0.85);
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.sortMenuOptionTitle {
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sortMenuOptionHint {
+  font-size: 0.7rem;
+  text-transform: none;
+  color: rgba(204, 215, 255, 0.6);
+}
+
+.sortMenuOption:hover {
+  border-color: rgba(122, 148, 255, 0.45);
+  background: rgba(17, 24, 44, 0.92);
   color: #f5f7ff;
+}
+
+.sortMenuOption:focus-visible {
+  outline: none;
+  border-color: rgba(122, 148, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.35);
+}
+
+.sortMenuOptionActive {
+  border-color: rgba(120, 255, 208, 0.45);
+  background: rgba(18, 42, 46, 0.85);
+  color: #ecf6ff;
+  box-shadow: 0 12px 28px rgba(10, 32, 40, 0.4);
 }
 
 .layoutSwitch {
@@ -2724,8 +2816,8 @@
     border-radius: calc(var(--radius-lg) * 1.05);
   }
 
-  .sortButtons {
-    grid-template-columns: 1fr;
+  .sortMenu {
+    padding: 0.65rem;
   }
   .layoutSwitch {
     grid-template-columns: repeat(2, minmax(0, 1fr));
