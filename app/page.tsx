@@ -2397,6 +2397,15 @@ export default function Page() {
 
           <aside className={styles.statsColumn} aria-label="Watchlist controls and statistics">
             <div className={styles.sortControls} aria-label="Organize watchlist">
+              {sortMenuOpen ? (
+                <button
+                  type="button"
+                  className={styles.sortMenuScrim}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  onClick={() => setSortMenuOpen(false)}
+                />
+              ) : null}
               <div
                 className={styles.organizeGroup}
                 role="group"
