@@ -2615,7 +2615,12 @@ export default function Page() {
                 </p>
               </div>
               <div className={styles.heroPanel}>
-                <div className={styles.heroPanelTabs} role="tablist" aria-label="Choose a flow">
+                <div
+                  className={styles.heroPanelTabs}
+                  role="tablist"
+                  aria-label="Choose a flow"
+                  data-mode={entryMode}
+                >
                   <button
                     type="button"
                     role="tab"
@@ -2642,7 +2647,7 @@ export default function Page() {
                 <div className={styles.heroPanelBody} role="tabpanel">
                   {entryMode === 'create' ? (
                     <div className={styles.form}>
-                      <h3 className={styles.panelTitle}>Create a watchlist</h3>
+                      <h3 className={styles.panelTitle}>Create a list</h3>
                       <p className={styles.panelSubtitle}>
                         Give it a name, protect it if you want, and start adding movies immediately.
                       </p>
@@ -2686,7 +2691,7 @@ export default function Page() {
                           aria-busy={creating}
                         >
                           {creating ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
-                          {creating ? 'Creating…' : 'Create watchlist'}
+                          {creating ? 'Creating…' : 'Create list'}
                         </button>
                         <button
                           className={styles.buttonGhost}
@@ -2734,7 +2739,7 @@ export default function Page() {
                       </div>
                       <div className={styles.buttonRow}>
                         <button
-                          className={styles.buttonSurface}
+                          className={styles.buttonPrimary}
                           type="button"
                           onClick={() => joinList(listIdInput, joinPassword)}
                           disabled={joining}
