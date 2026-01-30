@@ -6,8 +6,10 @@ import { useAnimatedList } from '@/lib/useAnimatedList';
 import {
   AlertCircle,
   ArrowRight,
+  ArrowUpDown,
   Check,
   CheckCircle2,
+  ChevronDown,
   Clock,
   Copy,
   KeyRound,
@@ -69,6 +71,36 @@ type SortOption =
 type LayoutSelection = 'grid-4' | 'grid-5' | 'list';
 
 const LAYOUT_OPTIONS: LayoutSelection[] = ['grid-5', 'grid-4', 'list'];
+const SORT_GROUPS: Array<{
+  label: string;
+  options: Array<{ value: SortOption; label: string; description: string }>;
+}> = [
+  {
+    label: 'Date added',
+    options: [
+      { value: 'addedRecent', label: 'Latest added', description: 'Newest additions first' },
+      { value: 'addedOldest', label: 'Earliest added', description: 'Oldest additions first' }
+    ]
+  },
+  {
+    label: 'Release date',
+    options: [
+      { value: 'releaseAsc', label: 'Oldest release', description: 'Classic to recent' },
+      { value: 'releaseDesc', label: 'Newest release', description: 'Recent to classic' }
+    ]
+  },
+  {
+    label: 'Title',
+    options: [
+      { value: 'titleAsc', label: 'Title A-Z', description: 'Alphabetical order' },
+      { value: 'titleDesc', label: 'Title Z-A', description: 'Reverse alphabetical' }
+    ]
+  }
+];
+const SORT_LABELS = SORT_GROUPS.flatMap((group) => group.options).reduce(
+  (acc, option) => ({ ...acc, [option.value]: option.label }),
+  {} as Record<SortOption, string>
+);
 
 const RANDOM_COUNTDOWN_DURATION = 5;
 
@@ -253,6 +285,7 @@ export default function Page() {
   const [countdownSession, setCountdownSession] = useState(0);
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [listMenuOpen, setListMenuOpen] = useState(false);
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [initialListLoading, setInitialListLoading] = useState(false);
   const [passwordDialogType, setPasswordDialogType] = useState<
     'set' | 'change' | 'remove' | 'delete' | null
@@ -265,7 +298,8 @@ export default function Page() {
   const randomTitleId = useId();
   const randomDescriptionId = useId();
   const filterToggleId = useId();
-  const sortSelectId = useId();
+  const sortMenuButtonId = useId();
+  const sortMenuListId = useId();
   const countdownGradientId = useId();
   const listMenuDropdownId = useId();
   const listMenuButtonId = useId();
@@ -282,6 +316,7 @@ export default function Page() {
   const notificationTimeoutsRef = useRef<Map<number, number>>(new Map());
   const randomCloseRef = useRef<HTMLButtonElement | null>(null);
   const listMenuRef = useRef<HTMLDivElement | null>(null);
+  const sortMenuRef = useRef<HTMLDivElement | null>(null);
   const passwordDialogFormRef = useRef<HTMLFormElement | null>(null);
   const passwordDialogInputRef = useRef<HTMLInputElement | null>(null);
   const passwordDialogCloseRef = useRef<HTMLButtonElement | null>(null);
@@ -394,6 +429,33 @@ export default function Page() {
       document.removeEventListener('keydown', handleKey);
     };
   }, [listMenuOpen]);
+
+  useEffect(() => {
+    if (!sortMenuOpen) {
+      return;
+    }
+    const handlePointer = (event: MouseEvent | TouchEvent) => {
+      if (!sortMenuRef.current) {
+        return;
+      }
+      if (!sortMenuRef.current.contains(event.target as Node)) {
+        setSortMenuOpen(false);
+      }
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSortMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('touchstart', handlePointer);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('touchstart', handlePointer);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [sortMenuOpen]);
 
   const dismissNotification = useCallback((id: number) => {
     setNotifications((current) => current.filter((note) => note.id !== id));
@@ -2335,29 +2397,68 @@ export default function Page() {
 
           <aside className={styles.statsColumn} aria-label="Watchlist controls and statistics">
             <div className={styles.sortControls} aria-label="Organize watchlist">
-              <div className={styles.organizeGroup} role="group" aria-label="Sort watchlist">
-                <label className={styles.groupLabel} htmlFor={sortSelectId}>
+              <div
+                className={styles.organizeGroup}
+                role="group"
+                aria-label="Sort watchlist"
+                ref={sortMenuRef}
+              >
+                <label className={styles.groupLabel} htmlFor={sortMenuButtonId}>
                   Sort
                 </label>
-                <select
-                  id={sortSelectId}
-                  className={styles.sortSelect}
-                  value={sortOption}
-                  onChange={(event) => setSortOption(event.target.value as SortOption)}
+                <button
+                  id={sortMenuButtonId}
+                  type="button"
+                  className={styles.sortTrigger}
+                  aria-haspopup="listbox"
+                  aria-expanded={sortMenuOpen}
+                  aria-controls={sortMenuOpen ? sortMenuListId : undefined}
+                  onClick={() => setSortMenuOpen((prev) => !prev)}
                 >
-                  <optgroup label="Date added">
-                    <option value="addedRecent">Latest added</option>
-                    <option value="addedOldest">Earliest added</option>
-                  </optgroup>
-                  <optgroup label="Release date">
-                    <option value="releaseAsc">Oldest release</option>
-                    <option value="releaseDesc">Newest release</option>
-                  </optgroup>
-                  <optgroup label="Title">
-                    <option value="titleAsc">Title A-Z</option>
-                    <option value="titleDesc">Title Z-A</option>
-                  </optgroup>
-                </select>
+                  <span className={styles.sortTriggerIcon} aria-hidden="true">
+                    <ArrowUpDown size={16} />
+                  </span>
+                  <span className={styles.sortTriggerValue}>{SORT_LABELS[sortOption]}</span>
+                  <span className={styles.sortTriggerChevron} aria-hidden="true">
+                    <ChevronDown size={16} />
+                  </span>
+                </button>
+                {sortMenuOpen ? (
+                  <div className={styles.sortMenu} role="listbox" id={sortMenuListId}>
+                    {SORT_GROUPS.map((group) => (
+                      <div key={group.label} className={styles.sortMenuGroup}>
+                        <span className={styles.sortMenuGroupLabel}>{group.label}</span>
+                        <div className={styles.sortMenuOptions}>
+                          {group.options.map((option) => {
+                            const selected = option.value === sortOption;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                role="option"
+                                aria-selected={selected}
+                                className={`${styles.sortMenuOption} ${
+                                  selected ? styles.sortMenuOptionActive : ''
+                                }`}
+                                onClick={() => {
+                                  setSortOption(option.value);
+                                  setSortMenuOpen(false);
+                                }}
+                              >
+                                <span className={styles.sortMenuOptionTitle}>
+                                  {option.label}
+                                </span>
+                                <span className={styles.sortMenuOptionHint}>
+                                  {option.description}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
               <div
