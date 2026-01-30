@@ -171,8 +171,7 @@
   overflow: hidden;
 }
 
-.heroPanelTabs::before {
-  content: "";
+.heroPanelIndicator {
   position: absolute;
   top: var(--tab-padding);
   left: var(--tab-padding);
@@ -186,7 +185,7 @@
   z-index: 0;
 }
 
-.heroPanelTabs[data-mode="join"]::before {
+.heroPanelTabs[data-mode="join"] .heroPanelIndicator {
   transform: translateX(calc(100% + var(--tab-gap)));
   background: rgba(122, 148, 255, 0.22);
   border-color: rgba(122, 148, 255, 0.5);
@@ -210,7 +209,7 @@
   background: transparent;
   border-color: transparent;
   color: #f4f7ff;
-  box-shadow: inset 0 0 0 1px rgba(122, 148, 255, 0.3);
+  box-shadow: none;
 }
 
 .heroPanelTab:focus-visible {
@@ -2919,7 +2918,7 @@
     grid-template-columns: 1fr;
   }
 
-  .heroPanelTabs::before {
+  .heroPanelIndicator {
     display: none;
   }
 
