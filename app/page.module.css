@@ -293,7 +293,7 @@
 
 .inputField:hover {
   border-color: var(--border-strong);
-  transform: translateY(-1px);
+  transform: scale(1.01);
 }
 
 .inputField:focus {
@@ -308,12 +308,12 @@
 }
 
 .inputGroup:focus-within {
-  transform: translateY(-2px);
+  transform: scale(1.01);
 }
 
 .inputGroup:focus-within .inputLabel {
   color: var(--accent);
-  transform: translateY(-2px);
+  transform: scale(1.02);
   letter-spacing: 0.12em;
 }
 
@@ -361,7 +361,7 @@
 }
 
 .buttonPrimary:hover {
-  transform: translateY(-1px);
+  transform: scale(1.02);
   box-shadow: 0 14px 38px rgba(10, 12, 24, 0.75);
 }
 
@@ -371,7 +371,7 @@
 }
 
 .buttonSurface:hover {
-  transform: translateY(-1px);
+  transform: scale(1.02);
   box-shadow: 0 12px 30px rgba(12, 16, 28, 0.55);
 }
 
@@ -442,7 +442,7 @@
   backdrop-filter: blur(18px) saturate(1.2);
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
   pointer-events: auto;
-  transform: translateY(-8px);
+  transform: scale(0.98);
   opacity: 0;
   animation: notificationEnter 0.3s ease forwards;
 }
@@ -502,11 +502,11 @@
 @keyframes notificationEnter {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.98);
+    transform: scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -522,15 +522,15 @@
 @keyframes randomContentPop {
   0% {
     opacity: 0;
-    transform: translateY(32px) scale(0.94);
+    transform: scale(0.94);
   }
   55% {
     opacity: 1;
-    transform: translateY(-6px) scale(1.02);
+    transform: scale(1.02);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -1031,7 +1031,7 @@
 .dialogSecondary:hover,
 .dialogSecondary:focus-visible {
   outline: none;
-  transform: translateY(-1px);
+  transform: scale(1.03);
   background: rgba(122, 148, 255, 0.18);
   border-color: rgba(122, 148, 255, 0.6);
   box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.25);
@@ -1047,7 +1047,7 @@
 .dialogPrimary:hover,
 .dialogPrimary:focus-visible {
   outline: none;
-  transform: translateY(-2px);
+  transform: scale(1.04);
   box-shadow: 0 26px 60px rgba(20, 115, 255, 0.5);
 }
 
@@ -1094,30 +1094,30 @@
 @keyframes backgroundDrift {
   0%,
   100% {
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: scale(1);
   }
   50% {
-    transform: translate3d(2%, -2%, 0) scale(1.02);
+    transform: scale(1.02);
   }
 }
 
 @keyframes meshFloat {
   0%,
   100% {
-    transform: translate3d(0, 0, 0);
+    transform: scale(1);
   }
   50% {
-    transform: translate3d(-1.5%, 1.5%, 0);
+    transform: scale(1.01);
   }
 }
 
 @keyframes gridFloat {
   0%,
   100% {
-    transform: perspective(1200px) rotateX(62deg) translateY(-10%);
+    transform: perspective(1200px) rotateX(62deg) scale(1);
   }
   50% {
-    transform: perspective(1200px) rotateX(60deg) translateY(-8%);
+    transform: perspective(1200px) rotateX(60deg) scale(1.01);
   }
 }
 
@@ -1202,12 +1202,12 @@
 
 .protectedIndicator:focus-visible {
   outline: none;
-  transform: translateY(-1px);
+  transform: scale(1.03);
   box-shadow: 0 10px 24px rgba(40, 64, 152, 0.6), 0 0 0 4px rgba(120, 148, 255, 0.55);
 }
 
 .protectedIndicator:hover {
-  transform: translateY(-1px);
+  transform: scale(1.03);
   box-shadow: 0 12px 28px rgba(38, 60, 150, 0.65), 0 0 0 4px rgba(120, 148, 255, 0.48);
 }
 
@@ -1308,7 +1308,7 @@
 
 .renameSave:not(:disabled):hover,
 .renameSave:not(:disabled):focus-visible {
-  transform: translateY(-1px);
+  transform: scale(1.03);
   box-shadow: 0 0 0 3px rgba(118, 137, 255, 0.35);
 }
 
@@ -1318,7 +1318,7 @@
 
 .renameCancel:hover,
 .renameCancel:focus-visible {
-  transform: translateY(-1px);
+  transform: scale(1.03);
   background: rgba(122, 148, 255, 0.18);
   border-color: rgba(122, 148, 255, 0.55);
   color: #f4f6ff;
@@ -1386,7 +1386,7 @@
 }
 
 .listMenuTrigger:hover {
-  transform: translateY(-1px);
+  transform: scale(1.03);
   background: rgba(122, 148, 255, 0.22);
   border-color: rgba(122, 148, 255, 0.6);
   color: #f4f6ff;
@@ -1627,7 +1627,7 @@
 
 .posterCard:hover,
 .posterCard:focus-within {
-  transform: translateY(-6px);
+  transform: scale(1.02);
   box-shadow: 0 34px 70px rgba(5, 8, 20, 0.65);
   border-color: rgba(122, 148, 255, 0.45);
 }
@@ -1683,7 +1683,7 @@
   background: rgba(9, 13, 26, 0.55);
   backdrop-filter: blur(18px) saturate(1.2);
   opacity: 0;
-  transform: translateY(12px);
+  transform: scale(0.98);
   transition: opacity 0.3s ease, transform 0.3s ease;
   pointer-events: none;
 }
@@ -1691,7 +1691,7 @@
 .posterCard:hover .posterOverlay,
 .posterCard:focus-within .posterOverlay {
   opacity: 1;
-  transform: translateY(0);
+  transform: scale(1);
   pointer-events: auto;
 }
 
@@ -1741,7 +1741,7 @@
 }
 
 .posterIconButton:hover {
-  transform: translateY(-2px);
+  transform: scale(1.04);
   background: rgba(122, 148, 255, 0.2);
   border-color: rgba(159, 182, 255, 0.55);
   color: #ffffff;
@@ -1749,7 +1749,7 @@
 
 .posterIconButton:focus-visible {
   outline: none;
-  transform: translateY(-2px);
+  transform: scale(1.04);
   background: rgba(122, 148, 255, 0.22);
   border-color: rgba(159, 182, 255, 0.65);
   color: #ffffff;
@@ -1804,7 +1804,7 @@
 
 .listRow:hover,
 .listRow:focus-within {
-  transform: translateY(-2px);
+  transform: scale(1.01);
   border-color: rgba(122, 148, 255, 0.45);
   box-shadow: 0 28px 60px rgba(5, 8, 20, 0.58);
   background: rgba(18, 24, 44, 0.88);
@@ -1953,7 +1953,7 @@
 }
 
 .randomButton:hover {
-  transform: translateY(-2px);
+  transform: scale(1.03);
   box-shadow: 0 24px 60px rgba(116, 65, 185, 0.6);
   filter: brightness(1.05);
 }
@@ -1980,7 +1980,7 @@
 }
 
 .randomButton.randomConfirm:hover {
-  transform: translateY(-3px);
+  transform: scale(1.04);
   box-shadow: 0 34px 90px rgba(82, 168, 255, 0.52);
   filter: brightness(1.04);
 }
@@ -2101,7 +2101,7 @@
 }
 
 .layoutOption:hover {
-  transform: translateY(-1px);
+  transform: scale(1.03);
   background: rgba(122, 148, 255, 0.16);
   border-color: rgba(122, 148, 255, 0.45);
   color: #f5f7ff;
@@ -2109,7 +2109,7 @@
 
 .layoutOption:focus-visible {
   outline: none;
-  transform: translateY(-1px);
+  transform: scale(1.03);
   background: rgba(122, 148, 255, 0.2);
   border-color: rgba(122, 148, 255, 0.55);
   box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.4);
@@ -2160,7 +2160,7 @@
 }
 
 .sortButton:hover {
-  transform: translateY(-1px);
+  transform: scale(1.02);
   background: rgba(122, 148, 255, 0.2);
   border-color: rgba(122, 148, 255, 0.45);
   color: #f5f7ff;
@@ -2168,7 +2168,7 @@
 
 .sortButton:focus-visible {
   outline: none;
-  transform: translateY(-1px);
+  transform: scale(1.02);
   background: rgba(122, 148, 255, 0.24);
   border-color: rgba(122, 148, 255, 0.55);
   color: #f5f7ff;
@@ -2252,7 +2252,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(118, 137, 255, 0.85), rgba(134, 240, 255, 0.9));
   box-shadow: 0 8px 18px rgba(8, 12, 26, 0.45);
-  transform: translateX(0);
+  transform: scale(1);
   transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -2271,7 +2271,7 @@
 }
 
 .toggleInput:checked + .toggleTrack .toggleThumb {
-  transform: translateX(20px);
+  transform: scale(1.1);
   background: linear-gradient(135deg, #7cffc5, #64f4c4);
   box-shadow: 0 12px 26px rgba(64, 180, 150, 0.55);
 }
