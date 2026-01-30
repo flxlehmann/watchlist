@@ -2621,6 +2621,7 @@ export default function Page() {
                   aria-label="Choose a flow"
                   data-mode={entryMode}
                 >
+                  <span className={styles.heroPanelIndicator} aria-hidden="true" />
                   <button
                     type="button"
                     role="tab"
