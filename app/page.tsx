@@ -223,7 +223,6 @@ function getComparableTitle(item: Item): string {
 }
 
 export default function Page() {
-  const viewportRef = useRef<HTMLElement | null>(null);
   const [list, setList] = useState<List | null>(null);
   const [listName, setListName] = useState('');
   const [listIdInput, setListIdInput] = useState('');
@@ -308,38 +307,6 @@ export default function Page() {
     () => SORT_OPTIONS.find((option) => option.value === sortOption)?.label ?? 'Sort',
     [sortOption]
   );
-
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    let frame = 0;
-
-    const handleMouseMove = (event: MouseEvent) => {
-      const { innerWidth, innerHeight } = window;
-      const x = (event.clientX / innerWidth) * 2 - 1;
-      const y = (event.clientY / innerHeight) * 2 - 1;
-      if (frame) return;
-      frame = window.requestAnimationFrame(() => {
-        viewport.style.setProperty('--grid-x', x.toFixed(3));
-        viewport.style.setProperty('--grid-y', y.toFixed(3));
-        frame = 0;
-      });
-    };
-
-    const handleMouseLeave = () => {
-      viewport.style.setProperty('--grid-x', '0');
-      viewport.style.setProperty('--grid-y', '0');
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, []);
 
   const layoutSelection: LayoutSelection = viewMode === 'list' ? 'list' : gridColumns === 4 ? 'grid-4' : 'grid-5';
   const selectLayout = useCallback(
@@ -1491,7 +1458,7 @@ export default function Page() {
   }, [title]);
 
   return (
-    <main className={styles.viewport} ref={viewportRef}>
+    <main className={styles.viewport}>
       <div className={styles.background} aria-hidden="true">
         <div className={styles.backgroundGradient} />
         <div className={styles.backgroundMesh} />
