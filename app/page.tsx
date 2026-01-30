@@ -1768,8 +1768,8 @@ export default function Page() {
             </div>
           )}
           <section className={styles.listHeader}>
-            <div className={styles.listTitleRow}>
-              <div className={styles.listTitleGroup}>
+            <div className={styles.listHero}>
+              <div className={styles.listHeroMain}>
                 <div className={styles.listTitleDisplay}>
                   {list.protected && (
                     <span
@@ -1831,8 +1831,10 @@ export default function Page() {
                     <h1 className={styles.listTitle}>{list.name}</h1>
                   )}
                 </div>
-              </div>
-              <div className={styles.listActions}>
+                <p className={styles.listHeroSubtitle}>
+                  A shared queue tuned for spontaneous movie nights. Everything you need is
+                  saved in one shimmering glass space.
+                </p>
                 <div className={styles.listMeta} aria-live="polite">
                   <span className={styles.listMetaItem}>
                     {lastUpdated ? (
@@ -1853,6 +1855,8 @@ export default function Page() {
                     </span>
                   )}
                 </div>
+              </div>
+              <div className={styles.listHeroActions}>
                 <div className={styles.listMenu} ref={listMenuRef}>
                   <button
                     type="button"
@@ -2006,6 +2010,29 @@ export default function Page() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+            <div className={styles.listHeroStats}>
+              <div className={styles.statCard}>
+                <span className={styles.statLabel}>Total titles</span>
+                <span className={styles.statValue}>{stats.total}</span>
+                <span className={styles.statSub}>{stats.watched} watched</span>
+              </div>
+              <div className={styles.statCard}>
+                <span className={styles.statLabel}>On deck</span>
+                <span className={styles.statValue}>{stats.pending}</span>
+                <span className={styles.statSub}>{stats.pendingPercent}% of the list</span>
+              </div>
+              <div className={styles.statCard}>
+                <span className={styles.statLabel}>Runtime</span>
+                <span className={styles.statValue}>
+                  {stats.totalRuntime ? `${stats.watchedRuntimePercent}%` : '—'}
+                </span>
+                <span className={styles.statSub}>
+                  {stats.totalRuntime
+                    ? `${formatRuntime(stats.watchedRuntime)} / ${formatRuntime(stats.totalRuntime)}`
+                    : 'Add runtimes for insights'}
+                </span>
               </div>
             </div>
           </section>
@@ -2543,14 +2570,45 @@ export default function Page() {
       ) : (
         <div className={styles.content}>
           <section className={styles.hero}>
-            <span className={styles.heroBadge}>
-              <Sparkles size={16} /> Shared watchlists
-            </span>
-            <h1 className={styles.heroTitle}>Plan movie nights with zero friction</h1>
-            <p className={styles.heroSubtitle}>
-              Spin up a watchlist in seconds, invite friends with a single link, and
-              keep track of everything you want to stream next.
-            </p>
+            <div className={styles.heroContent}>
+              <span className={styles.heroBadge}>
+                <Sparkles size={16} /> Shared watchlists
+              </span>
+              <h1 className={styles.heroTitle}>Liquid glass watchlists for effortless movie nights</h1>
+              <p className={styles.heroSubtitle}>
+                Build shimmering queues in seconds, invite friends with one link, and stay
+                in sync with a cinema-ready home base.
+              </p>
+              <div className={styles.heroHighlights}>
+                <div className={styles.heroHighlight}>
+                  <span className={styles.heroHighlightTitle}>Instant share</span>
+                  <span className={styles.heroHighlightBody}>Every list is ready to pass around.</span>
+                </div>
+                <div className={styles.heroHighlight}>
+                  <span className={styles.heroHighlightTitle}>Live status</span>
+                  <span className={styles.heroHighlightBody}>See who added what and what’s next.</span>
+                </div>
+                <div className={styles.heroHighlight}>
+                  <span className={styles.heroHighlightTitle}>Glassy focus</span>
+                  <span className={styles.heroHighlightBody}>Soft blur layers inspired by iOS.</span>
+                </div>
+              </div>
+            </div>
+            <div className={styles.heroShowcase}>
+              <div className={styles.heroCard}>
+                <span className={styles.heroCardEyebrow}>Apple-style liquid glass</span>
+                <h2 className={styles.heroCardTitle}>Shaders, glow, and depth</h2>
+                <p className={styles.heroCardBody}>
+                  Layered gradients, translucent panels, and luminous highlights create
+                  a floating control surface that keeps your watchlist front and center.
+                </p>
+                <div className={styles.heroCardChips}>
+                  <span>Prismatic blur</span>
+                  <span>Specular glow</span>
+                  <span>Soft diffusion</span>
+                </div>
+              </div>
+            </div>
           </section>
 
           {error && (
@@ -2564,7 +2622,7 @@ export default function Page() {
               <div className={styles.form}>
                 <h2 className={styles.panelTitle}>Create a new list</h2>
                 <p className={styles.panelSubtitle}>
-                  Give it a name, hit create, and start dropping in titles straight away.
+                  Name your space, tap create, and start adding titles instantly.
                 </p>
                 <div className={styles.inputGroup}>
                   <label className={styles.inputLabel} htmlFor="list-name">
@@ -2622,8 +2680,7 @@ export default function Page() {
               <div className={styles.form}>
                 <h2 className={styles.panelTitle}>Open an existing list</h2>
                 <p className={styles.panelSubtitle}>
-                  Drop in a list ID to jump back into a shared queue, or continue where
-                  you left off.
+                  Paste a list ID to jump back into a shared queue or continue where you left off.
                 </p>
                 <div className={styles.inputGroup}>
                   <label className={styles.inputLabel} htmlFor="list-id">
