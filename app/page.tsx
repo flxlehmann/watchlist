@@ -2418,7 +2418,9 @@ export default function Page() {
                 />
               ) : null}
               <div
-                className={styles.organizeGroup}
+                className={`${styles.organizeGroup} ${
+                  sortMenuState !== 'closed' ? styles.sortMenuActive : ''
+                }`}
                 role="group"
                 aria-label="Sort watchlist"
                 ref={sortMenuRef}
