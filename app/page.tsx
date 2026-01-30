@@ -2139,7 +2139,13 @@ export default function Page() {
                   onChange={(event) => setAddedBy(event.target.value)}
                   disabled={adding}
                 />
-                <button className={styles.buttonPrimary} type="submit" disabled={adding || detailsLoading}>
+                <button
+                  className={styles.buttonPrimary}
+                  type="submit"
+                  disabled={adding || detailsLoading}
+                  data-loading={adding || detailsLoading ? 'true' : undefined}
+                  aria-busy={adding || detailsLoading}
+                >
                   {adding || detailsLoading ? (
                     <Loader2 size={18} className="spin" />
                   ) : (
@@ -2654,6 +2660,8 @@ export default function Page() {
                           type="button"
                           onClick={createList}
                           disabled={creating}
+                          data-loading={creating ? 'true' : undefined}
+                          aria-busy={creating}
                         >
                           {creating ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
                           {creating ? 'Creating…' : 'Create watchlist'}
@@ -2708,6 +2716,8 @@ export default function Page() {
                           type="button"
                           onClick={() => joinList(listIdInput, joinPassword)}
                           disabled={joining}
+                          data-loading={joining ? 'true' : undefined}
+                          aria-busy={joining}
                         >
                           {joining ? <Loader2 size={18} className="spin" /> : <ArrowRight size={18} />}
                           {joining ? 'Opening…' : 'Open list'}
