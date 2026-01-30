@@ -2,24 +2,24 @@
 
 :root {
   color-scheme: dark;
-  --bg: #05060f;
-  --bg-accent: #0b1020;
-  --surface: rgba(15, 19, 34, 0.82);
-  --surface-raised: rgba(25, 31, 51, 0.88);
-  --surface-strong: rgba(33, 40, 66, 0.92);
-  --border: rgba(99, 119, 186, 0.28);
-  --border-strong: rgba(122, 148, 228, 0.46);
-  --text: #f5f7ff;
-  --muted: rgba(199, 211, 255, 0.68);
-  --accent: #6a7dff;
-  --accent-glow: rgba(122, 148, 255, 0.35);
-  --accent-soft: rgba(135, 242, 255, 0.18);
-  --danger: #ff6f9d;
-  --success: #64f4c4;
-  --shadow: 0 28px 120px rgba(5, 8, 20, 0.55);
-  --radius-lg: 28px;
-  --radius-md: 18px;
-  --radius-sm: 12px;
+  --bg: #06080f;
+  --bg-accent: rgba(18, 24, 38, 0.85);
+  --surface: rgba(255, 255, 255, 0.08);
+  --surface-raised: rgba(255, 255, 255, 0.12);
+  --surface-strong: rgba(255, 255, 255, 0.18);
+  --border: rgba(255, 255, 255, 0.18);
+  --border-strong: rgba(255, 255, 255, 0.32);
+  --text: #f6f8ff;
+  --muted: rgba(220, 230, 255, 0.68);
+  --accent: #9cc3ff;
+  --accent-glow: rgba(150, 190, 255, 0.45);
+  --accent-soft: rgba(146, 248, 235, 0.24);
+  --danger: #ff87b5;
+  --success: #7bf1c6;
+  --shadow: 0 40px 120px rgba(3, 8, 24, 0.5);
+  --radius-lg: 30px;
+  --radius-md: 20px;
+  --radius-sm: 14px;
 }
 
 *, *::before, *::after {
@@ -30,11 +30,13 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', system-ui, 'Segoe UI',
+    sans-serif;
   background:
-    radial-gradient(circle at top, rgba(106, 125, 255, 0.2), transparent 55%),
-    radial-gradient(circle at 18% 20%, rgba(100, 244, 196, 0.12), transparent 35%),
-    linear-gradient(180deg, var(--bg), #04040a 70%);
+    radial-gradient(120% 120% at 10% 0%, rgba(148, 198, 255, 0.18), transparent 55%),
+    radial-gradient(140% 140% at 80% 10%, rgba(120, 255, 238, 0.16), transparent 58%),
+    radial-gradient(160% 160% at 20% 80%, rgba(190, 140, 255, 0.18), transparent 60%),
+    linear-gradient(180deg, #04050b 0%, #050811 45%, #070b18 100%);
   color: var(--text);
   line-height: 1.55;
 }
