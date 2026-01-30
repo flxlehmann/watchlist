@@ -1381,8 +1381,10 @@ export default function Page() {
     };
   }, [title]);
 
+  const viewState = list ? 'watchlist' : initialListLoading ? 'loading' : 'landing';
+
   return (
-    <main className={styles.viewport}>
+    <main className={styles.viewport} data-view={viewState}>
       <div className={styles.background} aria-hidden="true">
         <div className={styles.backgroundGradient} />
         <div className={styles.backgroundMesh} />
@@ -1656,7 +1658,8 @@ export default function Page() {
         </div>
       )}
       {list ? (
-        <div className={styles.workspace}>
+        <div className={styles.watchlistShell}>
+          <div className={styles.workspace}>
           {showRandomOverlay && randomPick && (
             <div
               className={styles.randomOverlay}
@@ -2531,6 +2534,7 @@ export default function Page() {
               <Sparkles size={18} /> Surprise me
             </button>
           </aside>
+          </div>
         </div>
       ) : initialListLoading ? (
         <div className={styles.loadingState} role="status" aria-live="polite">
@@ -2541,8 +2545,9 @@ export default function Page() {
           </div>
         </div>
       ) : (
-        <div className={styles.content}>
-          <section className={styles.hero}>
+        <div className={styles.landingShell}>
+          <div className={styles.content}>
+            <section className={styles.hero}>
             <span className={styles.heroBadge}>
               <Sparkles size={16} /> Shared watchlists
             </span>
@@ -2559,7 +2564,7 @@ export default function Page() {
             </div>
           )}
 
-          <section className={styles.panels}>
+            <section className={`${styles.panels} ${styles.landingPanels}`}>
             <article className={styles.panel}>
               <div className={styles.form}>
                 <h2 className={styles.panelTitle}>Create a new list</h2>
@@ -2676,7 +2681,8 @@ export default function Page() {
                 </div>
               </div>
             </article>
-          </section>
+            </section>
+          </div>
         </div>
       )}
     </main>
