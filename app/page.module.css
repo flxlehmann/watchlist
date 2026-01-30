@@ -158,13 +158,38 @@
 }
 
 .heroPanelTabs {
+  --tab-gap: 0.5rem;
+  --tab-padding: 0.35rem;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-  padding: 0.35rem;
+  gap: var(--tab-gap);
+  padding: var(--tab-padding);
   border-radius: 999px;
   border: 1px solid rgba(122, 148, 228, 0.3);
   background: rgba(12, 16, 30, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.heroPanelTabs::before {
+  content: "";
+  position: absolute;
+  top: var(--tab-padding);
+  left: var(--tab-padding);
+  width: calc(50% - (var(--tab-gap) / 2));
+  height: calc(100% - (var(--tab-padding) * 2));
+  border-radius: 999px;
+  border: 1px solid rgba(122, 148, 255, 0.4);
+  background: rgba(122, 148, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 18px rgba(8, 12, 26, 0.45);
+  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+  z-index: 0;
+}
+
+.heroPanelTabs[data-mode="join"]::before {
+  transform: translateX(calc(100% + var(--tab-gap)));
+  background: rgba(122, 148, 255, 0.22);
+  border-color: rgba(122, 148, 255, 0.5);
 }
 
 .heroPanelTab {
@@ -177,6 +202,8 @@
   border-radius: 999px;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .heroPanelTab:hover {
@@ -192,8 +219,8 @@
 }
 
 .heroPanelTabActive {
-  background: rgba(122, 148, 255, 0.2);
-  border-color: rgba(122, 148, 255, 0.45);
+  background: rgba(122, 148, 255, 0.08);
+  border-color: transparent;
   color: #ecf0ff;
 }
 
@@ -376,20 +403,20 @@
 .buttonPrimary {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(122, 148, 255, 0.45);
-  background: linear-gradient(135deg, rgba(62, 78, 190, 0.95), rgba(96, 210, 255, 0.9));
-  color: #081226;
-  box-shadow: 0 12px 30px rgba(26, 72, 160, 0.45), 0 0 0 1px rgba(120, 148, 255, 0.35);
+  border: 1px solid rgba(134, 160, 255, 0.55);
+  background: linear-gradient(135deg, rgba(76, 98, 210, 0.95), rgba(120, 188, 255, 0.9));
+  color: #08101f;
+  box-shadow: 0 12px 28px rgba(20, 40, 120, 0.4), 0 0 0 1px rgba(140, 170, 255, 0.35);
 }
 
 .buttonPrimary:hover {
-  background: linear-gradient(135deg, rgba(88, 112, 220, 0.98), rgba(120, 220, 255, 0.92));
-  box-shadow: 0 16px 40px rgba(32, 88, 190, 0.55), 0 0 0 1px rgba(140, 170, 255, 0.55);
+  background: linear-gradient(135deg, rgba(92, 118, 226, 0.98), rgba(138, 206, 255, 0.92));
+  box-shadow: 0 18px 36px rgba(28, 62, 150, 0.5), 0 0 0 1px rgba(160, 190, 255, 0.55);
   filter: brightness(1.03);
 }
 
 .buttonPrimary:active {
-  background: linear-gradient(135deg, rgba(58, 72, 160, 0.95), rgba(86, 190, 235, 0.88));
+  background: linear-gradient(135deg, rgba(62, 82, 182, 0.95), rgba(110, 174, 235, 0.88));
 }
 
 .buttonSurface {
@@ -2889,6 +2916,10 @@
 
   .heroPanelTabs {
     grid-template-columns: 1fr;
+  }
+
+  .heroPanelTabs::before {
+    display: none;
   }
 
   .panel {
