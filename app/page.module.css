@@ -2487,7 +2487,8 @@
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(118, 137, 255, 0.85), rgba(134, 240, 255, 0.9));
   box-shadow: 0 8px 18px rgba(8, 12, 26, 0.45);
-  transition: background 0.25s ease, box-shadow 0.25s ease;
+  transform: translateX(0);
+  transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .toggleLabel {
@@ -2508,6 +2509,7 @@
 .toggleInput:checked + .toggleTrack .toggleThumb {
   background: linear-gradient(135deg, #7cffc5, #64f4c4);
   box-shadow: 0 12px 26px rgba(64, 180, 150, 0.55);
+  transform: translateX(22px);
 }
 
 .toggleInput:checked ~ .toggleLabel {
