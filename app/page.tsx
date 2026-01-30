@@ -2551,6 +2551,41 @@ export default function Page() {
                   Start a new list in seconds or jump back into an existing one with your list ID.
                   Everything syncs automatically.
                 </p>
+                <div className={styles.heroHighlights}>
+                  <div className={styles.heroHighlightCard}>
+                    <div className={styles.heroHighlightIcon}>
+                      <Sparkles size={18} aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className={styles.heroHighlightTitle}>Instant setup</p>
+                      <p className={styles.heroHighlightText}>
+                        Create a list in under a minute and start sharing.
+                      </p>
+                    </div>
+                  </div>
+                  <div className={styles.heroHighlightCard}>
+                    <div className={styles.heroHighlightIcon}>
+                      <ShieldCheck size={18} aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className={styles.heroHighlightTitle}>Protected access</p>
+                      <p className={styles.heroHighlightText}>
+                        Optional passwords keep your watchlists private.
+                      </p>
+                    </div>
+                  </div>
+                  <div className={styles.heroHighlightCard}>
+                    <div className={styles.heroHighlightIcon}>
+                      <LayoutGrid size={18} aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className={styles.heroHighlightTitle}>Flexible views</p>
+                      <p className={styles.heroHighlightText}>
+                        Switch between grid and list layouts anytime.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className={styles.heroPanel}>
                 <div className={styles.heroPanelTabs} role="tablist" aria-label="Choose a flow">
