@@ -312,33 +312,8 @@ export default function Page() {
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
-    let frame = 0;
-
-    const handleMouseMove = (event: MouseEvent) => {
-      const { innerWidth, innerHeight } = window;
-      const x = (event.clientX / innerWidth) * 2 - 1;
-      const y = (event.clientY / innerHeight) * 2 - 1;
-      if (frame) return;
-      frame = window.requestAnimationFrame(() => {
-        viewport.style.setProperty('--grid-x', x.toFixed(3));
-        viewport.style.setProperty('--grid-y', y.toFixed(3));
-        frame = 0;
-      });
-    };
-
-    const handleMouseLeave = () => {
-      viewport.style.setProperty('--grid-x', '0');
-      viewport.style.setProperty('--grid-y', '0');
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
+    viewport.style.setProperty('--grid-x', '0');
+    viewport.style.setProperty('--grid-y', '0');
   }, []);
 
   const layoutSelection: LayoutSelection = viewMode === 'list' ? 'list' : gridColumns === 4 ? 'grid-4' : 'grid-5';
