@@ -8,38 +8,53 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: linear-gradient(180deg, #05050a 0%, #020205 55%, #000002 100%);
+  background: radial-gradient(140% 140% at 50% 10%, #0d101b 0%, #06070d 45%, #020205 100%);
 }
 
 .background {
-  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .backgroundGradient {
   position: absolute;
-  inset: -40% -30% -40% -30%;
+  inset: -10% -20% -40% -20%;
   background:
-    radial-gradient(38% 42% at 20% 18%, rgba(70, 88, 170, 0.22), transparent 78%),
-    radial-gradient(42% 48% at 78% 20%, rgba(120, 64, 170, 0.18), transparent 80%),
-    radial-gradient(36% 46% at 60% 78%, rgba(44, 110, 130, 0.18), transparent 80%),
-    radial-gradient(44% 52% at 14% 78%, rgba(150, 70, 110, 0.16), transparent 76%);
-  opacity: 0.7;
-  filter: blur(110px);
-  animation: backgroundDrift 18s ease-in-out infinite;
+    radial-gradient(circle, rgba(255, 255, 255, 0.2) 0 1px, rgba(0, 0, 0, 0) 2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.14) 0 1px, rgba(0, 0, 0, 0) 2px);
+  background-size: 32px 32px, 64px 64px;
+  background-position:
+    calc(50% + (var(--grid-x, 0) * 28px)) calc(45% + (var(--grid-y, 0) * 28px)),
+    calc(50% + (var(--grid-x, 0) * 12px)) calc(45% + (var(--grid-y, 0) * 12px));
+  transform: perspective(1200px) rotateX(62deg) translateY(-10%);
+  transform-origin: top;
+  opacity: 0.45;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent 70%);
+  animation: gridFloat 18s ease-in-out infinite;
 }
 
 .backgroundMesh {
   position: absolute;
-  inset: -18% -12%;
+  inset: -20% -10%;
   background:
-    radial-gradient(18% 24% at 24% 22%, rgba(86, 110, 210, 0.22), transparent 74%),
-    radial-gradient(22% 28% at 74% 24%, rgba(150, 86, 210, 0.22), transparent 72%),
-    radial-gradient(20% 26% at 58% 78%, rgba(72, 150, 160, 0.22), transparent 74%),
-    radial-gradient(16% 22% at 16% 78%, rgba(190, 90, 120, 0.2), transparent 72%);
-  opacity: 0.55;
-  filter: blur(46px);
+    radial-gradient(
+      600px 420px at calc(50% + (var(--grid-x, 0) * 14%))
+        calc(35% + (var(--grid-y, 0) * 8%)),
+      rgba(92, 120, 255, 0.12),
+      transparent 70%
+    ),
+    radial-gradient(
+      520px 380px at calc(50% + (var(--grid-x, 0) * -12%))
+        calc(60% + (var(--grid-y, 0) * -10%)),
+      rgba(80, 180, 170, 0.1),
+      transparent 68%
+    );
+  opacity: 0.65;
+  filter: blur(40px);
   mix-blend-mode: screen;
-  animation: meshFloat 22s ease-in-out infinite;
+  animation: meshFloat 24s ease-in-out infinite;
 }
 
 .content {
@@ -1059,6 +1074,16 @@
   }
   50% {
     transform: translate3d(-1.5%, 1.5%, 0);
+  }
+}
+
+@keyframes gridFloat {
+  0%,
+  100% {
+    transform: perspective(1200px) rotateX(62deg) translateY(-10%);
+  }
+  50% {
+    transform: perspective(1200px) rotateX(60deg) translateY(-8%);
   }
 }
 
