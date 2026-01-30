@@ -71,36 +71,14 @@ type SortOption =
 type LayoutSelection = 'grid-4' | 'grid-5' | 'list';
 
 const LAYOUT_OPTIONS: LayoutSelection[] = ['grid-5', 'grid-4', 'list'];
-const SORT_GROUPS: Array<{
-  label: string;
-  options: Array<{ value: SortOption; label: string; description: string }>;
-}> = [
-  {
-    label: 'Date added',
-    options: [
-      { value: 'addedRecent', label: 'Latest added', description: 'Newest additions first' },
-      { value: 'addedOldest', label: 'Earliest added', description: 'Oldest additions first' }
-    ]
-  },
-  {
-    label: 'Release date',
-    options: [
-      { value: 'releaseAsc', label: 'Oldest release', description: 'Classic to recent' },
-      { value: 'releaseDesc', label: 'Newest release', description: 'Recent to classic' }
-    ]
-  },
-  {
-    label: 'Title',
-    options: [
-      { value: 'titleAsc', label: 'Title A-Z', description: 'Alphabetical order' },
-      { value: 'titleDesc', label: 'Title Z-A', description: 'Reverse alphabetical' }
-    ]
-  }
+const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
+  { value: 'addedRecent', label: 'Latest added' },
+  { value: 'addedOldest', label: 'Earliest added' },
+  { value: 'releaseAsc', label: 'Oldest release' },
+  { value: 'releaseDesc', label: 'Newest release' },
+  { value: 'titleAsc', label: 'Title A-Z' },
+  { value: 'titleDesc', label: 'Title Z-A' }
 ];
-const SORT_LABELS = SORT_GROUPS.flatMap((group) => group.options).reduce(
-  (acc, option) => ({ ...acc, [option.value]: option.label }),
-  {} as Record<SortOption, string>
-);
 
 const RANDOM_COUNTDOWN_DURATION = 5;
 
@@ -285,7 +263,7 @@ export default function Page() {
   const [countdownSession, setCountdownSession] = useState(0);
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [listMenuOpen, setListMenuOpen] = useState(false);
-  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const [sortMenuState, setSortMenuState] = useState<'closed' | 'open' | 'closing'>('closed');
   const [initialListLoading, setInitialListLoading] = useState(false);
   const [passwordDialogType, setPasswordDialogType] = useState<
     'set' | 'change' | 'remove' | 'delete' | null
@@ -317,6 +295,7 @@ export default function Page() {
   const randomCloseRef = useRef<HTMLButtonElement | null>(null);
   const listMenuRef = useRef<HTMLDivElement | null>(null);
   const sortMenuRef = useRef<HTMLDivElement | null>(null);
+  const sortMenuCloseTimeoutRef = useRef<number | null>(null);
   const passwordDialogFormRef = useRef<HTMLFormElement | null>(null);
   const passwordDialogInputRef = useRef<HTMLInputElement | null>(null);
   const passwordDialogCloseRef = useRef<HTMLButtonElement | null>(null);
@@ -324,6 +303,10 @@ export default function Page() {
     duration: 260,
     easing: 'cubic-bezier(0.16, 1, 0.3, 1)'
   });
+  const currentSortLabel = useMemo(
+    () => SORT_OPTIONS.find((option) => option.value === sortOption)?.label ?? 'Sort',
+    [sortOption]
+  );
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -390,6 +373,25 @@ export default function Page() {
     [selectLayout]
   );
 
+  const closeSortMenu = useCallback(() => {
+    if (sortMenuCloseTimeoutRef.current) {
+      window.clearTimeout(sortMenuCloseTimeoutRef.current);
+    }
+    setSortMenuState('closing');
+    sortMenuCloseTimeoutRef.current = window.setTimeout(() => {
+      setSortMenuState('closed');
+      sortMenuCloseTimeoutRef.current = null;
+    }, 180);
+  }, []);
+
+  const openSortMenu = useCallback(() => {
+    if (sortMenuCloseTimeoutRef.current) {
+      window.clearTimeout(sortMenuCloseTimeoutRef.current);
+      sortMenuCloseTimeoutRef.current = null;
+    }
+    setSortMenuState('open');
+  }, []);
+
   const withPassword = useCallback(
     (init: RequestInit = {}, override?: string) => {
       const password = override ?? activePassword;
@@ -431,7 +433,7 @@ export default function Page() {
   }, [listMenuOpen]);
 
   useEffect(() => {
-    if (!sortMenuOpen) {
+    if (sortMenuState === 'closed') {
       return;
     }
     const handlePointer = (event: MouseEvent | TouchEvent) => {
@@ -439,12 +441,12 @@ export default function Page() {
         return;
       }
       if (!sortMenuRef.current.contains(event.target as Node)) {
-        setSortMenuOpen(false);
+        closeSortMenu();
       }
     };
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setSortMenuOpen(false);
+        closeSortMenu();
       }
     };
     document.addEventListener('mousedown', handlePointer);
@@ -455,7 +457,15 @@ export default function Page() {
       document.removeEventListener('touchstart', handlePointer);
       document.removeEventListener('keydown', handleKey);
     };
-  }, [sortMenuOpen]);
+  }, [closeSortMenu, sortMenuState]);
+
+  useEffect(() => {
+    return () => {
+      if (sortMenuCloseTimeoutRef.current) {
+        window.clearTimeout(sortMenuCloseTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const dismissNotification = useCallback((id: number) => {
     setNotifications((current) => current.filter((note) => note.id !== id));
@@ -2397,13 +2407,14 @@ export default function Page() {
 
           <aside className={styles.statsColumn} aria-label="Watchlist controls and statistics">
             <div className={styles.sortControls} aria-label="Organize watchlist">
-              {sortMenuOpen ? (
+              {sortMenuState !== 'closed' ? (
                 <button
                   type="button"
                   className={styles.sortMenuScrim}
+                  data-state={sortMenuState}
                   aria-hidden="true"
                   tabIndex={-1}
-                  onClick={() => setSortMenuOpen(false)}
+                  onClick={closeSortMenu}
                 />
               ) : null}
               <div
@@ -2420,52 +2431,47 @@ export default function Page() {
                   type="button"
                   className={styles.sortTrigger}
                   aria-haspopup="listbox"
-                  aria-expanded={sortMenuOpen}
-                  aria-controls={sortMenuOpen ? sortMenuListId : undefined}
-                  onClick={() => setSortMenuOpen((prev) => !prev)}
+                  aria-expanded={sortMenuState === 'open'}
+                  aria-controls={sortMenuState !== 'closed' ? sortMenuListId : undefined}
+                  onClick={() =>
+                    sortMenuState === 'open' ? closeSortMenu() : openSortMenu()
+                  }
                 >
                   <span className={styles.sortTriggerIcon} aria-hidden="true">
                     <ArrowUpDown size={16} />
                   </span>
-                  <span className={styles.sortTriggerValue}>{SORT_LABELS[sortOption]}</span>
+                  <span className={styles.sortTriggerValue}>{currentSortLabel}</span>
                   <span className={styles.sortTriggerChevron} aria-hidden="true">
                     <ChevronDown size={16} />
                   </span>
                 </button>
-                {sortMenuOpen ? (
-                  <div className={styles.sortMenu} role="listbox" id={sortMenuListId}>
-                    {SORT_GROUPS.map((group) => (
-                      <div key={group.label} className={styles.sortMenuGroup}>
-                        <span className={styles.sortMenuGroupLabel}>{group.label}</span>
-                        <div className={styles.sortMenuOptions}>
-                          {group.options.map((option) => {
-                            const selected = option.value === sortOption;
-                            return (
-                              <button
-                                key={option.value}
-                                type="button"
-                                role="option"
-                                aria-selected={selected}
-                                className={`${styles.sortMenuOption} ${
-                                  selected ? styles.sortMenuOptionActive : ''
-                                }`}
-                                onClick={() => {
-                                  setSortOption(option.value);
-                                  setSortMenuOpen(false);
-                                }}
-                              >
-                                <span className={styles.sortMenuOptionTitle}>
-                                  {option.label}
-                                </span>
-                                <span className={styles.sortMenuOptionHint}>
-                                  {option.description}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
+                {sortMenuState !== 'closed' ? (
+                  <div
+                    className={styles.sortMenu}
+                    role="listbox"
+                    id={sortMenuListId}
+                    data-state={sortMenuState}
+                  >
+                    {SORT_OPTIONS.map((option) => {
+                      const selected = option.value === sortOption;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          className={`${styles.sortMenuOption} ${
+                            selected ? styles.sortMenuOptionActive : ''
+                          }`}
+                          onClick={() => {
+                            setSortOption(option.value);
+                            closeSortMenu();
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : null}
               </div>
