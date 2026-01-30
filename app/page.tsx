@@ -245,6 +245,7 @@ export default function Page() {
   const [showUnwatchedOnly, setShowUnwatchedOnly] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [gridColumns, setGridColumns] = useState<4 | 5>(5);
+  const [entryMode, setEntryMode] = useState<'create' | 'join'>('create');
   const [randomPick, setRandomPick] = useState<Item | null>(null);
   const [showRandomOverlay, setShowRandomOverlay] = useState(false);
   const [countdownRemaining, setCountdownRemaining] = useState<number | null>(null);
@@ -2543,14 +2544,156 @@ export default function Page() {
       ) : (
         <div className={styles.content}>
           <section className={styles.hero}>
-            <span className={styles.heroBadge}>
-              <Sparkles size={16} /> Shared watchlists
-            </span>
-            <h1 className={styles.heroTitle}>Plan movie nights with zero friction</h1>
-            <p className={styles.heroSubtitle}>
-              Spin up a watchlist in seconds, invite friends with a single link, and
-              keep track of everything you want to stream next.
-            </p>
+            <div className={styles.heroLayout}>
+              <div className={styles.heroCopy}>
+                <h1 className={styles.heroTitle}>Create or open a watchlist fast</h1>
+                <p className={styles.heroSubtitle}>
+                  Start a new list in seconds or jump back into an existing one with your list ID.
+                  Everything syncs automatically.
+                </p>
+              </div>
+              <div className={styles.heroPanel}>
+                <div className={styles.heroPanelTabs} role="tablist" aria-label="Choose a flow">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={entryMode === 'create'}
+                    className={`${styles.heroPanelTab} ${
+                      entryMode === 'create' ? styles.heroPanelTabActive : ''
+                    }`}
+                    onClick={() => setEntryMode('create')}
+                  >
+                    Create a list
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={entryMode === 'join'}
+                    className={`${styles.heroPanelTab} ${
+                      entryMode === 'join' ? styles.heroPanelTabActive : ''
+                    }`}
+                    onClick={() => setEntryMode('join')}
+                  >
+                    Open a list
+                  </button>
+                </div>
+                <div className={styles.heroPanelBody} role="tabpanel">
+                  {entryMode === 'create' ? (
+                    <div className={styles.form}>
+                      <h3 className={styles.panelTitle}>Create a watchlist</h3>
+                      <p className={styles.panelSubtitle}>
+                        Give it a name, protect it if you want, and start adding movies immediately.
+                      </p>
+                      <div className={styles.inputGroup}>
+                        <label className={styles.inputLabel} htmlFor="list-name">
+                          List name
+                        </label>
+                        <input
+                          id="list-name"
+                          className={styles.inputField}
+                          placeholder="e.g. Friday Movie Club"
+                          value={listName}
+                          onChange={(event) => setListName(event.target.value)}
+                          disabled={creating}
+                        />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <label className={styles.inputLabel} htmlFor="list-password">
+                          Password (optional)
+                        </label>
+                        <input
+                          id="list-password"
+                          className={styles.inputField}
+                          type="password"
+                          placeholder="Leave blank to keep it open"
+                          value={createPassword}
+                          onChange={(event) => setCreatePassword(event.target.value)}
+                          disabled={creating}
+                        />
+                        <p className={styles.inputHint}>
+                          Share this password with collaborators to limit access.
+                        </p>
+                      </div>
+                      <div className={styles.buttonRow}>
+                        <button
+                          className={styles.buttonPrimary}
+                          type="button"
+                          onClick={createList}
+                          disabled={creating}
+                        >
+                          {creating ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
+                          {creating ? 'Creating…' : 'Create watchlist'}
+                        </button>
+                        <button
+                          className={styles.buttonGhost}
+                          type="button"
+                          onClick={quickStart}
+                          disabled={creating}
+                        >
+                          Quick start
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={styles.form}>
+                      <h3 className={styles.panelTitle}>Open a shared list</h3>
+                      <p className={styles.panelSubtitle}>
+                        Paste the list ID to reconnect with your crew and pick up where you left off.
+                      </p>
+                      <div className={styles.inputGroup}>
+                        <label className={styles.inputLabel} htmlFor="list-id">
+                          List ID
+                        </label>
+                        <input
+                          id="list-id"
+                          className={styles.inputField}
+                          placeholder="Paste the list ID"
+                          value={listIdInput}
+                          onChange={(event) => setListIdInput(event.target.value)}
+                          disabled={joining}
+                        />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <label className={styles.inputLabel} htmlFor="list-password-open">
+                          Password
+                        </label>
+                        <input
+                          id="list-password-open"
+                          className={styles.inputField}
+                          type="password"
+                          placeholder="Only if the list is protected"
+                          value={joinPassword}
+                          onChange={(event) => setJoinPassword(event.target.value)}
+                          disabled={joining}
+                        />
+                        <p className={styles.inputHint}>Leave blank for public watchlists.</p>
+                      </div>
+                      <div className={styles.buttonRow}>
+                        <button
+                          className={styles.buttonSurface}
+                          type="button"
+                          onClick={() => joinList(listIdInput, joinPassword)}
+                          disabled={joining}
+                        >
+                          {joining ? <Loader2 size={18} className="spin" /> : <ArrowRight size={18} />}
+                          {joining ? 'Opening…' : 'Open list'}
+                        </button>
+                        {lastListId && (
+                          <button
+                            className={styles.buttonGhost}
+                            type="button"
+                            onClick={() => joinList(lastListId, joinPassword)}
+                            disabled={joining}
+                          >
+                            Continue last list
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </section>
 
           {error && (
@@ -2559,124 +2702,6 @@ export default function Page() {
             </div>
           )}
 
-          <section className={styles.panels}>
-            <article className={styles.panel}>
-              <div className={styles.form}>
-                <h2 className={styles.panelTitle}>Create a new list</h2>
-                <p className={styles.panelSubtitle}>
-                  Give it a name, hit create, and start dropping in titles straight away.
-                </p>
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel} htmlFor="list-name">
-                    List name
-                  </label>
-                  <input
-                    id="list-name"
-                    className={styles.inputField}
-                    placeholder="e.g. Friday Movie Club"
-                    value={listName}
-                    onChange={(event) => setListName(event.target.value)}
-                    disabled={creating}
-                  />
-                </div>
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel} htmlFor="list-password">
-                    Password (optional)
-                  </label>
-                  <input
-                    id="list-password"
-                    className={styles.inputField}
-                    type="password"
-                    placeholder="Leave blank to keep it open"
-                    value={createPassword}
-                    onChange={(event) => setCreatePassword(event.target.value)}
-                    disabled={creating}
-                  />
-                  <p className={styles.inputHint}>
-                    Share this password with collaborators to limit access.
-                  </p>
-                </div>
-                <div className={styles.buttonRow}>
-                  <button
-                    className={styles.buttonPrimary}
-                    type="button"
-                    onClick={createList}
-                    disabled={creating}
-                  >
-                    {creating ? <Loader2 size={18} className="spin" /> : <Plus size={18} />}
-                    {creating ? 'Creating…' : 'Create watchlist'}
-                  </button>
-                  <button
-                    className={styles.buttonGhost}
-                    type="button"
-                    onClick={quickStart}
-                    disabled={creating}
-                  >
-                    Quick start
-                  </button>
-                </div>
-              </div>
-            </article>
-
-            <article className={styles.panel}>
-              <div className={styles.form}>
-                <h2 className={styles.panelTitle}>Open an existing list</h2>
-                <p className={styles.panelSubtitle}>
-                  Drop in a list ID to jump back into a shared queue, or continue where
-                  you left off.
-                </p>
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel} htmlFor="list-id">
-                    List ID
-                  </label>
-                  <input
-                    id="list-id"
-                    className={styles.inputField}
-                    placeholder="Paste the list ID"
-                    value={listIdInput}
-                    onChange={(event) => setListIdInput(event.target.value)}
-                    disabled={joining}
-                  />
-                </div>
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel} htmlFor="list-password-open">
-                    Password
-                  </label>
-                  <input
-                    id="list-password-open"
-                    className={styles.inputField}
-                    type="password"
-                    placeholder="Only if the list is protected"
-                    value={joinPassword}
-                    onChange={(event) => setJoinPassword(event.target.value)}
-                    disabled={joining}
-                  />
-                  <p className={styles.inputHint}>Leave blank for public watchlists.</p>
-                </div>
-                <div className={styles.buttonRow}>
-                  <button
-                    className={styles.buttonSurface}
-                    type="button"
-                    onClick={() => joinList(listIdInput, joinPassword)}
-                    disabled={joining}
-                  >
-                    {joining ? <Loader2 size={18} className="spin" /> : <ArrowRight size={18} />}
-                    {joining ? 'Opening…' : 'Open list'}
-                  </button>
-                  {lastListId && (
-                    <button
-                      className={styles.buttonGhost}
-                      type="button"
-                      onClick={() => joinList(lastListId, joinPassword)}
-                      disabled={joining}
-                    >
-                      Continue last list
-                    </button>
-                  )}
-                </div>
-              </div>
-            </article>
-          </section>
         </div>
       )}
     </main>
