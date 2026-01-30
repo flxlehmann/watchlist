@@ -2,21 +2,21 @@
 
 :root {
   color-scheme: dark;
-  --bg: #05060f;
-  --bg-accent: #0b1020;
-  --surface: rgba(15, 19, 34, 0.82);
-  --surface-raised: rgba(25, 31, 51, 0.88);
-  --surface-strong: rgba(33, 40, 66, 0.92);
-  --border: rgba(99, 119, 186, 0.28);
-  --border-strong: rgba(122, 148, 228, 0.46);
-  --text: #f5f7ff;
-  --muted: rgba(199, 211, 255, 0.68);
-  --accent: #6a7dff;
-  --accent-glow: rgba(122, 148, 255, 0.35);
-  --accent-soft: rgba(135, 242, 255, 0.18);
+  --bg: #020206;
+  --bg-accent: #050811;
+  --surface: rgba(10, 13, 24, 0.88);
+  --surface-raised: rgba(16, 20, 34, 0.9);
+  --surface-strong: rgba(22, 27, 44, 0.94);
+  --border: rgba(83, 97, 150, 0.28);
+  --border-strong: rgba(110, 130, 200, 0.38);
+  --text: #eef1ff;
+  --muted: rgba(181, 193, 234, 0.62);
+  --accent: #5d6bff;
+  --accent-glow: rgba(102, 120, 255, 0.3);
+  --accent-soft: rgba(109, 214, 255, 0.14);
   --danger: #ff6f9d;
   --success: #64f4c4;
-  --shadow: 0 28px 120px rgba(5, 8, 20, 0.55);
+  --shadow: 0 28px 120px rgba(3, 5, 14, 0.7);
   --radius-lg: 28px;
   --radius-md: 18px;
   --radius-sm: 12px;
@@ -32,9 +32,9 @@ html, body {
   min-height: 100%;
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   background:
-    radial-gradient(circle at top, rgba(106, 125, 255, 0.2), transparent 55%),
-    radial-gradient(circle at 18% 20%, rgba(100, 244, 196, 0.12), transparent 35%),
-    linear-gradient(180deg, var(--bg), #04040a 70%);
+    radial-gradient(circle at top, rgba(93, 107, 255, 0.12), transparent 55%),
+    radial-gradient(circle at 18% 20%, rgba(90, 180, 190, 0.08), transparent 35%),
+    linear-gradient(180deg, var(--bg), #010104 70%);
   color: var(--text);
   line-height: 1.55;
 }
@@ -61,7 +61,7 @@ input, textarea {
 }
 
 ::selection {
-  background: rgba(135, 242, 255, 0.35);
+  background: rgba(109, 214, 255, 0.24);
   color: var(--text);
 }
 
