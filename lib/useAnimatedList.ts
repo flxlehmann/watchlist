@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import type { DependencyList } from 'react';
 
 type AnimatedListOptions = {
   duration?: number;
   easing?: string;
+  dependencies?: DependencyList;
 };
 
 export function useAnimatedList<T extends HTMLElement>({
   duration = 360,
-  easing = 'cubic-bezier(0.22, 1, 0.36, 1)'
+  easing = 'cubic-bezier(0.22, 1, 0.36, 1)',
+  dependencies
 }: AnimatedListOptions = {}) {
   const parentRef = useRef<T | null>(null);
   const positionsRef = useRef<Map<Element, DOMRect>>(new Map());
+  const animationsRef = useRef(new WeakMap<Element, Animation[]>());
   const reduceMotionRef = useRef(false);
   const hasInitializedRef = useRef(false);
 
@@ -22,12 +26,13 @@ export function useAnimatedList<T extends HTMLElement>({
       return;
     }
     const initialPositions = new Map<Element, DOMRect>();
-    node.childNodes.forEach((child) => {
+    Array.from(node.children).forEach((child) => {
       if (child instanceof HTMLElement) {
         initialPositions.set(child, child.getBoundingClientRect());
       }
     });
     positionsRef.current = initialPositions;
+    animationsRef.current = new WeakMap<Element, Animation[]>();
     hasInitializedRef.current = false;
   }, []);
 
@@ -38,11 +43,20 @@ export function useAnimatedList<T extends HTMLElement>({
       return;
     }
 
-    const nextPositions = new Map<Element, DOMRect>();
-    parent.childNodes.forEach((child) => {
-      if (child instanceof HTMLElement) {
-        nextPositions.set(child, child.getBoundingClientRect());
+    const elements = Array.from(parent.children).filter(
+      (child): child is HTMLElement => child instanceof HTMLElement
+    );
+
+    elements.forEach((element) => {
+      const activeAnimations = animationsRef.current.get(element);
+      if (activeAnimations?.length) {
+        activeAnimations.forEach((animation) => animation.cancel());
       }
+    });
+
+    const nextPositions = new Map<Element, DOMRect>();
+    elements.forEach((element) => {
+      nextPositions.set(element, element.getBoundingClientRect());
     });
 
     const shouldAnimate = hasInitializedRef.current && !reduceMotionRef.current;
@@ -51,7 +65,6 @@ export function useAnimatedList<T extends HTMLElement>({
       nextPositions.forEach((rect, element) => {
         const previous = positionsRef.current.get(element);
         if (!previous) {
-          element.getAnimations?.().forEach((animation) => animation.cancel());
           const targetOpacity = (() => {
             const view = element.ownerDocument?.defaultView;
             if (!view) return 1;
@@ -62,13 +75,14 @@ export function useAnimatedList<T extends HTMLElement>({
             0,
             Number.isFinite(targetOpacity) ? Math.min(targetOpacity * 0.7, targetOpacity) : 0
           );
-          element.animate(
+          const animation = element.animate(
             [
               { opacity: fromOpacity, transform: 'scale(0.96)' },
               { opacity: targetOpacity, transform: 'scale(1)' }
             ],
             { duration, easing, fill: 'none' }
           );
+          animationsRef.current.set(element, [animation]);
           return;
         }
 
@@ -76,21 +90,21 @@ export function useAnimatedList<T extends HTMLElement>({
         const deltaY = previous.top - rect.top;
 
         if (deltaX !== 0 || deltaY !== 0) {
-          element.getAnimations?.().forEach((animation) => animation.cancel());
-          element.animate(
+          const animation = element.animate(
             [
               { transform: `translate(${deltaX}px, ${deltaY}px)` },
               { transform: 'translate(0, 0)' }
             ],
             { duration, easing, fill: 'none' }
           );
+          animationsRef.current.set(element, [animation]);
         }
       });
     }
 
     hasInitializedRef.current = true;
     positionsRef.current = nextPositions;
-  });
+  }, dependencies ? [...dependencies, duration, easing] : undefined);
 
   useEffect(() => {
     if (typeof window === 'undefined') {

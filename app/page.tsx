@@ -301,7 +301,8 @@ export default function Page() {
   const passwordDialogCloseRef = useRef<HTMLButtonElement | null>(null);
   const itemsParent = useAnimatedList<HTMLElement>({
     duration: 260,
-    easing: 'cubic-bezier(0.16, 1, 0.3, 1)'
+    easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+    dependencies: [list?.items, sortOption, showUnwatchedOnly, viewMode, gridColumns]
   });
   const currentSortLabel = useMemo(
     () => SORT_OPTIONS.find((option) => option.value === sortOption)?.label ?? 'Sort',
