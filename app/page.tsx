@@ -2647,7 +2647,6 @@ export default function Page() {
                 <div className={styles.heroPanelBody} role="tabpanel">
                   {entryMode === 'create' ? (
                     <div className={styles.form}>
-                      <h3 className={styles.panelTitle}>Create a list</h3>
                       <p className={styles.panelSubtitle}>
                         Give it a name, protect it if you want, and start adding movies immediately.
                       </p>
@@ -2705,7 +2704,6 @@ export default function Page() {
                     </div>
                   ) : (
                     <div className={styles.form}>
-                      <h3 className={styles.panelTitle}>Open a shared list</h3>
                       <p className={styles.panelSubtitle}>
                         Paste the list ID to reconnect with your crew and pick up where you left off.
                       </p>
