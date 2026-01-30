@@ -265,6 +265,7 @@ export default function Page() {
   const randomTitleId = useId();
   const randomDescriptionId = useId();
   const filterToggleId = useId();
+  const sortSelectId = useId();
   const countdownGradientId = useId();
   const listMenuDropdownId = useId();
   const listMenuButtonId = useId();
@@ -2334,94 +2335,29 @@ export default function Page() {
 
           <aside className={styles.statsColumn} aria-label="Watchlist controls and statistics">
             <div className={styles.sortControls} aria-label="Organize watchlist">
-              <div
-                className={styles.organizeGroup}
-                role="radiogroup"
-                aria-label="Sort by date added"
-              >
-                <span className={styles.groupLabel}>Date added</span>
-                <div className={styles.sortButtons}>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'addedRecent' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('addedRecent')}
-                    aria-pressed={sortOption === 'addedRecent'}
-                  >
-                    Latest
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'addedOldest' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('addedOldest')}
-                    aria-pressed={sortOption === 'addedOldest'}
-                  >
-                    Earliest
-                  </button>
-                </div>
-              </div>
-
-              <div
-                className={styles.organizeGroup}
-                role="radiogroup"
-                aria-label="Sort by release date"
-              >
-                <span className={styles.groupLabel}>Released</span>
-                <div className={styles.sortButtons}>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'releaseAsc' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('releaseAsc')}
-                    aria-pressed={sortOption === 'releaseAsc'}
-                  >
-                    Oldest
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'releaseDesc' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('releaseDesc')}
-                    aria-pressed={sortOption === 'releaseDesc'}
-                  >
-                    Newest
-                  </button>
-                </div>
-              </div>
-
-              <div
-                className={styles.organizeGroup}
-                role="radiogroup"
-                aria-label="Sort by title"
-              >
-                <span className={styles.groupLabel}>Title</span>
-                <div className={styles.sortButtons}>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'titleAsc' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('titleAsc')}
-                    aria-pressed={sortOption === 'titleAsc'}
-                  >
-                    A-Z
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.sortButton} ${
-                      sortOption === 'titleDesc' ? styles.sortButtonActive : ''
-                    }`}
-                    onClick={() => setSortOption('titleDesc')}
-                    aria-pressed={sortOption === 'titleDesc'}
-                  >
-                    Z-A
-                  </button>
-                </div>
+              <div className={styles.organizeGroup} role="group" aria-label="Sort watchlist">
+                <label className={styles.groupLabel} htmlFor={sortSelectId}>
+                  Sort
+                </label>
+                <select
+                  id={sortSelectId}
+                  className={styles.sortSelect}
+                  value={sortOption}
+                  onChange={(event) => setSortOption(event.target.value as SortOption)}
+                >
+                  <optgroup label="Date added">
+                    <option value="addedRecent">Latest added</option>
+                    <option value="addedOldest">Earliest added</option>
+                  </optgroup>
+                  <optgroup label="Release date">
+                    <option value="releaseAsc">Oldest release</option>
+                    <option value="releaseDesc">Newest release</option>
+                  </optgroup>
+                  <optgroup label="Title">
+                    <option value="titleAsc">Title A-Z</option>
+                    <option value="titleDesc">Title Z-A</option>
+                  </optgroup>
+                </select>
               </div>
 
               <div
