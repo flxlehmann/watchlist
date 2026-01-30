@@ -309,14 +309,14 @@
 }
 
 .buttonPrimary {
-  background: linear-gradient(135deg, rgba(96, 110, 210, 0.9), rgba(98, 190, 220, 0.85));
-  color: #f4f7ff;
-  box-shadow: 0 10px 28px rgba(72, 88, 160, 0.35);
+  background: linear-gradient(135deg, rgba(28, 32, 60, 0.98), rgba(38, 46, 88, 0.95));
+  color: #e9edff;
+  box-shadow: 0 10px 28px rgba(10, 12, 24, 0.65);
 }
 
 .buttonPrimary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 38px rgba(72, 88, 160, 0.45);
+  box-shadow: 0 14px 38px rgba(10, 12, 24, 0.75);
 }
 
 .buttonSurface {
