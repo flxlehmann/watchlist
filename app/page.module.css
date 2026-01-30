@@ -116,6 +116,56 @@
   line-height: 1.6;
 }
 
+.heroHighlights {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.heroHighlightCard {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(122, 148, 228, 0.2);
+  background: rgba(8, 12, 24, 0.55);
+  box-shadow: 0 16px 32px rgba(4, 8, 20, 0.35);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.heroHighlightCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(122, 148, 228, 0.4);
+  box-shadow: 0 20px 36px rgba(6, 12, 28, 0.5);
+}
+
+.heroHighlightIcon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(122, 148, 255, 0.2), rgba(66, 196, 220, 0.1));
+  color: #d9e3ff;
+  box-shadow: 0 10px 18px rgba(12, 18, 36, 0.4);
+}
+
+.heroHighlightTitle {
+  margin: 0;
+  font-weight: 600;
+  color: #eef1ff;
+}
+
+.heroHighlightText {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
 .heroLayout {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
@@ -140,6 +190,13 @@
   flex-direction: column;
   gap: 1.5rem;
   box-shadow: 0 24px 55px rgba(6, 10, 24, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.heroPanel:hover {
+  transform: translateY(-2px);
+  border-color: rgba(122, 148, 228, 0.55);
+  box-shadow: 0 30px 70px rgba(6, 10, 28, 0.6);
 }
 
 .heroPanelTabs {
@@ -161,7 +218,12 @@
   min-height: 44px;
   border-radius: 999px;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.heroPanelTab:hover {
+  color: #eff2ff;
+  transform: translateY(-1px);
 }
 
 .heroPanelTab:focus-visible {
@@ -263,13 +325,20 @@
   border: 1px solid transparent;
   background: var(--surface-raised);
   padding: 0.95rem 1.1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease,
+    background 0.2s ease;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.inputField:hover {
+  border-color: rgba(122, 148, 228, 0.35);
+  background: rgba(12, 16, 32, 0.78);
 }
 
 .inputField:focus {
   border-color: var(--border-strong);
   box-shadow: 0 0 0 4px rgba(122, 148, 255, 0.18);
+  transform: translateY(-1px);
 }
 
 .inputInline {
@@ -295,7 +364,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease,
+    border-color 0.2s ease, color 0.2s ease;
   line-height: 1;
 }
 
@@ -314,6 +384,19 @@
 .buttonPrimary:hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 38px rgba(10, 12, 24, 0.75);
+}
+
+.buttonPrimary:active,
+.buttonSurface:active,
+.buttonGhost:active {
+  transform: translateY(0);
+}
+
+.buttonPrimary:focus-visible,
+.buttonSurface:focus-visible,
+.buttonGhost:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.35), 0 10px 28px rgba(10, 12, 24, 0.55);
 }
 
 .buttonSurface {
