@@ -2130,7 +2130,7 @@
   inset: 0;
   border: none;
   background: rgba(9, 13, 26, 0.45);
-  z-index: 20;
+  z-index: 40;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
@@ -2177,7 +2177,7 @@
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
     box-shadow 0.2s ease;
   position: relative;
-  z-index: 31;
+  z-index: 51;
 }
 
 .sortTriggerIcon {
@@ -2229,7 +2229,7 @@
   border: 1px solid rgba(122, 148, 228, 0.32);
   background: rgba(9, 13, 26, 0.98);
   box-shadow: 0 20px 40px rgba(6, 10, 24, 0.55);
-  z-index: 30;
+  z-index: 50;
   opacity: 0;
   transform: translateY(-6px) scale(0.98);
   pointer-events: none;
