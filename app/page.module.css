@@ -248,7 +248,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  transition: transform 0.2s ease;
 }
 
 .inputHint {
@@ -268,12 +267,24 @@
   }
 }
 
+@keyframes buttonPulse {
+  0%,
+  100% {
+    box-shadow: 0 12px 30px rgba(26, 72, 160, 0.45), 0 0 0 1px rgba(120, 148, 255, 0.25);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 18px 40px rgba(48, 110, 210, 0.55), 0 0 0 1px rgba(150, 180, 255, 0.35);
+    filter: brightness(1.05);
+  }
+}
+
 .inputLabel {
   font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
-  transition: color 0.2s ease, transform 0.2s ease, letter-spacing 0.2s ease;
+  transition: color 0.2s ease, letter-spacing 0.2s ease;
 }
 
 .inputField {
@@ -281,7 +292,7 @@
   border: 1px solid var(--border);
   background: linear-gradient(135deg, rgba(16, 20, 34, 0.96), rgba(10, 14, 26, 0.92));
   padding: 0.95rem 1.1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.3s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 12px 30px rgba(4, 6, 18, 0.45);
 }
 
@@ -293,7 +304,7 @@
 
 .inputField:hover {
   border-color: var(--border-strong);
-  transform: scale(1.01);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 34px rgba(4, 6, 18, 0.55);
 }
 
 .inputField:focus {
@@ -307,13 +318,8 @@
   opacity: 0.65;
 }
 
-.inputGroup:focus-within {
-  transform: scale(1.01);
-}
-
 .inputGroup:focus-within .inputLabel {
   color: var(--accent);
-  transform: scale(1.02);
   letter-spacing: 0.12em;
 }
 
@@ -344,7 +350,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+  transition: box-shadow 0.15s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
   line-height: 1;
 }
 
@@ -355,35 +361,73 @@
 }
 
 .buttonPrimary {
-  background: linear-gradient(135deg, rgba(28, 32, 60, 0.98), rgba(38, 46, 88, 0.95));
-  color: #e9edff;
-  box-shadow: 0 10px 28px rgba(10, 12, 24, 0.65);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(122, 148, 255, 0.45);
+  background: linear-gradient(135deg, rgba(62, 78, 190, 0.95), rgba(96, 210, 255, 0.9));
+  color: #081226;
+  box-shadow: 0 12px 30px rgba(26, 72, 160, 0.45), 0 0 0 1px rgba(120, 148, 255, 0.35);
 }
 
 .buttonPrimary:hover {
-  transform: scale(1.02);
-  box-shadow: 0 14px 38px rgba(10, 12, 24, 0.75);
+  background: linear-gradient(135deg, rgba(88, 112, 220, 0.98), rgba(120, 220, 255, 0.92));
+  box-shadow: 0 16px 40px rgba(32, 88, 190, 0.55), 0 0 0 1px rgba(140, 170, 255, 0.55);
+  filter: brightness(1.03);
+}
+
+.buttonPrimary:active {
+  background: linear-gradient(135deg, rgba(58, 72, 160, 0.95), rgba(86, 190, 235, 0.88));
 }
 
 .buttonSurface {
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(122, 148, 228, 0.45);
+  background: linear-gradient(160deg, rgba(20, 26, 48, 0.95), rgba(12, 16, 32, 0.92));
+  color: rgba(228, 234, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(8, 12, 24, 0.55);
 }
 
 .buttonSurface:hover {
-  transform: scale(1.02);
-  box-shadow: 0 12px 30px rgba(12, 16, 28, 0.55);
+  background: linear-gradient(160deg, rgba(30, 40, 70, 0.98), rgba(16, 22, 40, 0.95));
+  border-color: rgba(140, 170, 255, 0.6);
+  box-shadow: 0 14px 32px rgba(10, 16, 32, 0.6);
+  color: #f2f5ff;
+}
+
+.buttonSurface:active {
+  background: linear-gradient(160deg, rgba(18, 24, 44, 0.98), rgba(10, 14, 28, 0.95));
 }
 
 .buttonGhost {
   background: transparent;
-  border: 1px dashed rgba(122, 148, 228, 0.35);
-  color: var(--muted);
+  border: 1px dashed rgba(122, 148, 228, 0.45);
+  color: rgba(210, 220, 255, 0.7);
 }
 
 .buttonGhost:hover {
   border-style: solid;
-  color: var(--text);
+  border-color: rgba(140, 170, 255, 0.65);
+  color: #f4f7ff;
+  background: rgba(122, 148, 255, 0.1);
+}
+
+.buttonPrimary:active,
+.buttonSurface:active,
+.buttonGhost:active {
+  filter: brightness(0.97);
+  box-shadow: inset 0 2px 8px rgba(4, 6, 18, 0.4);
+}
+
+.buttonPrimary:focus-visible,
+.buttonSurface:focus-visible,
+.buttonGhost:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.35), 0 14px 36px rgba(12, 16, 28, 0.55);
+}
+
+.buttonPrimary[data-loading="true"],
+.buttonSurface[data-loading="true"] {
+  animation: buttonPulse 1.4s ease-in-out infinite;
+  cursor: progress;
 }
 
 .buttonPrimary:disabled,
@@ -391,9 +435,27 @@
 .buttonGhost:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
   box-shadow: none;
+  filter: none;
 }
+
+.buttonPrimary:disabled {
+  background: linear-gradient(135deg, rgba(38, 44, 74, 0.9), rgba(50, 58, 102, 0.9));
+  border-color: rgba(122, 148, 228, 0.3);
+  color: rgba(214, 224, 255, 0.7);
+}
+
+.buttonSurface:disabled {
+  background: rgba(12, 16, 30, 0.7);
+  border-color: rgba(122, 148, 228, 0.25);
+  color: rgba(210, 220, 255, 0.65);
+}
+
+.buttonGhost:disabled {
+  border-color: rgba(122, 148, 228, 0.2);
+  color: rgba(190, 200, 235, 0.55);
+}
+
 
 .status {
   border-radius: var(--radius-md);
@@ -442,7 +504,6 @@
   backdrop-filter: blur(18px) saturate(1.2);
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
   pointer-events: auto;
-  transform: scale(0.98);
   opacity: 0;
   animation: notificationEnter 0.3s ease forwards;
 }
@@ -485,13 +546,13 @@
   justify-content: center;
   padding: 0.2rem;
   border-radius: var(--radius-sm);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
 .notificationDismiss:hover,
 .notificationDismiss:focus-visible {
   opacity: 1;
-  transform: scale(1.05);
+  background: rgba(122, 148, 255, 0.18);
 }
 
 .notificationDismiss:focus-visible {
@@ -502,11 +563,9 @@
 @keyframes notificationEnter {
   from {
     opacity: 0;
-    transform: scale(0.98);
   }
   to {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
@@ -522,15 +581,12 @@
 @keyframes randomContentPop {
   0% {
     opacity: 0;
-    transform: scale(0.94);
   }
   55% {
     opacity: 1;
-    transform: scale(1.02);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
@@ -545,22 +601,19 @@
 
 @keyframes countdownPulse {
   0% {
-    transform: scale(0.88);
     opacity: 0.6;
   }
   50% {
-    transform: scale(1);
     opacity: 1;
   }
   100% {
-    transform: scale(0.92);
     opacity: 0.65;
   }
 }
 
 @keyframes fireworkBurst {
   0% {
-    transform: translate(-50%, -50%) scale(0.35);
+    transform: translate(-50%, -50%);
     opacity: 0;
     filter: blur(12px);
   }
@@ -572,7 +625,7 @@
     filter: blur(1px);
   }
   100% {
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: translate(-50%, -50%);
     opacity: 0;
     filter: blur(18px);
   }
@@ -628,7 +681,7 @@
 .firework {
   position: absolute;
   border-radius: 50%;
-  transform: translate(-50%, -50%) scale(0.35);
+  transform: translate(-50%, -50%);
   opacity: 0;
   animation: fireworkBurst 2s ease-out forwards;
   mix-blend-mode: screen;
@@ -791,12 +844,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .randomClose:hover {
-  transform: scale(1.05);
   background: rgba(122, 148, 255, 0.2);
+  border-color: rgba(140, 170, 255, 0.6);
+  color: #f5f7ff;
 }
 
 .randomClose:focus-visible {
@@ -1019,7 +1073,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition: box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .dialogSecondary {
@@ -1031,7 +1085,6 @@
 .dialogSecondary:hover,
 .dialogSecondary:focus-visible {
   outline: none;
-  transform: scale(1.03);
   background: rgba(122, 148, 255, 0.18);
   border-color: rgba(122, 148, 255, 0.6);
   box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.25);
@@ -1047,7 +1100,6 @@
 .dialogPrimary:hover,
 .dialogPrimary:focus-visible {
   outline: none;
-  transform: scale(1.04);
   box-shadow: 0 26px 60px rgba(20, 115, 255, 0.5);
 }
 
@@ -1094,30 +1146,30 @@
 @keyframes backgroundDrift {
   0%,
   100% {
-    transform: scale(1);
+    opacity: 0.85;
   }
   50% {
-    transform: scale(1.02);
+    opacity: 1;
   }
 }
 
 @keyframes meshFloat {
   0%,
   100% {
-    transform: scale(1);
+    opacity: 0.6;
   }
   50% {
-    transform: scale(1.01);
+    opacity: 0.75;
   }
 }
 
 @keyframes gridFloat {
   0%,
   100% {
-    transform: perspective(1200px) rotateX(62deg) scale(1);
+    opacity: 0.42;
   }
   50% {
-    transform: perspective(1200px) rotateX(60deg) scale(1.01);
+    opacity: 0.55;
   }
 }
 
@@ -1192,7 +1244,7 @@
   box-shadow: 0 8px 20px rgba(32, 52, 138, 0.55), 0 0 0 3px rgba(96, 124, 228, 0.35);
   color: #071022;
   cursor: default;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .protectedIndicator svg {
@@ -1202,12 +1254,10 @@
 
 .protectedIndicator:focus-visible {
   outline: none;
-  transform: scale(1.03);
   box-shadow: 0 10px 24px rgba(40, 64, 152, 0.6), 0 0 0 4px rgba(120, 148, 255, 0.55);
 }
 
 .protectedIndicator:hover {
-  transform: scale(1.03);
   box-shadow: 0 12px 28px rgba(38, 60, 150, 0.65), 0 0 0 4px rgba(120, 148, 255, 0.48);
 }
 
@@ -1215,7 +1265,7 @@
   position: absolute;
   bottom: calc(100% + 0.55rem);
   left: 50%;
-  transform: translateX(-50%) scale(0.92);
+  transform: translateX(-50%);
   transform-origin: 50% 100%;
   background: rgba(6, 12, 28, 0.92);
   border: 1px solid rgba(118, 142, 248, 0.4);
@@ -1228,7 +1278,7 @@
   pointer-events: none;
   opacity: 0;
   box-shadow: 0 12px 28px rgba(6, 12, 28, 0.55);
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition: opacity 0.18s ease;
   white-space: nowrap;
   z-index: 1;
 }
@@ -1236,7 +1286,6 @@
 .protectedIndicator:focus .protectedTooltip,
 .protectedIndicator:hover .protectedTooltip {
   opacity: 1;
-  transform: translateX(-50%) scale(1);
 }
 
 .listTitleDisplay {
@@ -1290,7 +1339,7 @@
   border: 1px solid rgba(122, 148, 228, 0.45);
   background: rgba(10, 13, 28, 0.7);
   color: rgba(235, 240, 255, 0.88);
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
@@ -1308,7 +1357,6 @@
 
 .renameSave:not(:disabled):hover,
 .renameSave:not(:disabled):focus-visible {
-  transform: scale(1.03);
   box-shadow: 0 0 0 3px rgba(118, 137, 255, 0.35);
 }
 
@@ -1318,7 +1366,6 @@
 
 .renameCancel:hover,
 .renameCancel:focus-visible {
-  transform: scale(1.03);
   background: rgba(122, 148, 255, 0.18);
   border-color: rgba(122, 148, 255, 0.55);
   color: #f4f6ff;
@@ -1381,12 +1428,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
 .listMenuTrigger:hover {
-  transform: scale(1.03);
   background: rgba(122, 148, 255, 0.22);
   border-color: rgba(122, 148, 255, 0.6);
   color: #f4f6ff;
@@ -1621,13 +1667,12 @@
   background: linear-gradient(145deg, rgba(34, 40, 78, 0.85), rgba(11, 14, 28, 0.92));
   border: 1px solid rgba(122, 148, 228, 0.28);
   box-shadow: 0 26px 55px rgba(6, 9, 20, 0.55);
-  transition: transform 0.28s ease, box-shadow 0.28s ease, opacity 0.28s ease, border-color 0.28s ease;
+  transition: box-shadow 0.28s ease, opacity 0.28s ease, border-color 0.28s ease;
   isolation: isolate;
 }
 
 .posterCard:hover,
 .posterCard:focus-within {
-  transform: scale(1.02);
   box-shadow: 0 34px 70px rgba(5, 8, 20, 0.65);
   border-color: rgba(122, 148, 255, 0.45);
 }
@@ -1642,7 +1687,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.45s ease, filter 0.45s ease;
+  transition: filter 0.45s ease;
 }
 
 .posterFallback {
@@ -1654,7 +1699,7 @@
   color: rgba(226, 233, 255, 0.88);
   font-size: 1.9rem;
   letter-spacing: 0.06em;
-  transition: transform 0.45s ease, filter 0.45s ease;
+  transition: filter 0.45s ease;
 }
 
 .posterFallback span {
@@ -1665,7 +1710,6 @@
 .posterCard:focus-within .posterImage,
 .posterCard:hover .posterFallback,
 .posterCard:focus-within .posterFallback {
-  transform: scale(1.06);
   filter: blur(8px) brightness(0.6);
 }
 
@@ -1683,15 +1727,13 @@
   background: rgba(9, 13, 26, 0.55);
   backdrop-filter: blur(18px) saturate(1.2);
   opacity: 0;
-  transform: scale(0.98);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease;
   pointer-events: none;
 }
 
 .posterCard:hover .posterOverlay,
 .posterCard:focus-within .posterOverlay {
   opacity: 1;
-  transform: scale(1);
   pointer-events: auto;
 }
 
@@ -1736,12 +1778,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
 .posterIconButton:hover {
-  transform: scale(1.04);
   background: rgba(122, 148, 255, 0.2);
   border-color: rgba(159, 182, 255, 0.55);
   color: #ffffff;
@@ -1749,7 +1790,6 @@
 
 .posterIconButton:focus-visible {
   outline: none;
-  transform: scale(1.04);
   background: rgba(122, 148, 255, 0.22);
   border-color: rgba(159, 182, 255, 0.65);
   color: #ffffff;
@@ -1798,13 +1838,12 @@
   border: 1px solid rgba(122, 148, 228, 0.22);
   background: rgba(12, 16, 32, 0.78);
   box-shadow: 0 20px 48px rgba(5, 8, 20, 0.5);
-  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease,
+  transition: border-color 0.24s ease, box-shadow 0.24s ease,
     background 0.24s ease, opacity 0.24s ease;
 }
 
 .listRow:hover,
 .listRow:focus-within {
-  transform: scale(1.01);
   border-color: rgba(122, 148, 255, 0.45);
   box-shadow: 0 28px 60px rgba(5, 8, 20, 0.58);
   background: rgba(18, 24, 44, 0.88);
@@ -1949,11 +1988,10 @@
   background: linear-gradient(135deg, #ff7fa2, #8e5dff 55%, #4ac6ff);
   box-shadow: 0 18px 48px rgba(116, 65, 185, 0.48);
   border: none;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+  transition: box-shadow 0.25s ease, filter 0.25s ease, background 0.25s ease;
 }
 
 .randomButton:hover {
-  transform: scale(1.03);
   box-shadow: 0 24px 60px rgba(116, 65, 185, 0.6);
   filter: brightness(1.05);
 }
@@ -1980,7 +2018,6 @@
 }
 
 .randomButton.randomConfirm:hover {
-  transform: scale(1.04);
   box-shadow: 0 34px 90px rgba(82, 168, 255, 0.52);
   filter: brightness(1.04);
 }
@@ -2089,7 +2126,7 @@
   letter-spacing: 0.08em;
   color: rgba(204, 215, 255, 0.72);
   transition: background 0.22s ease, border-color 0.22s ease, color 0.22s ease,
-    transform 0.22s ease, box-shadow 0.22s ease;
+    box-shadow 0.22s ease;
 }
 
 .layoutOptionSolo {
@@ -2101,7 +2138,6 @@
 }
 
 .layoutOption:hover {
-  transform: scale(1.03);
   background: rgba(122, 148, 255, 0.16);
   border-color: rgba(122, 148, 255, 0.45);
   color: #f5f7ff;
@@ -2109,7 +2145,6 @@
 
 .layoutOption:focus-visible {
   outline: none;
-  transform: scale(1.03);
   background: rgba(122, 148, 255, 0.2);
   border-color: rgba(122, 148, 255, 0.55);
   box-shadow: 0 0 0 3px rgba(122, 148, 255, 0.4);
@@ -2153,14 +2188,13 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(204, 215, 255, 0.7);
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease,
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
     box-shadow 0.2s ease;
   width: 100%;
   min-height: 2.6rem;
 }
 
 .sortButton:hover {
-  transform: scale(1.02);
   background: rgba(122, 148, 255, 0.2);
   border-color: rgba(122, 148, 255, 0.45);
   color: #f5f7ff;
@@ -2168,7 +2202,6 @@
 
 .sortButton:focus-visible {
   outline: none;
-  transform: scale(1.02);
   background: rgba(122, 148, 255, 0.24);
   border-color: rgba(122, 148, 255, 0.55);
   color: #f5f7ff;
@@ -2252,8 +2285,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(118, 137, 255, 0.85), rgba(134, 240, 255, 0.9));
   box-shadow: 0 8px 18px rgba(8, 12, 26, 0.45);
-  transform: scale(1);
-  transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
 }
 
 .toggleLabel {
@@ -2271,7 +2303,6 @@
 }
 
 .toggleInput:checked + .toggleTrack .toggleThumb {
-  transform: scale(1.1);
   background: linear-gradient(135deg, #7cffc5, #64f4c4);
   box-shadow: 0 12px 26px rgba(64, 180, 150, 0.55);
 }
