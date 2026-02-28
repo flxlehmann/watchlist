@@ -364,7 +364,7 @@ export default function Home() {
                     />
                     Watched
                   </label>
-                  <button className={styles.textButton} type="button" onClick={() => void removeItem(item.id)}>
+                  <button className={styles.dangerButton} type="button" onClick={() => void removeItem(item.id)}>
                     Remove
                   </button>
                 </div>
