@@ -34,12 +34,12 @@ type SearchSuggestion = {
 type SortOption = 'addedRecent' | 'addedOldest' | 'releaseAsc' | 'releaseDesc' | 'titleAsc' | 'titleDesc';
 
 const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
-  { value: 'addedRecent', label: 'Latest added' },
-  { value: 'addedOldest', label: 'Earliest added' },
-  { value: 'releaseAsc', label: 'Oldest release' },
-  { value: 'releaseDesc', label: 'Newest release' },
-  { value: 'titleAsc', label: 'Title A-Z' },
-  { value: 'titleDesc', label: 'Title Z-A' }
+  { value: 'addedRecent', label: 'Zuletzt hinzugefügt' },
+  { value: 'addedOldest', label: 'Zuerst hinzugefügt' },
+  { value: 'releaseAsc', label: 'Ältester Release' },
+  { value: 'releaseDesc', label: 'Neuester Release' },
+  { value: 'titleAsc', label: 'Titel A-Z' },
+  { value: 'titleDesc', label: 'Titel Z-A' }
 ];
 
 function formatRuntime(minutes?: number): string {
@@ -66,7 +66,7 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
   const payload = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error((payload as { error?: string }).error ?? 'Request failed');
+    throw new Error((payload as { error?: string }).error ?? 'Anfrage fehlgeschlagen.');
   }
   return payload as T;
 }
@@ -93,7 +93,7 @@ export default function Home() {
   const [gridColumns, setGridColumns] = useState<4 | 5>(5);
 
   const authorizedFetch = async <T,>(init?: RequestInit): Promise<T> => {
-    if (!authPassword) throw new Error('Missing auth');
+    if (!authPassword) throw new Error('Authentifizierung fehlt.');
     return fetchJson<T>('/api/list', {
       ...init,
       headers: {
@@ -119,7 +119,7 @@ export default function Home() {
     } catch (err) {
       setAuthPassword(null);
       setList(null);
-      setError(err instanceof Error ? err.message : 'Access denied.');
+      setError(err instanceof Error ? err.message : 'Zugriff verweigert.');
     } finally {
       setLoading(false);
     }
@@ -188,8 +188,9 @@ export default function Home() {
       setSelectedRuntime(null);
       setSelectedReleaseDate(null);
       setSuggestions([]);
+      setShowSuggestions(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Add failed');
+      setError(err instanceof Error ? err.message : 'Hinzufügen fehlgeschlagen.');
     } finally {
       setLoading(false);
     }
@@ -243,8 +244,8 @@ export default function Home() {
     return (
       <main className={styles.viewport}>
         <section className={styles.panel}>
-          <h1 className={styles.title}>Unified Watchlist</h1>
-          <p className={styles.subtitle}>Passwort eingeben, um die gemeinsame Liste zu öffnen.</p>
+          <h1 className={styles.title}>Watchlist Neon Edition</h1>
+          <p className={styles.subtitle}>Passwort eingeben, um die gemeinsame Liste freizuschalten.</p>
           <form onSubmit={unlockList} className={styles.form}>
             <input
               className={styles.input}
@@ -270,46 +271,66 @@ export default function Home() {
       <section className={styles.panel}>
         <h1 className={styles.title}>{list.name}</h1>
 
-        <div className={styles.statsRow}>
-          <span>{stats.total} total</span>
-          <span>{stats.watched} watched</span>
-          <span>{stats.unwatched} unwatched</span>
-          <span>{formatRuntime(stats.runtime)} runtime</span>
+        <div className={styles.statsGrid}>
+          <article className={styles.statCard}>
+            <span className={styles.statEmoji}>🎬</span>
+            <p className={styles.statLabel}>Gesamt</p>
+            <p className={styles.statValue}>{stats.total}</p>
+          </article>
+          <article className={styles.statCard}>
+            <span className={styles.statEmoji}>✅</span>
+            <p className={styles.statLabel}>Gesehen</p>
+            <p className={styles.statValue}>{stats.watched}</p>
+          </article>
+          <article className={styles.statCard}>
+            <span className={styles.statEmoji}>🍿</span>
+            <p className={styles.statLabel}>Offen</p>
+            <p className={styles.statValue}>{stats.unwatched}</p>
+          </article>
+          <article className={styles.statCard}>
+            <span className={styles.statEmoji}>⏱️</span>
+            <p className={styles.statLabel}>Laufzeit</p>
+            <p className={styles.statValue}>{formatRuntime(stats.runtime)}</p>
+          </article>
         </div>
 
         <form className={styles.form} onSubmit={addItem}>
           <div className={styles.row}>
-            <input
-              className={styles.input}
-              value={title}
-              onChange={event => {
-                setTitle(event.target.value);
-                setShowSuggestions(true);
-              }}
-              placeholder="Movie title"
-              required
-            />
+            <div className={styles.flyoutAnchor}>
+              <input
+                className={styles.input}
+                value={title}
+                onFocus={() => setShowSuggestions(true)}
+                onChange={event => {
+                  setTitle(event.target.value);
+                  setShowSuggestions(true);
+                }}
+                placeholder="Filmtitel suchen"
+                required
+              />
+              {showSuggestions && suggestions.length > 0 ? (
+                <ul className={styles.suggestions}>
+                  {suggestions.map(suggestion => (
+                    <li key={suggestion.id}>
+                      <button className={styles.suggestionButton} type="button" onClick={() => void pickSuggestion(suggestion)}>
+                        {suggestion.title} {suggestion.year ? `(${suggestion.year})` : ''}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+
             <input
               className={styles.input}
               value={addedBy}
               onChange={event => setAddedBy(event.target.value)}
-              placeholder="Added by"
+              placeholder="Hinzugefügt von"
             />
             <button className={styles.button} disabled={loading} type="submit">
-              Add
+              Hinzufügen
             </button>
           </div>
-          {showSuggestions && suggestions.length > 0 ? (
-            <ul className={styles.suggestions}>
-              {suggestions.map(suggestion => (
-                <li key={suggestion.id}>
-                  <button className={styles.suggestionButton} type="button" onClick={() => void pickSuggestion(suggestion)}>
-                    {suggestion.title} {suggestion.year ? `(${suggestion.year})` : ''}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
         </form>
 
         <div className={styles.controls}>
@@ -326,18 +347,18 @@ export default function Home() {
               checked={showUnwatchedOnly}
               onChange={event => setShowUnwatchedOnly(event.target.checked)}
             />
-            Unwatched only
+            Nur ungesehene
           </label>
           <div className={styles.viewButtons}>
             <button className={viewMode === 'grid' ? styles.activeButton : styles.textButton} type="button" onClick={() => setViewMode('grid')}>
-              Grid
+              Raster
             </button>
             <button className={viewMode === 'list' ? styles.activeButton : styles.textButton} type="button" onClick={() => setViewMode('list')}>
-              List
+              Liste
             </button>
             {viewMode === 'grid' ? (
               <button className={styles.textButton} type="button" onClick={() => setGridColumns(current => (current === 5 ? 4 : 5))}>
-                {gridColumns} columns
+                {gridColumns} Spalten
               </button>
             ) : null}
           </div>
@@ -347,14 +368,14 @@ export default function Home() {
           {filteredSortedItems.map(item => (
             <li key={item.id} className={styles.itemCard}>
               <div className={styles.posterWrap}>
-                {item.poster ? <img className={styles.poster} src={item.poster} alt={item.title} /> : <div className={styles.posterFallback}>No Cover</div>}
+                {item.poster ? <img className={styles.poster} src={item.poster} alt={item.title} /> : <div className={styles.posterFallback}>Kein Cover</div>}
               </div>
               <div className={styles.itemBody}>
                 <p className={item.watched ? styles.watchedTitle : styles.itemTitle}>{item.title}</p>
                 <p className={styles.meta}>
                   {releaseYear(item)} • {formatRuntime(item.runtimeMinutes)}
                 </p>
-                <p className={styles.meta}>By: {item.addedBy || '—'}</p>
+                <p className={styles.meta}>Von: {item.addedBy || '—'}</p>
                 <div className={styles.itemActions}>
                   <label className={styles.toggleLabel}>
                     <input
@@ -362,10 +383,10 @@ export default function Home() {
                       checked={item.watched}
                       onChange={event => void toggleWatched(item.id, event.target.checked)}
                     />
-                    Watched
+                    Gesehen
                   </label>
                   <button className={styles.dangerButton} type="button" onClick={() => void removeItem(item.id)}>
-                    Remove
+                    Entfernen
                   </button>
                 </div>
               </div>
@@ -373,7 +394,7 @@ export default function Home() {
           ))}
         </ul>
 
-        {filteredSortedItems.length === 0 ? <p className={styles.empty}>No items to show.</p> : null}
+        {filteredSortedItems.length === 0 ? <p className={styles.empty}>Noch keine Einträge sichtbar.</p> : null}
         {error ? <p className={styles.error}>{error}</p> : null}
       </section>
     </main>
