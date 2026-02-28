@@ -5,28 +5,29 @@
   padding: clamp(1rem, 2.5vw, 2rem);
   color: #e5e7eb;
   background:
-    radial-gradient(1100px 600px at 10% -20%, rgb(56 189 248 / 14%), transparent 60%),
-    radial-gradient(1000px 700px at 110% 10%, rgb(167 139 250 / 15%), transparent 55%),
-    linear-gradient(170deg, #070b15 0%, #0b1120 45%, #0a1224 100%);
+    radial-gradient(1200px 600px at 8% -20%, rgb(6 182 212 / 26%), transparent 60%),
+    radial-gradient(900px 500px at 95% -10%, rgb(217 70 239 / 22%), transparent 58%),
+    radial-gradient(1000px 620px at 50% 120%, rgb(59 130 246 / 20%), transparent 62%),
+    linear-gradient(160deg, #050712 0%, #090f1f 55%, #080d1a 100%);
 }
 
 .panel {
   width: min(1120px, 100%);
-  border-radius: 24px;
-  padding: clamp(1rem, 2.4vw, 1.75rem);
-  background: linear-gradient(160deg, rgb(17 24 39 / 92%), rgb(15 23 42 / 88%));
-  border: 1px solid rgb(148 163 184 / 20%);
+  border-radius: 26px;
+  padding: clamp(1rem, 2.4vw, 1.8rem);
+  background: linear-gradient(160deg, rgb(15 23 42 / 88%), rgb(17 24 39 / 82%));
+  border: 1px solid rgb(148 163 184 / 24%);
   box-shadow:
-    0 24px 60px rgb(2 6 23 / 45%),
-    inset 0 1px 0 rgb(255 255 255 / 5%);
-  backdrop-filter: blur(10px);
-  animation: fadeUp 320ms ease;
+    0 30px 70px rgb(2 6 23 / 58%),
+    inset 0 1px 0 rgb(255 255 255 / 6%);
+  backdrop-filter: blur(12px);
+  animation: fadeUp 300ms ease;
 }
 
 .title {
   margin: 0;
   letter-spacing: -0.02em;
-  font-size: clamp(1.35rem, 3vw, 1.95rem);
+  font-size: clamp(1.35rem, 3vw, 2rem);
 }
 
 .subtitle {
@@ -46,23 +47,28 @@
   gap: 0.75rem;
 }
 
+.flyoutAnchor {
+  position: relative;
+  z-index: 20;
+}
+
 .input,
 .select {
   width: 100%;
-  border: 1px solid rgb(148 163 184 / 25%);
+  border: 1px solid rgb(148 163 184 / 26%);
   border-radius: 14px;
-  background: rgb(15 23 42 / 85%);
+  background: rgb(15 23 42 / 84%);
   color: inherit;
   font: inherit;
   padding: 0.72rem 0.82rem;
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  transition: border-color 170ms ease, box-shadow 170ms ease, transform 170ms ease;
 }
 
 .input:focus,
 .select:focus {
   outline: none;
-  border-color: rgb(56 189 248 / 65%);
-  box-shadow: 0 0 0 3px rgb(56 189 248 / 20%);
+  border-color: rgb(34 211 238 / 70%);
+  box-shadow: 0 0 0 3px rgb(34 211 238 / 20%);
 }
 
 .button,
@@ -76,20 +82,20 @@
   font-weight: 600;
   padding: 0.66rem 0.92rem;
   cursor: pointer;
-  transition: transform 150ms ease, background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+  transition: transform 140ms ease, background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
 }
 
 .button {
-  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  background: linear-gradient(120deg, #2563eb, #06b6d4 55%, #9333ea);
 }
 
 .textButton {
-  background: rgb(30 41 59 / 55%);
+  background: rgb(30 41 59 / 56%);
 }
 
 .activeButton {
-  background: rgb(56 189 248 / 20%);
-  border-color: rgb(56 189 248 / 60%);
+  background: linear-gradient(135deg, rgb(34 211 238 / 22%), rgb(217 70 239 / 22%));
+  border-color: rgb(217 70 239 / 42%);
 }
 
 .dangerButton {
@@ -105,13 +111,6 @@
   transform: translateY(-1px);
 }
 
-.button:active,
-.textButton:active,
-.activeButton:active,
-.dangerButton:active {
-  transform: translateY(0);
-}
-
 .button:disabled,
 .textButton:disabled,
 .activeButton:disabled,
@@ -121,14 +120,54 @@
   transform: none;
 }
 
+.statsGrid {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.statCard {
+  border-radius: 16px;
+  border: 1px solid rgb(148 163 184 / 20%);
+  background: linear-gradient(145deg, rgb(15 23 42 / 86%), rgb(30 41 59 / 72%));
+  padding: 0.7rem 0.8rem;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+.statEmoji {
+  font-size: 1.1rem;
+}
+
+.statLabel {
+  margin: 0.15rem 0 0;
+  color: #93c5fd;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.statValue {
+  margin: 0.25rem 0 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
 .suggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.45rem);
   list-style: none;
   margin: 0;
-  padding: 0.25rem;
-  border: 1px solid rgb(148 163 184 / 24%);
+  padding: 0.28rem;
+  border: 1px solid rgb(148 163 184 / 30%);
   border-radius: 14px;
-  overflow: hidden;
-  background: rgb(15 23 42 / 88%);
+  background: rgb(15 23 42 / 96%);
+  box-shadow: 0 22px 45px rgb(2 6 23 / 62%);
+  max-height: 260px;
+  overflow: auto;
+  z-index: 80;
 }
 
 .suggestionButton {
@@ -140,28 +179,20 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
-  transition: background-color 150ms ease;
+  transition: background-color 140ms ease, transform 140ms ease;
 }
 
 .suggestionButton:hover {
-  background: rgb(56 189 248 / 12%);
+  background: linear-gradient(120deg, rgb(34 211 238 / 16%), rgb(217 70 239 / 14%));
+  transform: translateX(2px);
 }
 
-.statsRow,
 .controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.68rem;
   margin-top: 1rem;
-}
-
-.statsRow span {
-  border: 1px solid rgb(148 163 184 / 24%);
-  border-radius: 999px;
-  padding: 0.3rem 0.72rem;
-  font-size: 0.85rem;
-  background: rgb(15 23 42 / 58%);
 }
 
 .toggleLabel {
@@ -171,7 +202,7 @@
 }
 
 .toggleLabel input[type='checkbox'] {
-  accent-color: #38bdf8;
+  accent-color: #22d3ee;
 }
 
 .viewButtons {
@@ -212,8 +243,8 @@
 }
 
 .itemCard:hover {
-  border-color: rgb(56 189 248 / 40%);
-  box-shadow: 0 18px 34px rgb(2 6 23 / 34%);
+  border-color: rgb(34 211 238 / 42%);
+  box-shadow: 0 18px 34px rgb(2 6 23 / 36%);
   transform: translateY(-2px);
 }
 
@@ -223,7 +254,7 @@
 
 .posterWrap {
   aspect-ratio: 2 / 3;
-  background: linear-gradient(140deg, #1e293b, #0f172a);
+  background: linear-gradient(145deg, #1e293b, #0f172a);
   overflow: hidden;
 }
 
@@ -294,6 +325,10 @@
 }
 
 @media (max-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .grid5,
   .grid4 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -302,6 +337,10 @@
 
 @media (max-width: 760px) {
   .row {
+    grid-template-columns: 1fr;
+  }
+
+  .statsGrid {
     grid-template-columns: 1fr;
   }
 
