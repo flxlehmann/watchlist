@@ -4,7 +4,7 @@ This app now exposes exactly one watchlist protected by a fixed password gate.
 
 ## Password
 
-`Test123456`
+`link`
 
 ## Behavior
 

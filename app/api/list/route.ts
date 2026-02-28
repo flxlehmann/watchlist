@@ -5,7 +5,7 @@ import { getList, now, saveList, toPublicList, type Item, type List } from '@/li
 import { hashPassword, verifyPassword } from '@/lib/password';
 
 const LIST_ID = 'single';
-const LIST_PASSWORD = 'Test123456';
+const LIST_PASSWORD = 'link';
 
 function normalizeTitle(value: string): string {
   return value.replace(/\s*\(\d{4}\)$/u, '').trim().toLowerCase();
