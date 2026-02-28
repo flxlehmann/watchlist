@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { Eye, EyeOff, Grid3X3, LayoutList, LockKeyhole, Plus, Trash2 } from 'lucide-react';
 import styles from './page.module.css';
 
 type Item = {
@@ -81,6 +82,8 @@ export default function Home() {
   const [list, setList] = useState<SingleList | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [statsAnimated, setStatsAnimated] = useState(false);
+  const hasLoadedList = useRef(false);
 
   const [title, setTitle] = useState('');
   const [addedBy, setAddedBy] = useState('');
@@ -128,6 +131,18 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!list) return;
+    if (!hasLoadedList.current) {
+      hasLoadedList.current = true;
+      return;
+    }
+
+    setStatsAnimated(true);
+    const timer = window.setTimeout(() => setStatsAnimated(false), 520);
+    return () => window.clearTimeout(timer);
+  }, [list?.updatedAt, list?.items.length, list]);
 
   useEffect(() => {
     if (!authPassword || title.trim().length < 2) {
@@ -293,8 +308,8 @@ export default function Home() {
               placeholder="Passwort"
               required
             />
-            <button className={styles.button} disabled={loading} type="submit">
-              {loading ? 'Prüfe…' : 'Liste öffnen'}
+            <button className={styles.iconButton} disabled={loading} type="submit" aria-label="Liste öffnen" title="Liste öffnen">
+              <LockKeyhole size={18} aria-hidden="true" />
             </button>
           </form>
           {error ? <p className={styles.error}>{error}</p> : null}
@@ -309,13 +324,13 @@ export default function Home() {
         <h1 className={styles.title}>{list.name}</h1>
 
         <div className={styles.statsGrid}>
-          <article className={styles.statCard}>
+          <article className={`${styles.statCard} ${statsAnimated ? styles.statCardPulse : ''}`}>
             <span className={styles.statEmoji}>🎬</span>
             <p className={styles.statLabel}>Gesamtfilme</p>
             <p className={styles.statValue}>{stats.total}</p>
           </article>
 
-          <article className={styles.statCard}>
+          <article className={`${styles.statCard} ${statsAnimated ? styles.statCardPulse : ''}`}>
             <span className={styles.statEmoji}>📊</span>
             <p className={styles.statLabel}>Fortschritt</p>
             <div className={styles.progressHeader}>
@@ -328,13 +343,13 @@ export default function Home() {
             </div>
           </article>
 
-          <article className={styles.statCard}>
+          <article className={`${styles.statCard} ${statsAnimated ? styles.statCardPulse : ''}`}>
             <span className={styles.statEmoji}>⏱️</span>
             <p className={styles.statLabel}>Laufzeit gesamt</p>
             <p className={styles.statValue}>{formatRuntime(stats.runtimeTotal)}</p>
           </article>
 
-          <article className={styles.statCard}>
+          <article className={`${styles.statCard} ${statsAnimated ? styles.statCardPulse : ''}`}>
             <span className={styles.statEmoji}>✅</span>
             <p className={styles.statLabel}>Laufzeit gesehen</p>
             <p className={styles.statValue}>{formatRuntime(stats.runtimeWatched)}</p>
@@ -378,8 +393,8 @@ export default function Home() {
               onChange={event => setAddedBy(event.target.value)}
               placeholder="Hinzugefügt von"
             />
-            <button className={styles.button} disabled={loading} type="submit">
-              Hinzufügen
+            <button className={styles.iconButton} disabled={loading} type="submit" aria-label="Film hinzufügen" title="Film hinzufügen">
+              <Plus size={18} aria-hidden="true" />
             </button>
           </div>
         </form>
@@ -401,15 +416,33 @@ export default function Home() {
             Nur ungesehene
           </label>
           <div className={styles.viewButtons}>
-            <button className={viewMode === 'grid' ? styles.activeButton : styles.textButton} type="button" onClick={() => setViewMode('grid')}>
-              Raster
+            <button
+              className={viewMode === 'grid' ? styles.activeButton : styles.textButton}
+              type="button"
+              onClick={() => setViewMode('grid')}
+              aria-label="Rasteransicht"
+              title="Rasteransicht"
+            >
+              <Grid3X3 size={16} aria-hidden="true" />
             </button>
-            <button className={viewMode === 'list' ? styles.activeButton : styles.textButton} type="button" onClick={() => setViewMode('list')}>
-              Liste
+            <button
+              className={viewMode === 'list' ? styles.activeButton : styles.textButton}
+              type="button"
+              onClick={() => setViewMode('list')}
+              aria-label="Listenansicht"
+              title="Listenansicht"
+            >
+              <LayoutList size={16} aria-hidden="true" />
             </button>
             {viewMode === 'grid' ? (
-              <button className={styles.textButton} type="button" onClick={() => setGridColumns(current => (current === 5 ? 4 : 5))}>
-                {gridColumns} Spalten
+              <button
+                className={styles.textButton}
+                type="button"
+                onClick={() => setGridColumns(current => (current === 5 ? 4 : 5))}
+                aria-label={`${gridColumns} Spalten`}
+                title={`${gridColumns} Spalten`}
+              >
+                {gridColumns}
               </button>
             ) : null}
           </div>
@@ -428,16 +461,17 @@ export default function Home() {
                 </p>
                 <p className={styles.meta}>Von: {item.addedBy || '—'}</p>
                 <div className={styles.itemActions}>
-                  <label className={styles.toggleLabel}>
-                    <input
-                      type="checkbox"
-                      checked={item.watched}
-                      onChange={event => void toggleWatched(item.id, event.target.checked)}
-                    />
-                    Gesehen
-                  </label>
-                  <button className={styles.dangerButton} type="button" onClick={() => void removeItem(item.id)}>
-                    Entfernen
+                  <button
+                    className={styles.iconButton}
+                    type="button"
+                    onClick={() => void toggleWatched(item.id, !item.watched)}
+                    aria-label={item.watched ? 'Als ungesehen markieren' : 'Als gesehen markieren'}
+                    title={item.watched ? 'Als ungesehen markieren' : 'Als gesehen markieren'}
+                  >
+                    {item.watched ? <EyeOff size={17} aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}
+                  </button>
+                  <button className={styles.dangerButton} type="button" onClick={() => void removeItem(item.id)} aria-label="Film entfernen" title="Film entfernen">
+                    <Trash2 size={17} aria-hidden="true" />
                   </button>
                 </div>
               </div>

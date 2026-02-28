@@ -1,12 +1,12 @@
 .viewport {
   min-height: 100vh;
   padding: clamp(1rem, 2.5vw, 2rem);
-  color: #efe9ff;
+  color: #eee6ff;
   background:
-    radial-gradient(1100px 620px at 10% -20%, rgb(167 139 250 / 24%), transparent 60%),
-    radial-gradient(900px 540px at 94% -15%, rgb(192 132 252 / 20%), transparent 60%),
-    radial-gradient(1000px 620px at 50% 120%, rgb(124 58 237 / 22%), transparent 62%),
-    linear-gradient(165deg, #0b0616 0%, #140a25 50%, #0e081f 100%);
+    radial-gradient(1050px 620px at 8% -24%, rgb(107 33 168 / 30%), transparent 60%),
+    radial-gradient(900px 540px at 94% -15%, rgb(126 34 206 / 24%), transparent 62%),
+    radial-gradient(1000px 620px at 50% 120%, rgb(91 33 182 / 26%), transparent 64%),
+    linear-gradient(165deg, #05020d 0%, #0a0415 48%, #060311 100%);
 }
 
 .centeredViewport {
@@ -34,12 +34,12 @@
 
 .subtitle {
   margin: 0.6rem 0 1rem;
-  color: #d8cef8;
+  color: #d0c0f5;
 }
 
 .fieldLabel {
   font-size: 0.86rem;
-  color: #c4b5fd;
+  color: #bda5ef;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -66,7 +66,7 @@
 .suggestionButton,
 .textButton,
 .activeButton,
-.button,
+.iconButton,
 .dangerButton {
   border-radius: 14px;
   font: inherit;
@@ -77,71 +77,75 @@
 .input,
 .select {
   width: 100%;
-  border: 1px solid rgb(167 139 250 / 34%);
-  background: rgb(35 18 64 / 78%);
+  border: 1px solid rgb(139 92 246 / 38%);
+  background: rgb(23 10 46 / 86%);
   color: inherit;
   padding: 0.72rem 0.82rem;
 }
 
 .input::placeholder {
-  color: #b8abd9;
+  color: #9f90c8;
 }
 
 .input:hover,
 .select:hover,
 .toggleLabel:hover {
-  border-color: rgb(196 181 253 / 50%);
+  border-color: rgb(196 181 253 / 52%);
 }
 
 .input:focus,
 .select:focus {
   outline: none;
   border-color: rgb(196 181 253 / 72%);
-  box-shadow: 0 0 0 3px rgb(167 139 250 / 24%);
+  box-shadow: 0 0 0 3px rgb(139 92 246 / 22%);
   transform: translateY(-1px);
 }
 
 .select {
   appearance: none;
-  background-image: linear-gradient(130deg, rgb(124 58 237 / 24%), rgb(168 85 247 / 20%));
+  background-image: linear-gradient(130deg, rgb(91 33 182 / 24%), rgb(126 34 206 / 22%));
 }
 
-.button,
+.iconButton,
 .textButton,
 .activeButton,
 .dangerButton {
-  border: 1px solid rgb(167 139 250 / 35%);
-  color: #f8f4ff;
+  border: 1px solid rgb(139 92 246 / 38%);
+  color: #f7f2ff;
   font-weight: 600;
-  padding: 0.66rem 0.92rem;
+  padding: 0.62rem;
+  min-width: 2.45rem;
+  min-height: 2.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
-.button,
+.iconButton,
 .activeButton {
-  background-image: linear-gradient(130deg, rgb(124 58 237 / 78%), rgb(192 132 252 / 66%));
+  background-image: linear-gradient(130deg, rgb(91 33 182 / 80%), rgb(147 51 234 / 68%));
 }
 
 .textButton {
-  background: rgb(45 26 78 / 60%);
+  background: rgb(33 14 63 / 70%);
 }
 
 .dangerButton {
-  background-image: linear-gradient(130deg, rgb(147 51 234 / 30%), rgb(126 34 206 / 34%));
-  border-color: rgb(216 180 254 / 44%);
-  color: #f3e8ff;
+  background-image: linear-gradient(130deg, rgb(88 28 135 / 52%), rgb(126 34 206 / 40%));
+  border-color: rgb(192 132 252 / 48%);
 }
 
-.button:hover,
+.iconButton:hover,
 .textButton:hover,
 .activeButton:hover,
 .dangerButton:hover {
   transform: translateY(-1px);
   border-color: rgb(216 180 254 / 58%);
-  box-shadow: 0 10px 22px rgb(10 6 25 / 34%);
+  box-shadow: 0 10px 22px rgb(3 1 11 / 42%);
 }
 
-.button:disabled,
+.iconButton:disabled,
 .textButton:disabled,
 .activeButton:disabled,
 .dangerButton:disabled {
@@ -160,10 +164,14 @@
 
 .statCard {
   border-radius: 16px;
-  border: 1px solid rgb(167 139 250 / 28%);
-  background: linear-gradient(148deg, rgb(29 13 56 / 88%), rgb(54 31 86 / 72%));
+  border: 1px solid rgb(139 92 246 / 30%);
+  background: linear-gradient(148deg, rgb(16 7 33 / 92%), rgb(33 14 63 / 78%));
   padding: 0.74rem 0.82rem;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
+}
+
+.statCardPulse {
+  animation: statPulse 480ms ease;
 }
 
 .statEmoji {
@@ -172,7 +180,7 @@
 
 .statLabel {
   margin: 0.15rem 0 0;
-  color: #c4b5fd;
+  color: #bda5ef;
   font-size: 0.79rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -187,7 +195,7 @@
 .progressHeader {
   margin-top: 0.42rem;
   font-size: 0.8rem;
-  color: #ddd6fe;
+  color: #e0d1ff;
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
@@ -200,27 +208,28 @@
   display: flex;
   width: 100%;
   height: 9px;
-  background: rgb(76 29 149 / 40%);
-  border: 1px solid rgb(167 139 250 / 26%);
+  background: rgb(49 16 89 / 44%);
+  border: 1px solid rgb(139 92 246 / 30%);
 }
 
 .progressWatched,
 .progressUnwatched {
   display: block;
   height: 100%;
+  transition: width 420ms ease;
 }
 
 .progressWatched {
-  background: linear-gradient(120deg, rgb(167 139 250 / 92%), rgb(216 180 254 / 92%));
+  background: linear-gradient(120deg, rgb(167 139 250 / 96%), rgb(216 180 254 / 92%));
 }
 
 .progressUnwatched {
-  background: linear-gradient(120deg, rgb(91 33 182 / 82%), rgb(124 58 237 / 82%));
+  background: linear-gradient(120deg, rgb(76 29 149 / 84%), rgb(107 33 168 / 84%));
 }
 
 .progressFooter {
   margin: 0.38rem 0 0;
-  color: #c4b5fd;
+  color: #bda5ef;
   font-size: 0.78rem;
 }
 
@@ -232,10 +241,10 @@
   list-style: none;
   margin: 0;
   padding: 0.32rem;
-  border: 1px solid rgb(167 139 250 / 36%);
+  border: 1px solid rgb(139 92 246 / 38%);
   border-radius: 14px;
-  background: rgb(24 11 45 / 96%);
-  box-shadow: 0 22px 45px rgb(5 2 16 / 62%);
+  background: rgb(13 5 28 / 96%);
+  box-shadow: 0 22px 45px rgb(2 1 8 / 70%);
   max-height: 260px;
   overflow: auto;
   z-index: 80;
@@ -252,8 +261,8 @@
 }
 
 .suggestionButton:hover {
-  border-color: rgb(216 180 254 / 36%);
-  background-image: linear-gradient(130deg, rgb(124 58 237 / 26%), rgb(168 85 247 / 20%));
+  border-color: rgb(216 180 254 / 40%);
+  background-image: linear-gradient(130deg, rgb(91 33 182 / 30%), rgb(126 34 206 / 26%));
   transform: translateX(2px);
 }
 
@@ -269,16 +278,16 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  border: 1px solid rgb(167 139 250 / 30%);
-  background: rgb(45 26 78 / 56%);
+  border: 1px solid rgb(139 92 246 / 34%);
+  background: rgb(33 14 63 / 70%);
   border-radius: 14px;
   padding: 0.54rem 0.74rem;
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .toggleLabel:has(input:focus-visible) {
-  border-color: rgb(216 180 254 / 70%);
-  box-shadow: 0 0 0 3px rgb(167 139 250 / 20%);
+  border-color: rgb(216 180 254 / 74%);
+  box-shadow: 0 0 0 3px rgb(139 92 246 / 22%);
 }
 
 .toggleLabel input[type='checkbox'] {
@@ -313,18 +322,18 @@
 }
 
 .itemCard {
-  border: 1px solid rgb(167 139 250 / 28%);
+  border: 1px solid rgb(139 92 246 / 30%);
   border-radius: 18px;
   overflow: hidden;
-  background: linear-gradient(168deg, rgb(24 11 46 / 92%), rgb(41 20 70 / 80%));
+  background: linear-gradient(168deg, rgb(12 5 24 / 94%), rgb(27 11 51 / 84%));
   display: grid;
-  box-shadow: 0 12px 24px rgb(7 3 20 / 24%);
+  box-shadow: 0 12px 24px rgb(2 1 8 / 38%);
   transition: border-color 170ms ease, box-shadow 170ms ease, transform 170ms ease;
 }
 
 .itemCard:hover {
-  border-color: rgb(216 180 254 / 46%);
-  box-shadow: 0 18px 34px rgb(7 3 20 / 38%);
+  border-color: rgb(216 180 254 / 50%);
+  box-shadow: 0 18px 34px rgb(2 1 8 / 48%);
   transform: translateY(-2px);
 }
 
@@ -334,7 +343,7 @@
 
 .posterWrap {
   aspect-ratio: 2 / 3;
-  background: linear-gradient(145deg, #2c1052, #1a0a33);
+  background: linear-gradient(145deg, #1f0b3c, #0f0621);
   overflow: hidden;
 }
 
@@ -354,7 +363,7 @@
   height: 100%;
   display: grid;
   place-items: center;
-  color: #c4b5fd;
+  color: #bda5ef;
   font-size: 0.9rem;
 }
 
@@ -375,12 +384,12 @@
 
 .watchedTitle {
   text-decoration: line-through;
-  color: #b8abd9;
+  color: #9f90c8;
 }
 
 .meta {
   margin: 0;
-  color: #c4b5fd;
+  color: #bda5ef;
   font-size: 0.88rem;
 }
 
@@ -390,7 +399,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.55rem;
-  border-top: 1px solid rgb(167 139 250 / 18%);
+  border-top: 1px solid rgb(139 92 246 / 20%);
   padding-top: 0.55rem;
 }
 
@@ -401,7 +410,7 @@
 
 .empty {
   margin-top: 1rem;
-  color: #c4b5fd;
+  color: #bda5ef;
 }
 
 @media (max-width: 1024px) {
@@ -442,5 +451,20 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes statPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
+  }
+  50% {
+    transform: scale(1.015);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%), 0 0 0 1px rgb(196 181 253 / 18%);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
   }
 }
