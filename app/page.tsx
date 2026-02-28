@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Clock,
   Copy,
+  Download,
   KeyRound,
   Binoculars,
   LayoutGrid,
@@ -28,6 +29,7 @@ import {
   ShieldX,
   Sparkles,
   Trash2,
+  Upload,
   X
 } from 'lucide-react';
 import styles from './page.module.css';
@@ -222,6 +224,132 @@ function getComparableTitle(item: Item): string {
   return item.title.replace(/\s*\(\d{4}\)$/, '').trim().toLowerCase();
 }
 
+type CsvRecord = {
+  title: string;
+  watched: boolean;
+  addedBy?: string;
+  poster?: string;
+  runtimeMinutes?: number;
+  releaseDate?: string;
+};
+
+const CSV_HEADERS = ['title', 'watched', 'addedBy', 'releaseDate', 'runtimeMinutes', 'poster'] as const;
+
+function escapeCsv(value: string | number | boolean | undefined | null): string {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  const text = String(value);
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+function parseCsv(input: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let value = '';
+  let inQuotes = false;
+  for (let index = 0; index < input.length; index += 1) {
+    const char = input[index];
+    if (inQuotes) {
+      if (char === '"') {
+        if (input[index + 1] === '"') {
+          value += '"';
+          index += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        value += char;
+      }
+      continue;
+    }
+    if (char === '"') {
+      inQuotes = true;
+      continue;
+    }
+    if (char === ',') {
+      row.push(value.trim());
+      value = '';
+      continue;
+    }
+    if (char === '\n') {
+      row.push(value.trim());
+      rows.push(row);
+      row = [];
+      value = '';
+      continue;
+    }
+    if (char === '\r') {
+      continue;
+    }
+    value += char;
+  }
+  if (value.length > 0 || row.length > 0) {
+    row.push(value.trim());
+    rows.push(row);
+  }
+  return rows.filter((candidate) => candidate.some((entry) => entry.length > 0));
+}
+
+function recordsFromCsv(input: string): CsvRecord[] {
+  const rows = parseCsv(input);
+  if (rows.length < 2) {
+    return [];
+  }
+  const header = rows[0].map((column) => column.toLowerCase());
+  const titleIndex = header.indexOf('title');
+  if (titleIndex === -1) {
+    throw new Error('CSV must include a title column.');
+  }
+  const watchedIndex = header.indexOf('watched');
+  const addedByIndex = header.indexOf('addedby');
+  const releaseDateIndex = header.indexOf('releasedate');
+  const runtimeIndex = header.indexOf('runtimeminutes');
+  const posterIndex = header.indexOf('poster');
+  return rows.slice(1).flatMap((cells) => {
+    const title = (cells[titleIndex] ?? '').trim();
+    if (!title) {
+      return [];
+    }
+    const watchedRaw = (cells[watchedIndex] ?? '').trim().toLowerCase();
+    const runtimeRaw = (cells[runtimeIndex] ?? '').trim();
+    const releaseDateRaw = (cells[releaseDateIndex] ?? '').trim();
+    const runtimeMinutes = Number(runtimeRaw);
+    return [
+      {
+        title,
+        watched: watchedRaw === 'true' || watchedRaw === 'yes' || watchedRaw === '1',
+        addedBy: (cells[addedByIndex] ?? '').trim() || undefined,
+        releaseDate:
+          /^\d{4}-\d{2}-\d{2}$/.test(releaseDateRaw) ? releaseDateRaw : undefined,
+        runtimeMinutes:
+          Number.isFinite(runtimeMinutes) && runtimeMinutes > 0 ? Math.round(runtimeMinutes) : undefined,
+        poster: (cells[posterIndex] ?? '').trim() || undefined
+      }
+    ];
+  });
+}
+
+function recordsToCsv(items: Item[]): string {
+  const rows = [CSV_HEADERS.join(',')];
+  for (const item of items) {
+    rows.push(
+      [
+        escapeCsv(item.title),
+        escapeCsv(item.watched),
+        escapeCsv(item.addedBy),
+        escapeCsv(item.releaseDate),
+        escapeCsv(item.runtimeMinutes),
+        escapeCsv(item.poster)
+      ].join(',')
+    );
+  }
+  return rows.join('\n');
+}
+
 export default function Page() {
   const [list, setList] = useState<List | null>(null);
   const [listName, setListName] = useState('');
@@ -263,6 +391,7 @@ export default function Page() {
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [listMenuOpen, setListMenuOpen] = useState(false);
   const [sortMenuState, setSortMenuState] = useState<'closed' | 'open' | 'closing'>('closed');
+  const [importingCsv, setImportingCsv] = useState(false);
   const [initialListLoading, setInitialListLoading] = useState(false);
   const [passwordDialogType, setPasswordDialogType] = useState<
     'set' | 'change' | 'remove' | 'delete' | null
@@ -298,6 +427,7 @@ export default function Page() {
   const passwordDialogFormRef = useRef<HTMLFormElement | null>(null);
   const passwordDialogInputRef = useRef<HTMLInputElement | null>(null);
   const passwordDialogCloseRef = useRef<HTMLButtonElement | null>(null);
+  const csvFileInputRef = useRef<HTMLInputElement | null>(null);
   const itemsParent = useAnimatedList<HTMLElement>({
     duration: 260,
     easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
@@ -1106,6 +1236,87 @@ export default function Page() {
       pushNotification('error', message);
     }
   }, [list, pushNotification]);
+
+  const exportListAsCsv = useCallback(() => {
+    if (!list) return;
+    const csv = recordsToCsv(list.items);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    const safeName = list.name.trim().replace(/\s+/g, '-').replace(/[^\w-]/g, '').toLowerCase() || 'watchlist';
+    anchor.href = url;
+    anchor.download = `${safeName}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    pushNotification('success', 'Watchlist exported as CSV.');
+  }, [list, pushNotification]);
+
+  const importListFromCsv = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file || !list) return;
+      if (!ensurePasswordForChanges()) return;
+      setImportingCsv(true);
+      setError(null);
+      try {
+        const text = await file.text();
+        const records = recordsFromCsv(text);
+        if (!records.length) {
+          throw new Error('CSV has no importable rows.');
+        }
+        let currentList = list;
+        const knownKeys = new Set(
+          currentList.items.map((item) => `${normalizeTitle(item.title)}::${item.releaseDate ?? ''}`)
+        );
+        let imported = 0;
+        let skipped = 0;
+        for (const record of records) {
+          const key = `${normalizeTitle(record.title)}::${record.releaseDate ?? ''}`;
+          if (knownKeys.has(key)) {
+            skipped += 1;
+            continue;
+          }
+          let updated = await api<List>(`/api/lists/${list.id}`, withPassword({
+            method: 'POST',
+            body: JSON.stringify({
+              title: record.title,
+              addedBy: record.addedBy,
+              poster: record.poster,
+              runtimeMinutes: record.runtimeMinutes,
+              releaseDate: record.releaseDate
+            })
+          }));
+          if (record.watched) {
+            const importedItem = updated.items.find(
+              (item) =>
+                normalizeTitle(item.title) === normalizeTitle(record.title) &&
+                (item.releaseDate ?? '') === (record.releaseDate ?? '')
+            );
+            if (importedItem && !importedItem.watched) {
+              updated = await api<List>(`/api/lists/${list.id}`, withPassword({
+                method: 'PATCH',
+                body: JSON.stringify({ itemId: importedItem.id, watched: true })
+              }));
+            }
+          }
+          currentList = updated;
+          knownKeys.add(key);
+          imported += 1;
+        }
+        setList(currentList);
+        setLastSynced(Date.now());
+        pushNotification('success', `Imported ${imported} item${imported === 1 ? '' : 's'}${skipped ? `, skipped ${skipped} duplicate${skipped === 1 ? '' : 's'}` : ''}.`);
+      } catch (err) {
+        const message = parseError(err);
+        setError(message);
+        pushNotification('error', message);
+      } finally {
+        setImportingCsv(false);
+      }
+    },
+    [ensurePasswordForChanges, list, pushNotification, withPassword]
+  );
 
   const copyPassword = useCallback(async () => {
     if (!list?.protected) return;
@@ -1930,6 +2141,16 @@ export default function Page() {
                   )}
                 </div>
                 <div className={styles.listMenu} ref={listMenuRef}>
+                  <input
+                    ref={csvFileInputRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    className={styles.visuallyHidden}
+                    tabIndex={-1}
+                    onChange={(event) => {
+                      void importListFromCsv(event);
+                    }}
+                  />
                   <button
                     type="button"
                     id={listMenuButtonId}
@@ -1950,6 +2171,29 @@ export default function Page() {
                       aria-labelledby={listMenuButtonId}
                     >
                       <div className={styles.listMenuSection} role="none">
+                        <button
+                          type="button"
+                          className={styles.listMenuItem}
+                          role="menuitem"
+                          onClick={() => {
+                            setListMenuOpen(false);
+                            exportListAsCsv();
+                          }}
+                        >
+                          <Download size={16} /> Export CSV
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.listMenuItem}
+                          role="menuitem"
+                          onClick={() => {
+                            setListMenuOpen(false);
+                            csvFileInputRef.current?.click();
+                          }}
+                          disabled={importingCsv}
+                        >
+                          {importingCsv ? <Loader2 size={16} className="spin" /> : <Upload size={16} />} Import CSV
+                        </button>
                         <button
                           type="button"
                           className={styles.listMenuItem}
