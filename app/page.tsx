@@ -62,6 +62,10 @@ function releaseTimestamp(item: Item): number {
   return Number.isNaN(date) ? 0 : date;
 }
 
+function formatPercent(value: number): string {
+  return `${Math.round(value)}%`;
+}
+
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
   const payload = await res.json().catch(() => ({}));
@@ -234,20 +238,53 @@ export default function Home() {
   }, [list, showUnwatchedOnly, sortOption]);
 
   const stats = useMemo(() => {
-    if (!list) return { total: 0, watched: 0, unwatched: 0, runtime: 0 };
+    if (!list) {
+      return {
+        total: 0,
+        watched: 0,
+        unwatched: 0,
+        runtimeTotal: 0,
+        runtimeWatched: 0,
+        watchedPercent: 0,
+        unwatchedPercent: 0,
+        runtimeWatchedPercent: 0
+      };
+    }
+
     const watched = list.items.filter(item => item.watched).length;
-    const runtime = list.items.reduce((sum, item) => sum + (item.runtimeMinutes ?? 0), 0);
-    return { total: list.items.length, watched, unwatched: list.items.length - watched, runtime };
+    const runtimeTotal = list.items.reduce((sum, item) => sum + (item.runtimeMinutes ?? 0), 0);
+    const runtimeWatched = list.items.filter(item => item.watched).reduce((sum, item) => sum + (item.runtimeMinutes ?? 0), 0);
+    const total = list.items.length;
+    const unwatched = total - watched;
+
+    const watchedPercent = total > 0 ? (watched / total) * 100 : 0;
+    const unwatchedPercent = total > 0 ? (unwatched / total) * 100 : 0;
+    const runtimeWatchedPercent = runtimeTotal > 0 ? (runtimeWatched / runtimeTotal) * 100 : 0;
+
+    return {
+      total,
+      watched,
+      unwatched,
+      runtimeTotal,
+      runtimeWatched,
+      watchedPercent,
+      unwatchedPercent,
+      runtimeWatchedPercent
+    };
   }, [list]);
 
   if (!list) {
     return (
-      <main className={styles.viewport}>
-        <section className={styles.panel}>
+      <main className={`${styles.viewport} ${styles.centeredViewport}`}>
+        <section className={styles.loginContent}>
           <h1 className={styles.title}>Watchlist Neon Edition</h1>
           <p className={styles.subtitle}>Passwort eingeben, um die gemeinsame Liste freizuschalten.</p>
           <form onSubmit={unlockList} className={styles.form}>
+            <label className={styles.fieldLabel} htmlFor="password-input">
+              Passwort
+            </label>
             <input
+              id="password-input"
               className={styles.input}
               type="password"
               autoFocus
@@ -268,29 +305,43 @@ export default function Home() {
 
   return (
     <main className={styles.viewport}>
-      <section className={styles.panel}>
+      <section className={styles.content}>
         <h1 className={styles.title}>{list.name}</h1>
 
         <div className={styles.statsGrid}>
           <article className={styles.statCard}>
             <span className={styles.statEmoji}>🎬</span>
-            <p className={styles.statLabel}>Gesamt</p>
+            <p className={styles.statLabel}>Gesamtfilme</p>
             <p className={styles.statValue}>{stats.total}</p>
           </article>
+
           <article className={styles.statCard}>
-            <span className={styles.statEmoji}>✅</span>
-            <p className={styles.statLabel}>Gesehen</p>
-            <p className={styles.statValue}>{stats.watched}</p>
+            <span className={styles.statEmoji}>📊</span>
+            <p className={styles.statLabel}>Fortschritt</p>
+            <div className={styles.progressHeader}>
+              <span>Gesehen {formatPercent(stats.watchedPercent)}</span>
+              <span>Offen {formatPercent(stats.unwatchedPercent)}</span>
+            </div>
+            <div className={styles.progressTrack} aria-label="Gesehen vs offen">
+              <span className={styles.progressWatched} style={{ width: `${stats.watchedPercent}%` }} />
+              <span className={styles.progressUnwatched} style={{ width: `${stats.unwatchedPercent}%` }} />
+            </div>
           </article>
-          <article className={styles.statCard}>
-            <span className={styles.statEmoji}>🍿</span>
-            <p className={styles.statLabel}>Offen</p>
-            <p className={styles.statValue}>{stats.unwatched}</p>
-          </article>
+
           <article className={styles.statCard}>
             <span className={styles.statEmoji}>⏱️</span>
-            <p className={styles.statLabel}>Laufzeit</p>
-            <p className={styles.statValue}>{formatRuntime(stats.runtime)}</p>
+            <p className={styles.statLabel}>Laufzeit gesamt</p>
+            <p className={styles.statValue}>{formatRuntime(stats.runtimeTotal)}</p>
+          </article>
+
+          <article className={styles.statCard}>
+            <span className={styles.statEmoji}>✅</span>
+            <p className={styles.statLabel}>Laufzeit gesehen</p>
+            <p className={styles.statValue}>{formatRuntime(stats.runtimeWatched)}</p>
+            <div className={styles.progressTrack} aria-label="Gesehene Laufzeit">
+              <span className={styles.progressWatched} style={{ width: `${stats.runtimeWatchedPercent}%` }} />
+            </div>
+            <p className={styles.progressFooter}>{formatPercent(stats.runtimeWatchedPercent)} der Gesamtlaufzeit</p>
           </article>
         </div>
 
